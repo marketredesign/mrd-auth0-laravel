@@ -11,7 +11,7 @@ Wrapper to easily configure Auth0 with a Laravel application
 
 ### Prerequisites
 
-* PHP 7.2 or higher
+* PHP 7.3 or higher
 * Laravel 5.7 or higher
 
 ### Installing

@@ -16,7 +16,7 @@
         }
     ],
     "require": {
-        "php": "^7.2",
+        "php": "^7.3",
         "auth0/login": "^6.1",
         "illuminate/contracts": "^8.7",
         "illuminate/support": "^8.7"
