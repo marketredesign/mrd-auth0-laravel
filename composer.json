@@ -1,0 +1,53 @@
+{
+    "name": "marketredesign/mrd-auth0-laravel",
+    "description": "Wrapper to easily configure Auth0 with a Laravel application",
+    "keywords": [
+        "marketredesign",
+        "mrd-auth0-laravel"
+    ],
+    "homepage": "https://github.com/marketredesign/mrd-auth0-laravel",
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Marijn van der Horst",
+            "email": "marijn.vander.horst@marketredesign.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^7.1",
+        "auth0/login": "^6.1",
+        "illuminate/contracts": "^8.7",
+        "illuminate/support": "^8.7"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^6.2",
+        "phpunit/phpunit": "^9.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Marketredesign\\MrdAuth0Laravel\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Marketredesign\\MrdAuth0Laravel\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Marketredesign\\MrdAuth0Laravel\\MrdAuth0LaravelServiceProvider"
+            ]
+        }
+    }
+}
