@@ -14,6 +14,15 @@ class LogoutTest extends TestCase
 {
     private const ROUTE_NAME = 'logout';
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Mock out the Auth0Service.
+        $auth0Mock = $this->mock(Auth0Service::class);
+        $this->app->instance(Auth0Service::class, $auth0Mock);
+    }
+
     /**
      * Define environment setup.
      *
@@ -40,10 +49,6 @@ class LogoutTest extends TestCase
         // Sanity check; make sure a user is logged in.
         self::assertTrue(Auth::check());
 
-        // Mock out the Auth0Service and expect logout to be called.
-        $auth0Mock = $this->mock(Auth0Service::class)->shouldReceive('logout')->once()->getMock();
-        $this->app->instance(Auth0Service::class, $auth0Mock);
-
         // Assert we are redirected to Auth0 logout page.
         $this->get(route(self::ROUTE_NAME))->assertRedirect(
             'https://auth.marketredesign.com/v2/logout?client_id=123&returnTo=http://localhost'
@@ -60,10 +65,6 @@ class LogoutTest extends TestCase
     {
         // Sanity check; make sure no user is logged in.
         self::assertFalse(Auth::check());
-
-        // Mock out the Auth0Service and expect logout not to be called.
-        $auth0Mock = $this->mock(Auth0Service::class)->shouldNotReceive('logout')->getMock();
-        $this->app->instance(Auth0Service::class, $auth0Mock);
 
         // Assert we are redirected to our login page.
         $this->get(route(self::ROUTE_NAME))->assertRedirect(route('login'));
