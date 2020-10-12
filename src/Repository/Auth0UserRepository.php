@@ -48,9 +48,10 @@ class Auth0UserRepository extends BaseRepository
     }
 
     /**
-     * @return string Full classifier of {@code $this->model}}.
+     * @param string $model Model class.
+     * @return string Full classifier of given $model.
      */
-    protected function getFullModelClass($model): string
+    protected function getFullModelClass(string $model): string
     {
         return '\\'.ltrim($model, '\\');
     }
