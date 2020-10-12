@@ -15,13 +15,6 @@ use Mockery;
 
 class Auth0UserRepositoryTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-        Mockery::getConfiguration()->disableReflectionCache();
-    }
-
-
     /**
      * Verifies that our implementation of the User Repository is bound in the service container.
      */
