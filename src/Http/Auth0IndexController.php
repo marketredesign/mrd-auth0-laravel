@@ -3,7 +3,6 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Http;
 
-
 use Auth0\Login\Auth0Service;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controller;
@@ -15,7 +14,8 @@ class Auth0IndexController extends Controller
     /**
      * Redirect to the Auth0 hosted login page
      *
-     * @param Auth0Service $auth0Service Auth0 service
+     * @param  Auth0Service $auth0Service Auth0 service
+     *
      * @return RedirectResponse
      */
     public function login(Auth0Service $auth0Service)
@@ -25,11 +25,11 @@ class Auth0IndexController extends Controller
             return Redirect::back();
         }
 
-        $authorize_params = [
+        $authorizeParams = [
             'scope' => 'openid profile email',
         ];
 
-        return $auth0Service->login(null, null, $authorize_params);
+        return $auth0Service->login(null, null, $authorizeParams);
     }
 
     /**
