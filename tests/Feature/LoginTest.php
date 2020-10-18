@@ -3,7 +3,6 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
-
 use Auth0\Login\Auth0Service;
 use Auth0\Login\Auth0User;
 use Illuminate\Support\Facades\Auth;

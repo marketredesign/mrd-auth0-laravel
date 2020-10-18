@@ -21,21 +21,6 @@ class TestCase extends \Orchestra\Testbench\TestCase
     }
 
     /**
-     * {@inheritDoc}
-     *
-     * @param string $user User ID to perform the request(s) as.
-     * @param null $driver Part of parent method, not used.
-     * @return TestCase this.
-     */
-    public function be($user, $driver = null)
-    {
-        $this->userId = $user;
-        request()->merge(['user_id' => $user]);
-
-        return $this;
-    }
-
-    /**
      * Mock the Auth0Service. When the provided {@code jwt} is null, the JWT decoding is mocked to
      * throw an {@code InvalidTokenException}. Otherwise, it is mocked to return the provided JWT. When the provided
      * JWT does not include a `sub` field, it is added and set to {@code $this->userId}. The userinfo method is
