@@ -22,13 +22,13 @@ You can install the package via composer:
 composer require marketredesign/mrd-auth0-laravel
 ```
 
-### Usage
+## Usage
 
-## Authentication
+### Authentication
 Simply redirect the user to the `/login` route (named `login`). The rest will be handled by this package. For logout
 redirect to `/logout` (named `logout`).
 
-## Authorizing API endpoints
+### Authorizing API endpoints
 Add a `jwt` middleware to the API route. A scope can be added by using `jwt:scope`.
 
 ## Running the tests
