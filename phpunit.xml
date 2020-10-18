@@ -13,5 +13,6 @@
   <php>
     <env name="DB_CONNECTION" value="testing"/>
     <env name="APP_KEY" value="c5s5xX4FaUiCCqbcYH5YFXvN4VoQDVsb"/>
+    <env name="CACHE_DRIVER" value="array"/>
   </php>
 </phpunit>

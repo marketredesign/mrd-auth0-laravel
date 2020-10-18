@@ -2,7 +2,7 @@
 
 use Auth0\Login\Auth0Controller;
 use Illuminate\Support\Facades\Route;
-use Marketredesign\MrdAuth0Laravel\Http\Auth0IndexController;
+use Marketredesign\MrdAuth0Laravel\Http\Controllers\Auth0IndexController;
 
 Route::group(['middleware' => ['web']], function () {
     Route::get('/auth0/callback', [Auth0Controller::class, 'callback'])->name('auth0-callback');
