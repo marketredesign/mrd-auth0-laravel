@@ -12,7 +12,7 @@ use Marketredesign\MrdAuth0Laravel\Tests\TestCase;
 
 class JwtAuthorizationTest extends TestCase
 {
-    private const ROUTE_URI = 'test';
+    private const ROUTE_URI = 'test_route';
 
     /**
      * Define environment setup.
@@ -33,6 +33,7 @@ class JwtAuthorizationTest extends TestCase
      * Perform a GET request to the test endpoint, optionally including a Bearer token in the Authorization header.
      *
      * @param bool $includeBearer Whether or not to include a bearer token in the request.
+     * @param string $scope Optionally, a required scope for the JWT middleware. Defaults to no scope.
      * @param Closure|null $responseHandler Response handler for endpoint. When null, a JSON containing `test` will be
      * returned.
      * @return TestResponse
@@ -42,7 +43,7 @@ class JwtAuthorizationTest extends TestCase
         // Define a very simply testing endpoint, protected by the jwt middleware.
         Route::middleware('jwt' . (empty($scope) ? '' : ":$scope"))
             ->get(self::ROUTE_URI, $responseHandler ?? function () {
-                return response()->json('test');
+                return response()->json('test_response');
             });
 
         $headers = [];
@@ -83,7 +84,7 @@ class JwtAuthorizationTest extends TestCase
     {
         $this->mockAuth0Service([]);
 
-        $this->request(true, 'test')
+        $this->request(true, 'test_scope')
             ->assertForbidden()
             ->assertSee('Insufficient scope');
     }
@@ -95,7 +96,7 @@ class JwtAuthorizationTest extends TestCase
     {
         $this->mockAuth0Service(['scope' => '']);
 
-        $this->request(true, 'test')
+        $this->request(true, 'test_scope')
             ->assertForbidden()
             ->assertSee('Insufficient scope');
     }
@@ -105,9 +106,9 @@ class JwtAuthorizationTest extends TestCase
      */
     public function testScopeRequiredIncorrectScopeProvided()
     {
-        $this->mockAuth0Service(['scope' => 'nottest']);
+        $this->mockAuth0Service(['scope' => 'nottest_scope']);
 
-        $this->request(true, 'test')
+        $this->request(true, 'test_scope')
             ->assertForbidden()
             ->assertSee('Insufficient scope');
     }
@@ -117,11 +118,11 @@ class JwtAuthorizationTest extends TestCase
      */
     public function testScopeRequiredOneScopeProvided()
     {
-        $this->mockAuth0Service(['scope' => 'test']);
+        $this->mockAuth0Service(['scope' => 'test_scope']);
 
-        $this->request(true, 'test')
+        $this->request(true, 'test_scope')
             ->assertOk()
-            ->assertSee('test');
+            ->assertSee('test_response');
     }
 
     /**
@@ -129,11 +130,11 @@ class JwtAuthorizationTest extends TestCase
      */
     public function testScopeRequiredMultipleScopesProvided()
     {
-        $this->mockAuth0Service(['scope' => 'somescope test somethingelse']);
+        $this->mockAuth0Service(['scope' => 'somescope test_scope somethingelse']);
 
-        $this->request(true, 'test')
+        $this->request(true, 'test_scope')
             ->assertOk()
-            ->assertSee('test');
+            ->assertSee('test_response');
     }
 
     /**
@@ -156,6 +157,6 @@ class JwtAuthorizationTest extends TestCase
         $this->request(true, '', function (Request $request) {
             // Apply the user resolver on the request and return its response.
             return $request->user();
-        })->assertOk()->assertSee('test')->assertSimilarJson($userInfo);
+        })->assertOk()->assertSimilarJson($userInfo);
     }
 }
