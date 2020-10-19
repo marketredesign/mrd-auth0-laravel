@@ -40,7 +40,7 @@ class JwtAuthorizationTest extends TestCase
      */
     private function request(bool $includeBearer, string $scope = '', ?Closure $responseHandler = null)
     {
-        // Define a very simply testing endpoint, protected by the jwt middleware.
+        // Define a very simple testing endpoint, protected by the jwt middleware.
         Route::middleware('jwt' . (empty($scope) ? '' : ":$scope"))
             ->get(self::ROUTE_URI, $responseHandler ?? function () {
                 return response()->json('test_response');
