@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Marketredesign\MrdAuth0Laravel\Http;
+namespace Marketredesign\MrdAuth0Laravel\Http\Controllers;
 
 use Auth0\Login\Auth0Service;
 use Illuminate\Http\RedirectResponse;
