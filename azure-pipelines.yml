@@ -9,7 +9,7 @@ trigger:
 strategy:
   matrix:
     php72:
-      php_version: 7.2.5
+      php_version: 7.2
     php73:
       php_version: 7.3
     php74:
@@ -20,6 +20,8 @@ pool:
 
 steps:
   - script: |
+      sudo apt update
+      sudo apt install php-$(php_version)
       sudo update-alternatives --set php /usr/bin/php$(php_version)
       sudo update-alternatives --set phar /usr/bin/phar$(php_version)
       sudo update-alternatives --set phpdbg /usr/bin/phpdbg$(php_version)
