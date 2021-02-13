@@ -13,6 +13,9 @@ strategy:
     php74:
       php_version: 7.4
 
+variables:
+  codecov_token: "6bcc2937-9ce1-4b71-aff2-fb529f2226ef"
+
 pool:
   vmImage: ubuntu-latest
 
@@ -51,6 +54,6 @@ steps:
       testResultsFormat: 'JUnit'
       testResultsFiles: 'test_reports/report.xml'
 
-  - script: bash <(curl -s https://codecov.io/bash) -C $(Build.SourceVersion)
+  - script: bash <(curl -s https://codecov.io/bash) -t $(codecov_token)
     condition: always()
     displayName: 'Upload to codecov.io'
