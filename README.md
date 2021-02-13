@@ -13,6 +13,10 @@ Wrapper to easily configure Auth0 with a Laravel application
 
 * PHP 7.3 or higher
 * PHP JSON extension
+* PHP mbstring extension
+* PHP DOM extension
+* PHP XML extension
+* PHP Curl extension
 * Laravel 6 or higher
 
 ### Installing
