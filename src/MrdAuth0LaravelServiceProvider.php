@@ -64,9 +64,12 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
         $this->app->singleton(Management::class, function (Application $app) {
             $mrdConfig = config('mrd-auth0');
             $a0Config = config('laravel-auth0');
-            $token = $app->make(Authentication::class)->client_credentials(['audience' => $mrdConfig['management_audience']]);
+            $token = $app->make(Authentication::class)->client_credentials([
+                'audience' => $mrdConfig['management_audience'],
+            ]);
+            $guzzleOptions = $a0Config['guzzle_options'] ?? [];
 
-            return new Management($token['access_token'], $a0Config['domain'], $a0Config['guzzle_options'] ?? [], 'object');
+            return new Management($token['access_token'], $a0Config['domain'], $guzzleOptions, 'object');
         });
 
         // Bind the UserRepository implementation to the contract.
