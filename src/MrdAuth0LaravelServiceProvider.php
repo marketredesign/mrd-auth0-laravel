@@ -4,9 +4,11 @@ namespace Marketredesign\MrdAuth0Laravel;
 
 use Auth0\Login\Contract\Auth0UserRepository;
 use Auth0\SDK\API\Authentication;
+use Auth0\SDK\API\Management;
 use Illuminate\Foundation\Application;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
+use Marketredesign\MrdAuth0Laravel\Contracts\UserRepository;
 use Marketredesign\MrdAuth0Laravel\Http\Middleware\CheckJWT;
 
 class MrdAuth0LaravelServiceProvider extends ServiceProvider
@@ -57,5 +59,17 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
                 $config['guzzle_options'] ?? []
             );
         });
+
+        // Add a singleton for the Auth0 Management SDK using mrd-auth0 config for the management audience.
+        $this->app->singleton(Management::class, function (Application $app) {
+            $mrdConfig = config('mrd-auth0');
+            $a0Config = config('laravel-auth0');
+            $token = $app->make(Authentication::class)->client_credentials(['audience' => $mrdConfig['management_audience']]);
+
+            return new Management($token['access_token'], $a0Config['domain'], $a0Config['guzzle_options'] ?? [], 'object');
+        });
+
+        // Bind the UserRepository implementation to the contract.
+        $this->app->bind(UserRepository::class, \Marketredesign\MrdAuth0Laravel\Repository\UserRepository::class);
     }
 }

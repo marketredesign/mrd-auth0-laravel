@@ -25,4 +25,14 @@ return [
     */
 
     'jwt-model' => Auth0JWTUser::class,
+
+    /*
+    |-------------------------------------------------------------------------------------------------------------------
+    |   Management API audience
+    |-------------------------------------------------------------------------------------------------------------------
+    |   The API audience of the Auth0 Management API, as set in the auth0 administration page
+    |
+    */
+
+    'management_audience' => env('AUTH0_MANAGEMENT_AUDIENCE'),
 ];
