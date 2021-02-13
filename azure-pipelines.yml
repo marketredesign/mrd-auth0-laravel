@@ -13,9 +13,6 @@ strategy:
     php74:
       php_version: 7.4
 
-variables:
-  codecov_token: "6bcc2937-9ce1-4b71-aff2-fb529f2226ef"
-
 pool:
   vmImage: ubuntu-latest
 
