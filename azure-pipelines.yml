@@ -1,5 +1,10 @@
 trigger:
-  - develop
+  branches:
+    include:
+      - '*'
+  tags:
+    include:
+      - '*'
 
 strategy:
   matrix:
