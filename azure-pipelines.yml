@@ -16,6 +16,9 @@ strategy:
 pool:
   vmImage: ubuntu-latest
 
+variables:
+  - group: mrd-auth0-laravel
+
 steps:
   - script: |
       sudo apt-get update
