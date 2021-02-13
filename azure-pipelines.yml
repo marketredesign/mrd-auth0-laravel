@@ -51,6 +51,6 @@ steps:
       testResultsFormat: 'JUnit'
       testResultsFiles: 'test_reports/report.xml'
 
-  - script: bash <(curl -s https://codecov.io/bash)
+  - script: bash <(curl -s https://codecov.io/bash) -C $(Build.SourceVersion)
     condition: always()
     displayName: 'Upload to codecov.io'
