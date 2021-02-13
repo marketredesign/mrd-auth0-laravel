@@ -41,8 +41,10 @@
     },
     "scripts": {
         "test": "vendor/bin/phpunit",
-        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
-
+        "test-coverage": [
+            "@putenv XDEBUG_MODE=coverage",
+            "vendor/bin/phpunit -c phpunit.xml --log-junit test_reports/report.xml"
+        ]
     },
     "config": {
         "sort-packages": true

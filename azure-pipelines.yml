@@ -1,0 +1,47 @@
+trigger:
+  - develop
+
+strategy:
+  matrix:
+    php72:
+      php_version: 7.2.5
+    php73:
+      php_version: 7.3
+    php74:
+      php_version: 7.4
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - script: |
+      sudo update-alternatives --set php /usr/bin/php$(phpVersion)
+      sudo update-alternatives --set phar /usr/bin/phar$(phpVersion)
+      sudo update-alternatives --set phpdbg /usr/bin/phpdbg$(phpVersion)
+      sudo update-alternatives --set php-cgi /usr/bin/php-cgi$(phpVersion)
+      sudo update-alternatives --set phar.phar /usr/bin/phar.phar$(phpVersion)
+      php -version
+    displayName: 'Use PHP version $(phpVersion)'
+
+  - script: composer install --no-interaction --prefer-dist
+    displayName: 'composer install'
+
+  - script: |
+      vendor/bin/phpcs --runtime-set ignore_warnings_on_exit -p --extensions=php src
+      vendor/bin/phpmd src ansi phpmd.xml
+      vendor/bin/phpstan analyse src --level=0
+    displayName: 'Anaylze code'
+
+  - script: composer test-coverage
+    displayName: 'Run tests'
+
+  - task: PublishTestResults@2
+    condition: always()
+    displayName: 'Publish test report'
+    inputs:
+      testResultsFormat: 'JUnit'
+      testResultsFiles: 'test_reports/report.xml'
+
+  - script: bash <(curl -s https://codecov.io/bash)
+    condition: always()
+    displayName: 'Upload to codecov.io'
