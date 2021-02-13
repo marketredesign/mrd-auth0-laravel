@@ -23,7 +23,7 @@ steps:
       sudo add-apt-repository ppa:ondrej/php
       sudo apt-get update
       sudo apt-get install php$(php_version)
-      sudo apt-get install php-json php-mbstring php-dom php-xml php-curl
+      sudo apt-get install php$(php_version)-json php$(php_version)-mbstring php$(php_version)-xml php$(php_version)-curl
       sudo update-alternatives --set php /usr/bin/php$(php_version)
       sudo update-alternatives --set phar /usr/bin/phar$(php_version)
       sudo update-alternatives --set phpdbg /usr/bin/phpdbg$(php_version)
