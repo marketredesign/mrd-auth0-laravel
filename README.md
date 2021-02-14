@@ -35,6 +35,12 @@ redirect to `/logout` (named `logout`).
 ### Authorizing API endpoints
 Add a `jwt` middleware to the API route. A scope can be added by using `jwt:scope`.
 
+### User repository
+Use `Users` facade. Can be used to retrieve a single user, or multiple users, by ID.
+Also includes functionality to retrieve multiple users by email addresses.
+When testing a function that uses the UserRepository (or Facade), execute `Users::fake()` to use a mocked UserRepository
+which does not make any API calls to Auth0. The fake repository can be influenced using `Users::fake...()` methods.
+
 ## Running the tests
 
 Simply run:

@@ -9,7 +9,9 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
 use Marketredesign\MrdAuth0Laravel\Contracts\UserRepository;
 use Marketredesign\MrdAuth0Laravel\Tests\TestCase;
 
@@ -93,6 +95,15 @@ class UserRepositoryTest extends TestCase
     }
 
     /**
+     * Reset the repository singleton instance by creating a new instance.
+     */
+    protected function resetRepo()
+    {
+        App::forgetInstance(UserRepository::class);
+        $this->repo = App::make(UserRepository::class);
+    }
+
+    /**
      * Verifies that our implementation of the User Repository is bound in the service container, and that it can be
      * instantiated when a correct config is present.
      */
@@ -144,8 +155,6 @@ class UserRepositoryTest extends TestCase
         "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
         "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
         "blocked":false,"given_name":"","family_name":""}')];
-
-        $this->getEnvironmentSetUp(app());
 
         // Execute function under test
         $user = $this->repo->get('auth0|507f1f77bcf86cd799439020');
@@ -237,6 +246,41 @@ class UserRepositoryTest extends TestCase
 
         // Verify only 1 api call was made.
         self::assertCount(1, $this->guzzleContainer);
+    }
+
+    /**
+     * Verifies that the cache TTL can be set using a config value for get single user by ID.
+     */
+    public function testGetCachingTTL()
+    {
+        // Return example response twice times, taken from Auth0 documentation.
+        $response = new Response(200, [], '{"user_id":"auth0|507f1f77bcf86cd799439020",
+        "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
+        "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
+        "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
+        "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
+        "blocked":false,"given_name":"","family_name":""}');
+        $this->mockedResponses = [$response, $response];
+
+        // Set cache TTL to 10 seconds in the config, and create new repository using this cache value.
+        Config::set('mrd-auth0.cache_ttl', 10);
+        $this->resetRepo();
+
+        // First execute function under test twice, without delay, for the same user ID.
+        $this->repo->get('auth0|507f1f77bcf86cd799439020');
+        $this->repo->get('auth0|507f1f77bcf86cd799439020');
+
+        // Verify only 1 api call was made.
+        self::assertCount(1, $this->guzzleContainer);
+
+        // Increment time such that cache TTL should have passed.
+        Carbon::setTestNow(Carbon::now()->addSeconds(11));
+
+        // Execute function under test again, and expect a new API to be made.
+        $this->repo->get('auth0|507f1f77bcf86cd799439020');
+
+        // Verify now a total of two api calls was made.
+        self::assertCount(2, $this->guzzleContainer);
     }
 
     /**
@@ -440,6 +484,46 @@ class UserRepositoryTest extends TestCase
     }
 
     /**
+     * Verifies that the cache TTL can be set using a config value for get multiple users by ID.
+     */
+    public function testGetByIdsCachingTTL()
+    {
+        // Response base on Auth0 API documentation
+        $response = new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
+        "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
+        "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
+        "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
+        "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
+        "blocked":false,"given_name":"","family_name":""},{"user_id":"other_user",
+        "email":"other@gmail.com","email_verified":false,"username":"other","phone_number":
+        "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
+        "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
+        "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]');
+        $this->mockedResponses = [$response, $response];
+
+        // Set cache TTL to 10 seconds in the config, and create new repository using this cache value.
+        Config::set('mrd-auth0.cache_ttl', 10);
+        $this->resetRepo();
+
+        // First execute function under test twice, without delay.
+        $this->repo->getByIds(collect(['auth0|507f1f77bcf86cd799439020', 'other_user']));
+        $this->repo->getByIds(collect(['auth0|507f1f77bcf86cd799439020', 'other_user']));
+
+        // Verify only 1 api call was made.
+        self::assertCount(1, $this->guzzleContainer);
+
+        // Increment time such that cache TTL should have passed.
+        Carbon::setTestNow(Carbon::now()->addSeconds(11));
+
+        // Execute function under test again, and expect a new API to be made.
+        $this->repo->getByIds(collect(['auth0|507f1f77bcf86cd799439020', 'other_user']));
+
+        // Verify now a total of two api calls was made.
+        self::assertCount(2, $this->guzzleContainer);
+    }
+
+    /**
      * Verifies that getting users by email returns empty collection when no emails are given.
      */
     public function testGetByEmailEmpty()
@@ -637,5 +721,45 @@ class UserRepositoryTest extends TestCase
 
         // Verify only 1 api call was made.
         self::assertCount(1, $this->guzzleContainer);
+    }
+
+    /**
+     * Verifies that the cache TTL can be set using a config value for get multiple users by email.
+     */
+    public function testGetByEmailsCachingTTL()
+    {
+        // Response base on Auth0 API documentation
+        $response = new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
+        "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
+        "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
+        "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
+        "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
+        "blocked":false,"given_name":"","family_name":""},{"user_id":"other_user",
+        "email":"other@gmail.com","email_verified":false,"username":"other","phone_number":
+        "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
+        "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
+        "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]');
+        $this->mockedResponses = [$response, $response];
+
+        // Set cache TTL to 10 seconds in the config, and create new repository using this cache value.
+        Config::set('mrd-auth0.cache_ttl', 10);
+        $this->resetRepo();
+
+        // First execute function under test twice, without delay.
+        $this->repo->getByIds(collect(['john.doe@gmail.com', 'other@gmail.com']));
+        $this->repo->getByIds(collect(['john.doe@gmail.com', 'other@gmail.com']));
+
+        // Verify only 1 api call was made.
+        self::assertCount(1, $this->guzzleContainer);
+
+        // Increment time such that cache TTL should have passed.
+        Carbon::setTestNow(Carbon::now()->addSeconds(11));
+
+        // Execute function under test again, and expect a new API to be made.
+        $this->repo->getByIds(collect(['john.doe@gmail.com', 'other@gmail.com']));
+
+        // Verify now a total of two api calls was made.
+        self::assertCount(2, $this->guzzleContainer);
     }
 }

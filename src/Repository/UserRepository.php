@@ -11,9 +11,15 @@ use Illuminate\Support\Facades\Cache;
 
 class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRepository
 {
-    private const CACHE_TTL = 1800;
+    /**
+     * @var Management
+     */
+    protected $mgmtApi;
 
-    private $mgmtApi;
+    /**
+     * @var int Time to live for cache entries stored by this repository, in seconds.
+     */
+    protected $cacheTTL;
 
     /**
      * UserRepository constructor.
@@ -22,6 +28,7 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
     public function __construct(Management $management)
     {
         $this->mgmtApi = $management;
+        $this->cacheTTL = config('mrd-auth0.cache_ttl');
     }
 
     /**
@@ -35,7 +42,7 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
 
         $cacheKey = 'auth0-users-get-' . $id;
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($id) {
+        return Cache::remember($cacheKey, $this->cacheTTL, function () use ($id) {
             try {
                 // TODO handle API rate limit. The limit is high enough that we should not get in trouble anytime soon.
                 return json_decode($this->mgmtApi->users()->get($id)->getBody());
@@ -74,7 +81,7 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
         $cacheKey = 'auth0-users-all-' . hash('sha256', $query . $fields);
 
         // Send request to the Auth0 Management API and cache the result.
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($query, $fields, $queryField) {
+        return Cache::remember($cacheKey, $this->cacheTTL, function () use ($query, $fields, $queryField) {
             // TODO handle the API rate limit. The limit is high enough that we should not get in trouble anytime soon.
             $response = $this->mgmtApi->users()->getAll(['q' => $query], $fields);
             $users = json_decode($response->getBody());
