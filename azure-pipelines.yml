@@ -1,0 +1,59 @@
+trigger:
+  branches:
+    include:
+      - '*'
+  tags:
+    include:
+      - '*'
+
+strategy:
+  matrix:
+    php73:
+      php_version: 7.3
+    php74:
+      php_version: 7.4
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - group: mrd-auth0-laravel
+
+steps:
+  - script: |
+      sudo apt-get update
+      sudo apt-get install python-software-properties
+      sudo add-apt-repository ppa:ondrej/php
+      sudo apt-get update
+      sudo apt-get install php$(php_version)
+      sudo apt-get install php$(php_version)-json php$(php_version)-mbstring php$(php_version)-xml php$(php_version)-curl
+      sudo update-alternatives --set php /usr/bin/php$(php_version)
+      sudo update-alternatives --set phar /usr/bin/phar$(php_version)
+      sudo update-alternatives --set phpdbg /usr/bin/phpdbg$(php_version)
+      sudo update-alternatives --set php-cgi /usr/bin/php-cgi$(php_version)
+      sudo update-alternatives --set phar.phar /usr/bin/phar.phar$(php_version)
+      php -version
+    displayName: 'Use PHP version $(php_version)'
+
+  - script: composer install --no-interaction --prefer-dist
+    displayName: 'composer install'
+
+  - script: |
+      vendor/bin/phpcs --runtime-set ignore_warnings_on_exit -p --extensions=php src
+      vendor/bin/phpmd src ansi phpmd.xml
+      vendor/bin/phpstan analyse src --level=0
+    displayName: 'Anaylze code'
+
+  - script: composer test-coverage
+    displayName: 'Run tests'
+
+  - task: PublishTestResults@2
+    condition: always()
+    displayName: 'Publish test report'
+    inputs:
+      testResultsFormat: 'JUnit'
+      testResultsFiles: 'test_reports/report.xml'
+
+  - script: bash <(curl -s https://codecov.io/bash) -t $(codecov_token)
+    condition: always()
+    displayName: 'Upload to codecov.io'
