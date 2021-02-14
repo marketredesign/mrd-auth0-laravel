@@ -84,7 +84,7 @@ class UserFacadeTest extends TestCase
         $user1 = Users::get('test1');
         $user2 = Users::get('test1');
 
-        // Verify some user object was returned (has fake data).
+        // Verify the user objects returned are the same.
         self::assertNotNull($user1);
         self::assertEquals($user1, $user2);
     }

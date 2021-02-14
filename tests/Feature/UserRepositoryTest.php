@@ -259,7 +259,7 @@ class UserRepositoryTest extends TestCase
 
         // Verify correct endpoint was called.
         self::assertEquals('/api/v2/users', $request->getUri()->getPath());
-        // Verify that no user IDs where requested.
+        // Verify that no user IDs were requested.
         self::assertStringContainsString('user_id:("")', urldecode($request->getUri()->getQuery()));
     }
 
@@ -459,7 +459,7 @@ class UserRepositoryTest extends TestCase
 
         // Verify correct endpoint was called.
         self::assertEquals('/api/v2/users', $request->getUri()->getPath());
-        // Verify that no user IDs where requested.
+        // Verify that no user emails were requested.
         self::assertStringContainsString('email:("")', urldecode($request->getUri()->getQuery()));
     }
 
@@ -497,7 +497,7 @@ class UserRepositoryTest extends TestCase
 
         // Verify correct endpoint was called.
         self::assertEquals('/api/v2/users', $request->getUri()->getPath());
-        // Verify that one ID was requested, and is as expected.
+        // Verify that one email was requested, and is as expected.
         self::assertStringContainsString(
             'q=email:("john.doe@gmail.com")',
             urldecode($request->getUri()->getQuery())
@@ -527,7 +527,7 @@ class UserRepositoryTest extends TestCase
 
         // Expect one user returned.
         self::assertEquals(2, $users->count());
-        // Verify keyed by user id.
+        // Verify keyed by email.
         self::assertContains('john.doe@gmail.com', $users->keys());
         self::assertContains('other@gmail.com', $users->keys());
 
@@ -549,7 +549,7 @@ class UserRepositoryTest extends TestCase
 
         // Verify correct endpoint was called.
         self::assertEquals('/api/v2/users', $request->getUri()->getPath());
-        // Verify correct query sent to Auth0. Order of IDs does not matter.
+        // Verify correct query sent to Auth0. Order of emails does not matter.
         self::assertTrue(
             str_contains($query, 'q=email:("john.doe@gmail.com" OR "other@gmail.com")') ||
             str_contains($query, 'q=email:("other@gmail.com" OR "john.doe@gmail.com")'),
@@ -574,7 +574,7 @@ class UserRepositoryTest extends TestCase
 
         // Expect one user returned.
         self::assertEquals(1, $users->count());
-        // Verify that collection is keyed by user id.
+        // Verify that collection is keyed by email.
         self::assertEquals('some@mail.com', $users->keys()->first());
 
         self::assertEquals('some@mail.com', $users->first()->email);
@@ -603,7 +603,7 @@ class UserRepositoryTest extends TestCase
 
         // Verify correct endpoint was called.
         self::assertEquals('/api/v2/users', $request->getUri()->getPath());
-        // Verify that one ID was requested, and is as expected.
+        // Verify that one email was requested, and is as expected.
         self::assertStringContainsString(
             'q=email:("some@mail.com")',
             urldecode($request->getUri()->getQuery())

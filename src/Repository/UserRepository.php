@@ -33,7 +33,7 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
             return null;
         }
 
-        $cacheKey = 'auth0-users-get' . $id;
+        $cacheKey = 'auth0-users-get-' . $id;
 
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($id) {
             try {
@@ -71,7 +71,7 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
         // Create comma separated string for fields.
         $fields = $fields === null ? null : implode(',', $fields);
         // Create cache key based on the query and fields.
-        $cacheKey = 'auth0-users-all' . hash('sha256', $query . $fields);
+        $cacheKey = 'auth0-users-all-' . hash('sha256', $query . $fields);
 
         // Send request to the Auth0 Management API and cache the result.
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($query, $fields, $queryField) {
