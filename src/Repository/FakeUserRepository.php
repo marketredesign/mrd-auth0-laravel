@@ -65,7 +65,7 @@ class FakeUserRepository implements UserRepository
 
         $user = (object)[
             "created_at" => $this->faker->dateTime,
-            "email"=> $this->faker->email,
+            "email"=> $this->faker->unique()->email,
             "email_verified" => $this->faker->boolean,
             "family_name" => $lastName,
             "given_name" => $firstName,
