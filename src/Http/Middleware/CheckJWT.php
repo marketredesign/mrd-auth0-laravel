@@ -14,13 +14,16 @@ use Illuminate\Support\Facades\Cache;
 
 class CheckJWT
 {
-    // Time to store user info in cache, in seconds.
-    private const CACHE_TTL = 600;
     // Delimiter used to separate different scopes within the JWTs.
     private const SCOPE_DELIMITER = ' ';
 
-    private $auth;
-    private $userRepository;
+    /**
+     * @var int Time to store user info in cache, in seconds.
+     */
+    protected $cacheTTL;
+
+    protected $auth;
+    protected $userRepository;
 
     /**
      * CheckJWT constructor.
@@ -32,6 +35,7 @@ class CheckJWT
     {
         $this->auth = $auth;
         $this->userRepository = $userRepository;
+        $this->cacheTTL = config('mrd-auth0.cache_ttl');
     }
 
     /**
@@ -87,7 +91,7 @@ class CheckJWT
      */
     protected function getUserInfo(string $userId, string $bearerToken)
     {
-        return Cache::remember('UserInfo-' . $userId, self::CACHE_TTL, function () use ($bearerToken) {
+        return Cache::remember('UserInfo-' . $userId, $this->cacheTTL, function () use ($bearerToken) {
             return $this->userRepository->getUserByDecodedJWT($this->auth->userinfo($bearerToken));
         });
     }
