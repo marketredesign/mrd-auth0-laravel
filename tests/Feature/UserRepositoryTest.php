@@ -276,7 +276,7 @@ class UserRepositoryTest extends TestCase
         // Increment time such that cache TTL should have passed.
         Carbon::setTestNow(Carbon::now()->addSeconds(11));
 
-        // Execute function under test again, and expect a new API to be made.
+        // Execute function under test again, and expect a new API call to be made.
         $this->repo->get('auth0|507f1f77bcf86cd799439020');
 
         // Verify now a total of two api calls was made.
@@ -516,7 +516,7 @@ class UserRepositoryTest extends TestCase
         // Increment time such that cache TTL should have passed.
         Carbon::setTestNow(Carbon::now()->addSeconds(11));
 
-        // Execute function under test again, and expect a new API to be made.
+        // Execute function under test again, and expect a new API call to be made.
         $this->repo->getByIds(collect(['auth0|507f1f77bcf86cd799439020', 'other_user']));
 
         // Verify now a total of two api calls was made.
@@ -756,7 +756,7 @@ class UserRepositoryTest extends TestCase
         // Increment time such that cache TTL should have passed.
         Carbon::setTestNow(Carbon::now()->addSeconds(11));
 
-        // Execute function under test again, and expect a new API to be made.
+        // Execute function under test again, and expect a new API call to be made.
         $this->repo->getByIds(collect(['john.doe@gmail.com', 'other@gmail.com']));
 
         // Verify now a total of two api calls was made.
