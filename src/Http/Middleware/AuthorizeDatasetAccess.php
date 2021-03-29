@@ -46,8 +46,14 @@ class AuthorizeDatasetAccess
      */
     public function handle(Request $request, Closure $next)
     {
-        $authorizedDatasets = $this->getAuthorizedDatasetsCached();
         $requestedDatasetId = $this->getRequestedDatasetId($request);
+
+        if ($requestedDatasetId === null) {
+            // No dataset ID was found in the request, so no authorization required.
+            return $next($request);
+        }
+
+        $authorizedDatasets = $this->getAuthorizedDatasetsCached();
 
         if (!$authorizedDatasets->contains($requestedDatasetId)) {
             abort(403, 'Unauthorized dataset');
