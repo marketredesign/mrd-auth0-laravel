@@ -44,7 +44,7 @@ return [
     |
     */
 
-    'cache_ttl' => env('AUTH0_CACHE_TTL', 1800),
+    'cache_ttl' => env('AUTH0_CACHE_TTL', 300),
 
     /*
     |-------------------------------------------------------------------------------------------------------------------
@@ -54,4 +54,13 @@ return [
     |
     */
     'user_tool_url' => env('USER_TOOL_URL', 'https://users.pricecypher.com/api'),
+
+    /*
+    |--------------------------------------------------------------------------
+    |   Guzzle Options
+    |--------------------------------------------------------------------------
+    | guzzle_options    (array) optional. Used to specify additional connection options e.g. proxy settings.
+    |
+    */
+    // 'guzzle_options' => []
 ];

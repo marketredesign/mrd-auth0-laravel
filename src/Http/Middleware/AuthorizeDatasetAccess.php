@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Marketredesign\MrdAuth0Laravel\Contracts\DatasetRepository;
+use Marketredesign\MrdAuth0Laravel\Facades\Datasets;
 
 class AuthorizeDatasetAccess
 {
@@ -20,18 +20,10 @@ class AuthorizeDatasetAccess
     protected $cacheTTL;
 
     /**
-     * @var DatasetRepository
-     */
-    protected $datasetRepo;
-
-    /**
      * AuthorizedDatasetAccess constructor.
-     *
-     * @param DatasetRepository $datasetRepo
      */
-    public function __construct(DatasetRepository $datasetRepo)
+    public function __construct()
     {
-        $this->datasetRepo = $datasetRepo;
         $this->cacheTTL = config('mrd-auth0.cache_ttl');
     }
 
@@ -70,7 +62,7 @@ class AuthorizeDatasetAccess
     protected function retrieveAuthorizedDatasets(): Collection
     {
         try {
-            return $this->datasetRepo->getUserDatasetIds();
+            return Datasets::getUserDatasetIds();
         } catch (RequestException $e) {
             Log::error('Unable to request authorized datasets from user tool:');
             Log::error($e);
