@@ -33,13 +33,24 @@ Simply redirect the user to the `/login` route (named `login`). The rest will be
 redirect to `/logout` (named `logout`).
 
 ### Authorizing API endpoints
-Add a `jwt` middleware to the API route. A scope can be added by using `jwt:scope`.
+Add the `jwt` middleware to the API route. A scope can be added by using `jwt:scope`.
+
+### Authorizing dataset access
+Add the `dataset.access` middleware to the API route. Then, make sure the dataset ID is specified using either 
+`dataset_id` or `datasetId`. It can be part of the route itself or part of the request data (query param, 
+request body, etc.) 
 
 ### User repository
 Use `Users` facade. Can be used to retrieve a single user, or multiple users, by ID.
 Also includes functionality to retrieve multiple users by email addresses.
 When testing a function that uses the UserRepository (or Facade), execute `Users::fake()` to use a mocked UserRepository
 which does not make any API calls to Auth0. The fake repository can be influenced using `Users::fake...()` methods.
+
+### Dataset repository
+Use `Datasets` facade. Can be used to retrieve authorized datasets for the current user making the API request.
+When testing a function that uses the DatasetRepository (or Datasets face), execute `Datasets::fake()` to use a mocked
+version of the DatasetRepository that does not make any API calls to the underlying user tool API. The fake repository
+can be influenced using the `Datasets::fake...()` methods.
 
 ## Running the tests
 
