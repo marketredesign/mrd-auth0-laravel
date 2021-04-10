@@ -14,17 +14,14 @@ use Marketredesign\MrdAuth0Laravel\Http\Resources\DatasetResource;
 
 class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\DatasetRepository
 {
-    /**
-     * @var string Base URL of user tool.
-     */
-    protected $baseUrl;
+    protected $guzzleOptions;
 
     /**
      * DatasetRepository constructor.
      */
     public function __construct()
     {
-        $this->baseUrl = config('mrd-auth0.user_tool_url');
+        $this->guzzleOptions = config('mrd-auth0.guzzle_options');
     }
 
     /**
@@ -40,7 +37,7 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
         return array_merge(['headers' => [
             'Authorization' => "Bearer $token",
             'Accept' => 'application/json'
-        ]], $options);
+        ]], $options, $this->guzzleOptions);
     }
 
     /**
@@ -53,10 +50,12 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
      */
     protected function get(string $uri, array $options = []): Collection
     {
+        $baseUrl = config('mrd-auth0.user_tool_url');
+
         try {
             $http = new Client;
             $options = $this->addDefaultsToGuzzleOptions($options);
-            $jsonResponse = $http->get($this->baseUrl . $uri, $options);
+            $jsonResponse = $http->get($baseUrl . $uri, $options);
 
             return collect(json_decode((string) $jsonResponse->getBody(), false));
         } catch (GuzzleException $e) {

@@ -5,6 +5,7 @@ namespace Marketredesign\MrdAuth0Laravel;
 use Auth0\Login\Contract\Auth0UserRepository;
 use Auth0\SDK\API\Authentication;
 use Auth0\SDK\API\Management;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Foundation\Application;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
@@ -26,13 +27,15 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
             ], 'mrd-auth0-config');
         }
 
-        // Make the jwt middleware available to the router.
+        // Make the jwt and dataset middleware available to the router.
         $router = $this->app->make(Router::class);
         $router->aliasMiddleware('jwt', CheckJWT::class);
+        $router->aliasMiddleware('dataset.access', AuthorizeDatasetAccess::class);
 
         // Make sure the CheckJWT has a higher priority.
-        array_push($router->middlewarePriority, CheckJWT::class);
-        array_push($router->middlewarePriority, AuthorizeDatasetAccess::class);
+        $kernel = $this->app->make(Kernel::class);
+        $kernel->appendToMiddlewarePriority(CheckJWT::class);
+        $kernel->appendToMiddlewarePriority(AuthorizeDatasetAccess::class);
     }
 
     /**
