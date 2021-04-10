@@ -48,7 +48,7 @@ which does not make any API calls to Auth0. The fake repository can be influence
 
 ### Dataset repository
 Use `Datasets` facade. Can be used to retrieve authorized datasets for the current user making the API request.
-When testing a function that uses the DatasetRepository (or Datasets face), execute `Datasets::fake()` to use a mocked
+When testing a function that uses the DatasetRepository (or Datasets facade), execute `Datasets::fake()` to use a mocked
 version of the DatasetRepository that does not make any API calls to the underlying user tool API. The fake repository
 can be influenced using the `Datasets::fake...()` methods.
 
