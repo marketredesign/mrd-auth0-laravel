@@ -57,7 +57,7 @@ class FakeDatasetRepository implements DatasetRepository
     }
 
     /**
-     * Gets a random dataset object for the given ID, which will be created if it does not already exist.
+     * Gets the dataset object for the given ID, or creates, stores and returns a random one if it does not already exist.
      *
      * @param $id int Dataset ID to get the object for.
      * @return object Dataset object

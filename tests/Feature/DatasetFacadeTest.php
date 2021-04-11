@@ -64,10 +64,11 @@ class DatasetFacadeTest extends TestCase
         $dataset10 = $datasets->firstWhere('id', 10);
         $dataset3 = $datasets->firstWhere('id', 3);
 
+        // Verify the correct datasets are returned.
         self::assertNotNull($dataset10);
         self::assertNotNull($dataset3);
 
-        // Verify the correct datasets are returned, and have fake data.
+        // Verify the returned datasets have fake data.
         foreach ([$dataset10, $dataset3] as $dataset) {
             self::assertNotEmpty($dataset['name']);
             self::assertNotEmpty($dataset['created_at']);

@@ -40,13 +40,15 @@ class DatasetRepositoryTest extends TestCase
     /**
      * Asserts that the given dataset is as expected.
      *
-     * @param array $dataset
+     * @param array|null $dataset
      * @param string $name
      * @param string $createdAt
      * @param string $updatedAt
      */
-    protected function assertDataset(array $dataset, string $name, string $createdAt, string $updatedAt)
+    protected function assertDataset(?array $dataset, string $name, string $createdAt, string $updatedAt)
     {
+        self::assertNotNull($dataset);
+        
         self::assertEquals($name, $dataset['name']);
 
         $actCreatedAt = Carbon::parse($dataset['created_at']);
