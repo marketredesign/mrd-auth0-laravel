@@ -57,12 +57,12 @@ class FakeDatasetRepository implements DatasetRepository
     }
 
     /**
-     * Gets the dataset object for the given ID, or creates, stores and returns a random one if it does not already exist.
+     * Gets the dataset object for the given ID or creates, stores and returns a random one if it doesn't already exist.
      *
      * @param $id int Dataset ID to get the object for.
      * @return object Dataset object
      */
-    private function getRandomDatasetForId(int $id): object
+    private function getOrCreateDatasetForId(int $id): object
     {
         if ($this->datasets->has($id)) {
             return $this->datasets->get($id);
@@ -94,7 +94,7 @@ class FakeDatasetRepository implements DatasetRepository
     public function getUserDatasets(): ResourceCollection
     {
         $datasets = $this->datasetIds->map(function ($datasetId) {
-            return $this->getRandomDatasetForId($datasetId);
+            return $this->getOrCreateDatasetForId($datasetId);
         });
 
         return DatasetResource::collection($datasets);
