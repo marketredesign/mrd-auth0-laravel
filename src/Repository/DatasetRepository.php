@@ -27,10 +27,10 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
     /**
      * Adds Authorization and Accept headers to the given Guzzle options, if they are not already defined.
      *
-     * @param array $options Associative array of guzzle options
+     * @param array $options Associative array of guzzle options. Defaults to empty array.
      * @return array
      */
-    protected function addDefaultsToGuzzleOptions(array $options): array
+    protected function addDefaultsToGuzzleOptions(array $options = []): array
     {
         $token = Request::bearerToken();
 
@@ -41,10 +41,10 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
     }
 
     /**
-     * Send GET request to a REST API.
+     * Send GET request to User Tool API.
      *
-     * @param string $uri URI to send request to.
-     * @param array $options extra options to send in the request, like query parameters.
+     * @param string $uri URI of user tool API to send request to.
+     * @param array $options extra options to send in the request, like query parameters. Defaults to empty array.
      * @return Collection json decoded response as Collection.
      * @throws RequestException
      */

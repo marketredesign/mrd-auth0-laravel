@@ -59,8 +59,8 @@ return [
     |--------------------------------------------------------------------------
     |   Guzzle Options
     |--------------------------------------------------------------------------
-    | guzzle_options    (array) optional. Used to specify additional connection options e.g. proxy settings.
+    | guzzle_options (array). Used to specify additional connection options e.g. proxy settings.
     |
     */
-    // 'guzzle_options' => []
+    'guzzle_options' => []
 ];
