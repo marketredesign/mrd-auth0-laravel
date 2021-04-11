@@ -20,7 +20,7 @@ class DatasetAuthorizationTest extends TestCase
     /**
      * Overwrite default of 5 since some of our tests send more requests.
      */
-    protected const RESPONSE_QUEUE_SIZE = 10;
+    protected const RESPONSE_QUEUE_SIZE = 15;
 
     /**
      * URI of the test route that is created for these tests.
@@ -35,6 +35,7 @@ class DatasetAuthorizationTest extends TestCase
     private const SUPPORTED_DATASET_KEYS = [
         'dataset_id',
         'datasetId',
+        'datasetID',
     ];
 
     /**
@@ -295,6 +296,49 @@ class DatasetAuthorizationTest extends TestCase
             ])
                 ->assertOk()
                 ->assertSee('test_response');
+        }
+    }
+
+    /**
+     * Verifies that access to endpoints protected by the middleware is unauthorized for GET and POST requests that
+     * specify different dataset IDs as route and query parameters.
+     */
+    public function testDifferentDatasetIdsInRouteAndRequest()
+    {
+        // Send GET and POST requests to test endpoint for each supported dataset key as route and query parameter.
+        foreach (['GET', 'POST'] as $requestMethod) {
+            foreach (self::SUPPORTED_DATASET_KEYS as $routeParamKey) {
+                foreach (self::SUPPORTED_DATASET_KEYS as $queryParamKey) {
+                    // Specify two different dataset IDs.
+                    $this->request($requestMethod, $routeParamKey, 7, [
+                        $queryParamKey => 6,
+                    ])
+                        ->assertUnauthorized()
+                        ->assertSee('Multiple dataset IDs');
+                }
+            }
+        }
+    }
+
+    /**
+     * Verifies that access to endpoints protected by the middleware is unauthorized for GET and POST requests that
+     * specify different dataset IDs in the request data.
+     */
+    public function testDifferentDatasetIdsInRequest()
+    {
+        // Send GET and POST requests.
+        foreach (['GET', 'POST'] as $requestMethod) {
+            $requestData = [];
+
+            // Add all supported dataset ID keys to the request data, with distinct values.
+            foreach (self::SUPPORTED_DATASET_KEYS as $i => $reqDataKey) {
+                $requestData[$reqDataKey] = $i;
+            }
+
+            // Send request with no dataset ID in the route, but multiple dataset IDs in the request data.
+            $this->request($requestMethod, null, null, $requestData)
+                ->assertUnauthorized()
+                ->assertSee('Multiple dataset IDs');
         }
     }
 

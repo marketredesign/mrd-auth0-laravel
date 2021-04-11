@@ -19,6 +19,12 @@ class AuthorizeDatasetAccess
      */
     protected $cacheTTL;
 
+    protected const SUPPORTED_KEYS = [
+        'dataset_id',
+        'datasetId',
+        'datasetID',
+    ];
+
     /**
      * AuthorizedDatasetAccess constructor.
      */
@@ -91,14 +97,32 @@ class AuthorizeDatasetAccess
     }
 
     /**
-     * (Try to) find a dataset ID within the given request.
+     * (Try to) find a dataset ID within the given request. If multiple distinct ones are found, the request is aborted.
      *
      * @param Request $request
-     * @return null|string
+     * @return null|string Dataset ID, if exactly one unique one was found. Null if no dataset IDs could be found.
      */
     protected function getRequestedDatasetId(Request $request): ?string
     {
-        return $request->input('dataset_id') ?? $request->input('datasetId') ??
-            $request->route('dataset_id') ?? $request->route('datasetId');
+        // Collection to store all potential dataset IDs that occur in the request.
+        $potentialDatasetIds = collect();
+
+        // Find all potential dataset IDs.
+        foreach (static::SUPPORTED_KEYS as $supportedKey) {
+            $potentialDatasetIds->push($request->input($supportedKey));
+            $potentialDatasetIds->push($request->route($supportedKey));
+        }
+
+        // Reduce to only the unique non-null dataset IDs.
+        $notNull = $potentialDatasetIds->whereNotNull()->unique();
+
+        // There is no good reason to specify multiple different dataset IDs in the request and since we don't know
+        // which dataset ID is going to be used by the application, this can lead to serious exploits.
+        if ($notNull->count() > 1) {
+            abort(401, 'Multiple dataset IDs found in the request.');
+        }
+
+        // Return the dataset ID if there is one unique one. If the collection is empty, null is returned.
+        return $notNull->first();
     }
 }
