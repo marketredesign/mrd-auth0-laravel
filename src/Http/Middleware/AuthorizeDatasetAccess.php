@@ -19,6 +19,9 @@ class AuthorizeDatasetAccess
      */
     protected $cacheTTL;
 
+    /**
+     * @var array List of supported keys to represent the dataset ID in the requests (query/body/route).
+     */
     protected const SUPPORTED_KEYS = [
         'dataset_id',
         'datasetId',
