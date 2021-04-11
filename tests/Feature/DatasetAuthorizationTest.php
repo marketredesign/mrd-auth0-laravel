@@ -136,9 +136,9 @@ class DatasetAuthorizationTest extends TestCase
         $this->mockedResponses = array_fill(0, count(self::SUPPORTED_DATASET_KEYS), $response);
 
         // Create and send request to test endpoint for each supported dataset key as route parameter.
-        foreach (self::SUPPORTED_DATASET_KEYS as $routeParamKey) {
+        foreach (self::SUPPORTED_DATASET_KEYS as $queryParamKey) {
             $this->request('GET', null, null, [
-                    $routeParamKey => 1,
+                    $queryParamKey => 1,
                 ])
                 ->assertForbidden()
                 ->assertSee('Unauthorized dataset');
@@ -156,9 +156,9 @@ class DatasetAuthorizationTest extends TestCase
         $this->mockedResponses = array_fill(0, count(self::SUPPORTED_DATASET_KEYS), $response);
 
         // Create and send request to test endpoint for each supported dataset key as route parameter.
-        foreach (self::SUPPORTED_DATASET_KEYS as $routeParamKey) {
+        foreach (self::SUPPORTED_DATASET_KEYS as $queryParamKey) {
             $this->request('POST', null, null, [
-                $routeParamKey => 1,
+                $queryParamKey => 1,
             ])
                 ->assertForbidden()
                 ->assertSee('Unauthorized dataset');
@@ -200,9 +200,9 @@ class DatasetAuthorizationTest extends TestCase
         $this->mockedResponses = array_fill(0, count(self::SUPPORTED_DATASET_KEYS), $response);
 
         // Create and send request to test endpoint for each supported dataset key as route parameter.
-        foreach (self::SUPPORTED_DATASET_KEYS as $routeParamKey) {
+        foreach (self::SUPPORTED_DATASET_KEYS as $queryParamKey) {
             $this->request('GET', null, null, [
-                $routeParamKey => 2,
+                $queryParamKey => 2,
             ])
                 ->assertForbidden()
                 ->assertSee('Unauthorized dataset');
@@ -223,9 +223,9 @@ class DatasetAuthorizationTest extends TestCase
         $this->mockedResponses = array_fill(0, count(self::SUPPORTED_DATASET_KEYS), $response);
 
         // Create and send request to test endpoint for each supported dataset key as route parameter.
-        foreach (self::SUPPORTED_DATASET_KEYS as $routeParamKey) {
+        foreach (self::SUPPORTED_DATASET_KEYS as $queryParamKey) {
             $this->request('POST', null, null, [
-                $routeParamKey => 2,
+                $queryParamKey => 2,
             ])
                 ->assertForbidden()
                 ->assertSee('Unauthorized dataset');
@@ -267,9 +267,9 @@ class DatasetAuthorizationTest extends TestCase
         $this->mockedResponses = array_fill(0, count(self::SUPPORTED_DATASET_KEYS), $response);
 
         // Create and send request to test endpoint for each supported dataset key as route parameter.
-        foreach (self::SUPPORTED_DATASET_KEYS as $routeParamKey) {
+        foreach (self::SUPPORTED_DATASET_KEYS as $queryParamKey) {
             $this->request('GET', null, null, [
-                $routeParamKey => 6,
+                $queryParamKey => 6,
             ])
                 ->assertOk()
                 ->assertSee('test_response');
@@ -290,9 +290,9 @@ class DatasetAuthorizationTest extends TestCase
         $this->mockedResponses = array_fill(0, count(self::SUPPORTED_DATASET_KEYS), $response);
 
         // Create and send request to test endpoint for each supported dataset key as route parameter.
-        foreach (self::SUPPORTED_DATASET_KEYS as $routeParamKey) {
+        foreach (self::SUPPORTED_DATASET_KEYS as $queryParamKey) {
             $this->request('POST', null, null, [
-                $routeParamKey => 6,
+                $queryParamKey => 6,
             ])
                 ->assertOk()
                 ->assertSee('test_response');
