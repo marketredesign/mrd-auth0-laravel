@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Marketredesign\MrdAuth0Laravel\Repository;
+namespace Marketredesign\MrdAuth0Laravel\Repository\Fakes;
 
 use Exception;
 use Illuminate\Foundation\Testing\WithFaker;
