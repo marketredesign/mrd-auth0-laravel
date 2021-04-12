@@ -5,10 +5,13 @@ namespace Marketredesign\MrdAuth0Laravel;
 use Auth0\Login\Contract\Auth0UserRepository;
 use Auth0\SDK\API\Authentication;
 use Auth0\SDK\API\Management;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Foundation\Application;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
+use Marketredesign\MrdAuth0Laravel\Contracts\DatasetRepository;
 use Marketredesign\MrdAuth0Laravel\Contracts\UserRepository;
+use Marketredesign\MrdAuth0Laravel\Http\Middleware\AuthorizeDatasetAccess;
 use Marketredesign\MrdAuth0Laravel\Http\Middleware\CheckJWT;
 
 class MrdAuth0LaravelServiceProvider extends ServiceProvider
@@ -24,9 +27,15 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
             ], 'mrd-auth0-config');
         }
 
-        // Make the jwt middleware available to the router.
+        // Make the jwt and dataset middleware available to the router.
         $router = $this->app->make(Router::class);
         $router->aliasMiddleware('jwt', CheckJWT::class);
+        $router->aliasMiddleware('dataset.access', AuthorizeDatasetAccess::class);
+
+        // Make sure the CheckJWT has a higher priority.
+        $kernel = $this->app->make(Kernel::class);
+        $kernel->appendToMiddlewarePriority(CheckJWT::class);
+        $kernel->appendToMiddlewarePriority(AuthorizeDatasetAccess::class);
     }
 
     /**
@@ -72,7 +81,8 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
             return new Management($token['access_token'], $a0Config['domain'], $guzzleOptions, 'object');
         });
 
-        // Bind the UserRepository implementation to the contract.
+        // Bind repository implementations to the contracts.
         $this->app->bind(UserRepository::class, \Marketredesign\MrdAuth0Laravel\Repository\UserRepository::class);
+        $this->app->bind(DatasetRepository::class, \Marketredesign\MrdAuth0Laravel\Repository\DatasetRepository::class);
     }
 }

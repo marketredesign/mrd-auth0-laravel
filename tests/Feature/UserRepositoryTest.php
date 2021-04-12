@@ -4,9 +4,6 @@
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
 use Auth0\SDK\API\Authentication;
-use GuzzleHttp\Handler\MockHandler;
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Carbon;
@@ -18,18 +15,9 @@ use Marketredesign\MrdAuth0Laravel\Tests\TestCase;
 class UserRepositoryTest extends TestCase
 {
     /**
-     * The maximum number of mocked responses a test case may use. Increase when not sufficient.
-     */
-    protected const RESPONSE_QUEUE_SIZE = 5;
-
-    /**
      * @var UserRepository
      */
     protected $repo;
-
-    protected $mockedResponses;
-
-    protected $guzzleContainer = [];
 
     protected function setUp(): void
     {
@@ -63,35 +51,6 @@ class UserRepositoryTest extends TestCase
             'client_secret' => 'secret',
             'guzzle_options' => $this->createTestingGuzzleOptions(),
         ]);
-    }
-
-    /**
-     * Create a mocked guzzle client such that we can intercept all API calls, fake the response, and inspect the call
-     * that was made.
-     * @return array Guzzle options array
-     */
-    protected function createTestingGuzzleOptions()
-    {
-        $responseQueue = [];
-
-        // We need to provide the response queue before the user repository is created. However, this is before our test
-        // method is executed, which should define the mocked responses. Thus, create a fixed number of closures before.
-        for ($i = 0; $i < self::RESPONSE_QUEUE_SIZE; $i++) {
-            // Wrap each response in a closure such that the responses can be defined at a later stage.
-            $responseQueue[$i] = function () use ($i) {
-                return $this->mockedResponses[$i];
-            };
-        }
-
-        // Create handler stack with mock handler and history container.
-        $mock = new MockHandler($responseQueue);
-        $history = Middleware::history($this->guzzleContainer);
-        $handlerStack = HandlerStack::create($mock);
-        $handlerStack->push($history);
-
-        return [
-            'handler' => $handlerStack,
-        ];
     }
 
     /**

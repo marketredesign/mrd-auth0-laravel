@@ -6,7 +6,7 @@ namespace Marketredesign\MrdAuth0Laravel\Facades;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Facade;
 use Marketredesign\MrdAuth0Laravel\Contracts\UserRepository;
-use Marketredesign\MrdAuth0Laravel\Repository\FakeUserRepository;
+use Marketredesign\MrdAuth0Laravel\Repository\Fakes\FakeUserRepository;
 
 /**
  * @method static object|null get($id)
