@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\Redirect;
 
 class Auth0IndexController extends Controller
 {
+    const DEFAULT_SCOPES = [
+        'openid',
+        'profile',
+        'email',
+    ];
+
     /**
      * Redirect to the Auth0 hosted login page
      *
@@ -25,8 +31,10 @@ class Auth0IndexController extends Controller
             return Redirect::back();
         }
 
+        $scopes = collect(self::DEFAULT_SCOPES)->concat(config('mrd-auth0.scopes'))->unique();
+
         $authorizeParams = [
-            'scope' => 'openid profile email',
+            'scope' => $scopes->join(' '),
         ];
 
         return $auth0Service->login(null, null, $authorizeParams);
