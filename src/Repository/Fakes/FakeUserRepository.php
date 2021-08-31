@@ -115,6 +115,8 @@ class FakeUserRepository implements UserRepository
      */
     public function getByEmails(Collection $emails, array $fields = null): Collection
     {
-        throw new Exception('Not implemented for tests.');
+        return $this->userObjects->filter(function(Object $user) use ($emails){
+            return $emails->contains($user->email);
+        });
     }
 }
