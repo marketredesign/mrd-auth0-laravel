@@ -101,7 +101,7 @@ class FakeUserRepository implements UserRepository
      */
     public function delete($id)
     {
-        $this->userIds = $this->userIds->filter(function ($userID) use ($id){
+        $this->userIds = $this->userIds->filter (function($userID) use ($id) {
             return $userID != $id;
         });
 
@@ -127,7 +127,7 @@ class FakeUserRepository implements UserRepository
      */
     public function getByEmails(Collection $emails, array $fields = null): Collection
     {
-        return $this->userObjects->filter(function(Object $user) use ($emails){
+        return $this->userObjects->filter(function (Object $user) use ($emails) {
             return $emails->contains($user->email);
         });
     }
