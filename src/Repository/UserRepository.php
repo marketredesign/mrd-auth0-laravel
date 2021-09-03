@@ -57,6 +57,19 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
     }
 
     /**
+     * @inheritDoc
+     */
+    public function delete($id)
+    {
+        if ($id == null) {
+            return null;
+        }
+
+        $this->mgmtApi->users()->delete($id);
+    }
+
+
+    /**
      * Retrieves a collection of users from the Auth0 management API, queried on the given queryField looking for users
      * with the given queryValues. The result is optionally limited to only contain the given fields. The returned
      * collection will be keyed by the queryField.

@@ -156,4 +156,25 @@ class UserFacadeTest extends TestCase
         // Verify users have different fields.
         self::assertNotEquals($users->get('sjaak')->email, $users->get('user2')->email);
     }
+
+    /**
+     * Verifies that users can be retrieved through email address from the fake repository
+     */
+    public function testFakeGetByEmails()
+    {
+        // Enable testing mode
+        Users::fake();
+
+        // Add a fake user to the repository
+        Users::fakeAddUsers(collect(1));
+
+        // Get email of user
+        $email = collect(Users::get(1)->email);
+
+        // Get the users through email
+        $users = Users::getByEmails($email);
+
+        // Assert it returns the correct user,
+        self::assertContains(1, $users->keys());
+    }
 }

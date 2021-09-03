@@ -99,6 +99,15 @@ class FakeUserRepository implements UserRepository
     /**
      * @inheritDoc
      */
+    public function delete($id)
+    {
+        $this->userIds->forget($id);
+        $this->userObjects->forget($id);
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function getByIds(Collection $ids, array $fields = null): Collection
     {
         return $ids->mapWithKeys(function ($id) {

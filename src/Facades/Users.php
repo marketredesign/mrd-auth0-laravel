@@ -10,6 +10,7 @@ use Marketredesign\MrdAuth0Laravel\Repository\Fakes\FakeUserRepository;
 
 /**
  * @method static object|null get($id)
+ * @method static void delete($id)
  * @method static Collection getByIds(Collection $ids, array $fields = null)
  * @method static Collection getByEmails(Collection $emails, array $fields = null)
  * @method static int fakeCount()
