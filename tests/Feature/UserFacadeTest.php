@@ -177,4 +177,20 @@ class UserFacadeTest extends TestCase
         // Assert it returns the correct user,
         self::assertContains(1, $users->keys());
     }
+
+    /**
+     * Verifies that the fake delete functionality properly deletes users from the fake repository
+     */
+    public function testFakeDelete()
+    {
+        Users::fake();
+
+        Users::fakeAddUsers(collect(['test', 'sjaak', 'user2']));
+        Users::delete('sjaak');
+
+        $users = Users::getByIds(collect(['test', 'sjaak', 'user2']));
+        self::assertEquals(2, $users->count());
+        self::assertContains('test', $users->keys());
+        self::assertContains('user2', $users->keys());
+    }
 }

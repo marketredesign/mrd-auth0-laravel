@@ -101,7 +101,10 @@ class FakeUserRepository implements UserRepository
      */
     public function delete($id)
     {
-        $this->userIds->forget($id);
+        $this->userIds = $this->userIds->filter(function ($userID) use ($id){
+            return $userID != $id;
+        });
+
         $this->userObjects->forget($id);
     }
 
