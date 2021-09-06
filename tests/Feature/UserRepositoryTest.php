@@ -728,19 +728,22 @@ class UserRepositoryTest extends TestCase
     public function testDeleteOne()
     {
         // Altered response from Auth0 API documentation
-        $this->mockedResponses = [new Response(200, [], '')];
+        $this->mockedResponses = [new Response(204, [], '')];
 
-        // Call function under test.
+        // Call function under test
         $userID = 'test';
         $response = $this->repo->delete($userID);
 
         // Find the request that was sent to Auth0
         $request = $this->guzzleContainer[0]['request'];
 
-        // Expect 1 api call.
+        // Expect a Delete request
+        self::assertEquals("DELETE", $request->getMethod());
+
+        // Expect 1 api call
         self::assertCount(1, $this->guzzleContainer);
 
-        // Verify correct endpoint was called.
+        // Verify correct endpoint was called
         self::assertEquals('/api/v2/users/' . $userID, $request->getUri()->getPath());
     }
 }
