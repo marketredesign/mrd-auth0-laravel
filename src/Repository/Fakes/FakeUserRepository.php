@@ -99,6 +99,18 @@ class FakeUserRepository implements UserRepository
     /**
      * @inheritDoc
      */
+    public function delete($id)
+    {
+        $this->userIds = $this->userIds->filter(function ($userID) use ($id) {
+            return $userID != $id;
+        });
+
+        $this->userObjects->forget($id);
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function getByIds(Collection $ids, array $fields = null): Collection
     {
         return $ids->mapWithKeys(function ($id) {
@@ -115,6 +127,8 @@ class FakeUserRepository implements UserRepository
      */
     public function getByEmails(Collection $emails, array $fields = null): Collection
     {
-        throw new Exception('Not implemented for tests.');
+        return $this->userObjects->filter(function (Object $user) use ($emails) {
+            return $emails->contains($user->email);
+        });
     }
 }
