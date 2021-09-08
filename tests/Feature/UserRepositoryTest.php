@@ -103,7 +103,7 @@ class UserRepositoryTest extends TestCase
     }
 
     /**
-     * Verifies that retrieving an single, existing user works as expected.
+     * Verifies that retrieving a single, existing user works as expected.
      */
     public function testGetExisting()
     {
@@ -720,5 +720,30 @@ class UserRepositoryTest extends TestCase
 
         // Verify now a total of two api calls was made.
         self::assertCount(2, $this->guzzleContainer);
+    }
+
+    /**
+     * Verifies that deletion works correctly
+     */
+    public function testDeleteOne()
+    {
+        // Altered response from Auth0 API documentation
+        $this->mockedResponses = [new Response(204, [], '')];
+
+        // Call function under test
+        $userID = 'test';
+        $response = $this->repo->delete($userID);
+
+        // Find the request that was sent to Auth0
+        $request = $this->guzzleContainer[0]['request'];
+
+        // Expect a Delete request
+        self::assertEquals("DELETE", $request->getMethod());
+
+        // Expect 1 api call
+        self::assertCount(1, $this->guzzleContainer);
+
+        // Verify correct endpoint was called
+        self::assertEquals('/api/v2/users/' . $userID, $request->getUri()->getPath());
     }
 }

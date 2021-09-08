@@ -8,6 +8,7 @@ use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRepository
 {
@@ -55,6 +56,22 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
             }
         });
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function delete($id)
+    {
+        if ($id == null) {
+            return null;
+        }
+
+        $response = $this->mgmtApi->users()->delete($id);
+        if ($response->getStatusCode() != 204) {
+            throw new HttpException($response->getStatusCode());
+        }
+    }
+
 
     /**
      * Retrieves a collection of users from the Auth0 management API, queried on the given queryField looking for users

@@ -34,4 +34,11 @@ interface UserRepository
      * @return Collection Keyed by email, containing an object for each user.
      */
     public function getByEmails(Collection $emails, array $fields = null): Collection;
+
+    /**
+     * Delete the user with given userID from the Auth0 database
+     *
+     * @param mixed $id
+     */
+    public function delete($id);
 }
