@@ -8,6 +8,7 @@ use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use phpDocumentor\Reflection\Types\Null_;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRepository
@@ -113,6 +114,16 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
     public function getByIds(Collection $ids, array $fields = null): Collection
     {
         return $this->getAll('user_id', $ids, $fields);
+    }
+
+    public function getAllUsers(array $fields = null): Collection
+    {
+        $response = $this->mgmtApi->users()->getAll();
+        if ($response->getStatusCode() != 200) {
+            throw new HttpException($response->getStatusCode());
+        }
+
+        return $response;
     }
 
     /**
