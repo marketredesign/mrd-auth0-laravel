@@ -8,7 +8,6 @@ use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
-use phpDocumentor\Reflection\Types\Null_;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRepository
