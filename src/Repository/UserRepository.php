@@ -126,7 +126,9 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
             throw new HttpException($response->getStatusCode());
         }
 
-        return $response;
+        $users = json_decode($response->getBody());
+
+        return collect($users)->keyBy('user_id');
     }
 
     /**
