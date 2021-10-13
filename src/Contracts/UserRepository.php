@@ -32,7 +32,7 @@ interface UserRepository
      * @param array|null $fields Fields to be retrieved for each user.
      * @return Collection Keyed by user ID, containing an object for each user.
      */
-    public function getAllUsers(array $fields = null): Collection;
+    public function getAllUsers(): Collection;
 
     /**
      * Retrieve a collection of users with the given emails, optionally limited to only contain the given fields.

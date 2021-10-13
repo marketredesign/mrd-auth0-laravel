@@ -125,7 +125,7 @@ class FakeUserRepository implements UserRepository
     /**
      * @inheritdoc
      */
-    public function getAllUsers(array $fields = null): Collection
+    public function getAllUsers(): Collection
     {
         return $this->userIds->mapWithKeys(function ($id) {
             return [$id => $this->getRandomUserObjectForId($id)];
