@@ -116,6 +116,9 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
         return $this->getAll('user_id', $ids, $fields);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function getAllUsers(array $fields = null): Collection
     {
         $response = $this->mgmtApi->users()->getAll();

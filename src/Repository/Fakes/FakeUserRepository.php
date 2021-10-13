@@ -123,6 +123,16 @@ class FakeUserRepository implements UserRepository
     }
 
     /**
+     * @inheritdoc
+     */
+    public function getAllUsers(array $fields = null): Collection
+    {
+        return $this->userIds->mapWithKeys(function ($id) {
+            return [$id => $this->getRandomUserObjectForId($id)];
+        });
+    }
+
+    /**
      * @inheritDoc
      */
     public function getByEmails(Collection $emails, array $fields = null): Collection
