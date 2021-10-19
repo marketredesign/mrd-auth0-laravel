@@ -72,6 +72,20 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
         }
     }
 
+    /**
+     * @inheritdoc
+     */
+    public function createUser($email, $firstName, $lastName)
+    {
+        $response = $this->mgmtApi->users()->create([
+            'connection' => config('mrd-auth0.connection'),
+            'email' => $email,
+            'given_name' => $firstName,
+            'family_name' => $lastName
+        ]);
+
+        return $response->user_id;
+    }
 
     /**
      * Retrieves a collection of users from the Auth0 management API, queried on the given queryField looking for users

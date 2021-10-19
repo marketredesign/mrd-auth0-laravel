@@ -36,6 +36,16 @@ interface UserRepository
     public function getByEmails(Collection $emails, array $fields = null): Collection;
 
     /**
+     * Create a new user within Auth0 and return the ID of the new user.
+     *
+     * @param mixed $email Email adress of new user
+     * @param mixed $firstName first name of new user
+     * @param mixed $lastName last name of new user
+     * @return mixed ID of new user
+     */
+    public function createUser($email, $firstName, $lastName);
+
+    /**
      * Delete the user with given userID from the Auth0 database
      *
      * @param mixed $id

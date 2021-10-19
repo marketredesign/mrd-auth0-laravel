@@ -62,5 +62,13 @@ return [
     | guzzle_options (array). Used to specify additional connection options e.g. proxy settings.
     |
     */
-    'guzzle_options' => []
+    'guzzle_options' => [],
+
+    /*
+    |--------------------------------------------------------------------------
+    |   Connection
+    |--------------------------------------------------------------------------
+    | relationship between Auth0 and a source of users.
+    */
+    'connection' => env('AUTH0_CONNECTION', "External")
 ];
