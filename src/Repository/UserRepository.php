@@ -116,6 +116,21 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
     }
 
     /**
+     * @inheritdoc
+     */
+    public function getAllUsers(): Collection
+    {
+        $response = $this->mgmtApi->users()->getAll();
+        if ($response->getStatusCode() != 200) {
+            throw new HttpException($response->getStatusCode());
+        }
+
+        $users = json_decode($response->getBody());
+
+        return collect($users)->keyBy('user_id');
+    }
+
+    /**
      * @inheritDoc
      */
     public function getByEmails(Collection $emails, array $fields = null): Collection
