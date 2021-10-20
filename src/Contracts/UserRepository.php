@@ -26,6 +26,13 @@ interface UserRepository
     public function getByIds(Collection $ids, array $fields = null): Collection;
 
     /**
+     * Retrieve all users within Auth0. The returned collection is keyed by the user IDs.
+     *
+     * @return Collection Keyed by user ID, containing an object for each user.
+     */
+    public function getAllUsers(): Collection;
+
+    /**
      * Retrieve a collection of users with the given emails, optionally limited to only contain the given fields.
      * The returned collection is keyed by the email addresses.
      *
