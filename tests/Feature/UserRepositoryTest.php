@@ -753,7 +753,7 @@ class UserRepositoryTest extends TestCase
     public function testCreateOne()
     {
         // response based on Auth0 documentation
-        $response = new Response(200, [], '{"user_id":"auth0|507f1f77bcf86cd799439020",
+        $response = new Response(201, [], '{"user_id":"auth0|507f1f77bcf86cd799439020",
         "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
         "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
         "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
