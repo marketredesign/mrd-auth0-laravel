@@ -193,4 +193,21 @@ class UserFacadeTest extends TestCase
         self::assertContains('test', $users->keys());
         self::assertContains('user2', $users->keys());
     }
+
+    /**
+     * Verifies that fake create user functionality creates a new user and returns its ID properly
+     */
+    public function testCreateUser()
+    {
+        Users::fake();
+
+        Users::fakeAddUsers(collect(['test', 'sjaak', 'user2']));
+        $userId = Users::createUser("foo@bar.com", "foo", "bar");
+        $user = Users::getByEmails(collect("foo@bar.com"))->first();
+
+        self::assertEquals(4, Users::fakeCount());
+        self::assertEquals($userId, $user->user_id);
+        self::assertEquals("foo", $user->given_name);
+        self::assertEquals("bar", $user->family_name);
+    }
 }
