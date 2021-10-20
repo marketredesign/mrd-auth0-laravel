@@ -764,7 +764,7 @@ class UserRepositoryTest extends TestCase
         // Call function under test.
         $users = $this->repo->getAllUsers();
 
-        // Expect one user returned.
+        // Expect two users returned.
         self::assertEquals(2, $users->count());
 
         // Verify keyed by user id.
