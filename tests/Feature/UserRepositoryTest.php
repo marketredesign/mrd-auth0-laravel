@@ -747,6 +747,9 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('/api/v2/users/' . $userID, $request->getUri()->getPath());
     }
 
+    /**
+     * Verifies that the correct data is queried from the auth0 management API 
+     */
     public function testGetAllUsers()
     {
         $this->mockedResponses = [new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
