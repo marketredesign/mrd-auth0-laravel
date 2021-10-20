@@ -200,13 +200,12 @@ class UserFacadeTest extends TestCase
     public function testCreateUser()
     {
         Users::fake();
-
         Users::fakeAddUsers(collect(['test', 'sjaak', 'user2']));
-        $userId = Users::createUser("foo@bar.com", "foo", "bar");
-        $user = Users::getByEmails(collect("foo@bar.com"))->first();
+
+        $user = Users::createUser("foo@bar.com", "foo", "bar");
 
         self::assertEquals(4, Users::fakeCount());
-        self::assertEquals($userId, $user->user_id);
+        self::assertEquals("foo@bar.com", $user->email);
         self::assertEquals("foo", $user->given_name);
         self::assertEquals("bar", $user->family_name);
     }

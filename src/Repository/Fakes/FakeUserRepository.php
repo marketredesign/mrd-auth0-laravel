@@ -136,7 +136,7 @@ class FakeUserRepository implements UserRepository
     /**
      * @inheritDoc
      */
-    public function createUser(String $email, String $firstName, String $lastName)
+    public function createUser(String $email, String $firstName, String $lastName): object
     {
         $userId = Str::random(20);
         $this->fakeAddUsers(collect($userId));
@@ -146,6 +146,6 @@ class FakeUserRepository implements UserRepository
         $userModel->family_name = $lastName;
         $userModel->given_name = $firstName;
 
-        return $userId;
+        return $userModel;
     }
 }
