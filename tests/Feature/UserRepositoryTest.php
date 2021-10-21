@@ -748,7 +748,45 @@ class UserRepositoryTest extends TestCase
     }
 
     /**
-     * Verifies that the correct data is queried from the auth0 management API 
+     * Verifies that user creation works correctly
+     */
+    public function testCreateOne()
+    {
+        // response based on Auth0 documentation
+        $response = new Response(201, [], '{"user_id":"auth0|507f1f77bcf86cd799439020",
+        "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
+        "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
+        "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
+        "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
+        "blocked":false,"given_name":"John","family_name":"Doe"}');
+
+        $this->mockedResponses = [$response];
+
+        // call function under test
+        $user = $this->repo->createUser("john.doe@gmail.com", "John", "Doe");
+
+        // assert returned userId is the same as in the response
+        self::assertEquals("auth0|507f1f77bcf86cd799439020", $user->user_id);
+        self::assertEquals("john.doe@gmail.com", $user->email);
+        self::assertEquals("John", $user->given_name);
+        self::assertEquals("Doe", $user->family_name);
+
+        // Find the request that was sent to Auth0
+        $request = $this->guzzleContainer[0]['request'];
+
+        // Expect a Post request
+        self::assertEquals("POST", $request->getMethod());
+
+        // Expect 1 api call
+        self::assertCount(1, $this->guzzleContainer);
+
+        // Verify correct endpoint was called
+        self::assertEquals('/api/v2/users', $request->getUri()->getPath());
+    }
+
+
+    /**
+     * Verifies that the correct data is queried from the auth0 management API
      */
     public function testGetAllUsers()
     {

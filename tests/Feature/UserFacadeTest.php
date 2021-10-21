@@ -195,6 +195,22 @@ class UserFacadeTest extends TestCase
     }
 
     /**
+     * Verifies that fake create user functionality creates a new user and returns the new user properly
+     */
+    public function testCreateUser()
+    {
+        Users::fake();
+        Users::fakeAddUsers(collect(['test', 'sjaak', 'user2']));
+
+        $user = Users::createUser("foo@bar.com", "foo", "bar");
+
+        self::assertEquals(4, Users::fakeCount());
+        self::assertEquals("foo@bar.com", $user->email);
+        self::assertEquals("foo", $user->given_name);
+        self::assertEquals("bar", $user->family_name);
+    }
+
+    /**
      * Verifies that no users are returned when there are no users in the fake repository
      */
     public function testFakeGetAllUsersNone()
