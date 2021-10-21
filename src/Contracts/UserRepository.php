@@ -43,7 +43,7 @@ interface UserRepository
     public function getByEmails(Collection $emails, array $fields = null): Collection;
 
     /**
-     * Create a new user within Auth0 and return the ID of the new user.
+     * Create a new user within Auth0 and return the newly created user.
      *
      * @param String $email Email address of new user
      * @param String $firstName first name of new user
