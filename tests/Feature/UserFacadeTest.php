@@ -195,7 +195,7 @@ class UserFacadeTest extends TestCase
     }
 
     /**
-     * Verifies that fake create user functionality creates a new user and returns its ID properly
+     * Verifies that fake create user functionality creates a new user and returns the new user properly
      */
     public function testCreateUser()
     {
