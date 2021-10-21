@@ -758,7 +758,7 @@ class UserRepositoryTest extends TestCase
         "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
         "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
         "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
-        "blocked":false,"given_name":"","family_name":""}');
+        "blocked":false,"given_name":"John","family_name":"Doe"}');
 
         $this->mockedResponses = [$response];
 
@@ -767,6 +767,9 @@ class UserRepositoryTest extends TestCase
 
         // assert returned userId is the same as in the response
         self::assertEquals("auth0|507f1f77bcf86cd799439020", $user->user_id);
+        self::assertEquals("john.doe@gmail.com", $user->email);
+        self::assertEquals("John", $user->given_name);
+        self::assertEquals("Doe", $user->family_name);
 
         // Find the request that was sent to Auth0
         $request = $this->guzzleContainer[0]['request'];
