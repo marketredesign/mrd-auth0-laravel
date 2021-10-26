@@ -26,6 +26,13 @@ interface UserRepository
     public function getByIds(Collection $ids, array $fields = null): Collection;
 
     /**
+     * Retrieve all users within Auth0. The returned collection is keyed by the user IDs.
+     *
+     * @return Collection Keyed by user ID, containing an object for each user.
+     */
+    public function getAllUsers(): Collection;
+
+    /**
      * Retrieve a collection of users with the given emails, optionally limited to only contain the given fields.
      * The returned collection is keyed by the email addresses.
      *
@@ -34,6 +41,16 @@ interface UserRepository
      * @return Collection Keyed by email, containing an object for each user.
      */
     public function getByEmails(Collection $emails, array $fields = null): Collection;
+
+    /**
+     * Create a new user within Auth0 and return the newly created user.
+     *
+     * @param String $email Email address of new user
+     * @param String $firstName first name of new user
+     * @param String $lastName last name of new user
+     * @return object The newly created user
+     */
+    public function createUser(String $email, String $firstName, String $lastName): object;
 
     /**
      * Delete the user with given userID from the Auth0 database

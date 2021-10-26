@@ -193,4 +193,57 @@ class UserFacadeTest extends TestCase
         self::assertContains('test', $users->keys());
         self::assertContains('user2', $users->keys());
     }
+
+    /**
+     * Verifies that fake create user functionality creates a new user and returns the new user properly
+     */
+    public function testCreateUser()
+    {
+        Users::fake();
+        Users::fakeAddUsers(collect(['test', 'sjaak', 'user2']));
+
+        $user = Users::createUser("foo@bar.com", "foo", "bar");
+
+        self::assertEquals(4, Users::fakeCount());
+        self::assertEquals("foo@bar.com", $user->email);
+        self::assertEquals("foo", $user->given_name);
+        self::assertEquals("bar", $user->family_name);
+    }
+
+    /**
+     * Verifies that no users are returned when there are no users in the fake repository
+     */
+    public function testFakeGetAllUsersNone()
+    {
+        Users::fake();
+
+        $users = Users::getAllUsers();
+        self::assertEquals(0, $users->count());
+    }
+
+    /**
+     * Verifies that all users are returned when there are multiple users in the fake repository
+     */
+    public function testFakeGetAllUsersMultiple()
+    {
+        Users::fake();
+        Users::fakeAddUsers(collect(['test', 'sjaak', 'user2']));
+
+        $users = Users::getAllUsers();
+
+        // check that all users are returned
+        self::assertEquals(3, $users->count());
+        self::assertContains('test', $users->keys());
+        self::assertContains('sjaak', $users->keys());
+        self::assertContains('user2', $users->keys());
+
+        // Verify users have filled fields.
+        self::assertNotEmpty($users->get('test')->email);
+        self::assertNotEmpty($users->get('sjaak')->email);
+        self::assertNotEmpty($users->get('user2')->email);
+
+        // Verify users have different fields.
+        self::assertNotEquals($users->get('sjaak')->email, $users->get('user2')->email);
+    }
+
 }

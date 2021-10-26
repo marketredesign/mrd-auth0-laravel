@@ -6,6 +6,7 @@ namespace Marketredesign\MrdAuth0Laravel\Repository\Fakes;
 use Exception;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Marketredesign\MrdAuth0Laravel\Contracts\UserRepository;
 
 class FakeUserRepository implements UserRepository
@@ -123,6 +124,16 @@ class FakeUserRepository implements UserRepository
     }
 
     /**
+     * @inheritdoc
+     */
+    public function getAllUsers(): Collection
+    {
+        return $this->userIds->mapWithKeys(function ($id) {
+            return [$id => $this->getRandomUserObjectForId($id)];
+        });
+    }
+
+    /**
      * @inheritDoc
      */
     public function getByEmails(Collection $emails, array $fields = null): Collection
@@ -130,5 +141,21 @@ class FakeUserRepository implements UserRepository
         return $this->userObjects->filter(function (Object $user) use ($emails) {
             return $emails->contains($user->email);
         });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function createUser(String $email, String $firstName, String $lastName): object
+    {
+        $userId = Str::random(20);
+        $this->fakeAddUsers(collect($userId));
+
+        $userModel = $this->get($userId);
+        $userModel->email = $email;
+        $userModel->family_name = $lastName;
+        $userModel->given_name = $firstName;
+
+        return $userModel;
     }
 }

@@ -8,6 +8,8 @@ use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRepository
@@ -72,6 +74,27 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
         }
     }
 
+    /**
+     * @inheritdoc
+     */
+    public function createUser(String $email, String $firstName, String $lastName): object
+    {
+        $response = $this->mgmtApi->users()->create([
+            'connection' => config('mrd-auth0.connection'),
+            'email' => $email,
+            'given_name' => $firstName,
+            'family_name' => $lastName,
+            // hash a random 16 character string to generate initial random password
+            'password' => Hash::make(Str::random())
+        ]);
+
+        if ($response->getStatusCode() != 201) {
+            throw new HttpException($response->getStatusCode());
+        }
+
+        // body of response should be the newly created user object
+        return json_decode($response->getBody());
+    }
 
     /**
      * Retrieves a collection of users from the Auth0 management API, queried on the given queryField looking for users
@@ -113,6 +136,21 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
     public function getByIds(Collection $ids, array $fields = null): Collection
     {
         return $this->getAll('user_id', $ids, $fields);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getAllUsers(): Collection
+    {
+        $response = $this->mgmtApi->users()->getAll();
+        if ($response->getStatusCode() != 200) {
+            throw new HttpException($response->getStatusCode());
+        }
+
+        $users = json_decode($response->getBody());
+
+        return collect($users)->keyBy('user_id');
     }
 
     /**
