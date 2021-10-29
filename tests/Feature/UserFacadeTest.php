@@ -208,6 +208,7 @@ class UserFacadeTest extends TestCase
         self::assertEquals("foo@bar.com", $user->email);
         self::assertEquals("foo", $user->given_name);
         self::assertEquals("bar", $user->family_name);
+        self::assertEquals("foo" . " " . "bar", $user->name);
     }
 
     /**
