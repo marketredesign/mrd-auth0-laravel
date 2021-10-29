@@ -155,6 +155,7 @@ class FakeUserRepository implements UserRepository
         $userModel->email = $email;
         $userModel->family_name = $lastName;
         $userModel->given_name = $firstName;
+        $userModel->name = $firstName . ' ' . $lastName;
 
         return $userModel;
     }
