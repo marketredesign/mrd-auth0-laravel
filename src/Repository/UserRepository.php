@@ -84,6 +84,7 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
             'email' => $email,
             'given_name' => $firstName,
             'family_name' => $lastName,
+            'name' => $firstName . ' ' . $lastName,
             // hash a random 16 character string to generate initial random password
             'password' => Hash::make(Str::random())
         ]);
