@@ -23,7 +23,7 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__.'/../config/mrd-auth0.php' => config_path('mrd-auth0.php'),
+                __DIR__ . '/../config/mrd-auth0.php' => config_path('mrd-auth0.php'),
             ], 'mrd-auth0-config');
         }
 
@@ -44,10 +44,10 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
     public function register()
     {
         // Load our routes.
-        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+        $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
 
         // Load our config.
-        $this->mergeConfigFrom(__DIR__.'/../config/mrd-auth0.php', 'mrd-auth0');
+        $this->mergeConfigFrom(__DIR__ . '/../config/mrd-auth0.php', 'mrd-auth0');
 
 
         // Bind the auth0 user repository implementation.
@@ -82,7 +82,7 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
         });
 
         // Bind repository implementations to the contracts.
-        $this->app->bind(UserRepository::class, \Marketredesign\MrdAuth0Laravel\Repository\UserRepository::class);
-        $this->app->bind(DatasetRepository::class, \Marketredesign\MrdAuth0Laravel\Repository\DatasetRepository::class);
+        $this->app->bind(UserRepository::class, Repository\UserRepository::class);
+        $this->app->bind(DatasetRepository::class, Repository\DatasetRepository::class);
     }
 }
