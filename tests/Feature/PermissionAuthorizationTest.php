@@ -62,7 +62,7 @@ class PermissionAuthorizationTest extends TestCase
     public function testLoggedInNoPermRequested()
     {
         // Login as some user.
-        $this->be(new Auth0User([], null));
+        $this->be(new Auth0User([], 'anAccessToken'));
 
         // Sanity check; make sure a user is logged in.
         self::assertTrue(Auth::check());
@@ -81,7 +81,7 @@ class PermissionAuthorizationTest extends TestCase
     public function testLoggedInPermRequestedNonePresent()
     {
         // Login as some user.
-        $this->be(new Auth0User([], null));
+        $this->be(new Auth0User([], 'anAccessToken'));
 
         // Sanity check; make sure a user is logged in.
         self::assertTrue(Auth::check());
@@ -100,7 +100,7 @@ class PermissionAuthorizationTest extends TestCase
     public function testLoggedInPermRequestedWrongPresent()
     {
         // Login as some user.
-        $this->be(new Auth0User([], null));
+        $this->be(new Auth0User([], 'anAccessToken'));
 
         // Sanity check; make sure a user is logged in.
         self::assertTrue(Auth::check());
@@ -119,7 +119,7 @@ class PermissionAuthorizationTest extends TestCase
     public function testLoggedInPermRequestedPresent()
     {
         // Login as some user.
-        $this->be(new Auth0User([], null));
+        $this->be(new Auth0User([], 'anAccessToken'));
 
         // Sanity check; make sure a user is logged in.
         self::assertTrue(Auth::check());
@@ -129,5 +129,25 @@ class PermissionAuthorizationTest extends TestCase
 
         // Verify that the user is allowed access
         $this->request('read:test')->assertOk();
+    }
+
+    /**
+     * Verifies that when the user does not have an access token attached, for example for a misconfigured login
+     * process, the user is denied access.
+     */
+    public function testLoggedInNoAccessToken()
+    {
+        // Login as some user without an access token attached
+        $this->be(new Auth0User([], null));
+
+        // Sanity check; make sure a user is logged in without access token.
+        self::assertTrue(Auth::check());
+        self::assertNull(Auth::user()->getAuthPassword());
+
+        // Mock out the Auth0Service s.t. when the JWT is attempted to be decoded, it results in these permissions
+        $this->mockAuth0Service(['permissions' => ['read:test']]);
+
+        // Verify that the user is not allowed access
+        $this->request('read:test')->assertUnauthorized()->assertSee('No access token present');
     }
 }

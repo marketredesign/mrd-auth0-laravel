@@ -25,10 +25,14 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__ . '/../config/mrd-auth0.php' => config_path('mrd-auth0.php'),
+
+                // In the Laravel-auth0 config, the persist_access_token should be set for the CheckPermissions
+                // middleware, thus it is also published.
+                __DIR__ . '/../config/laravel-auth0.php' => config_path('laravel-auth0.php'),
             ], 'mrd-auth0-config');
         }
 
-        // Make the jwt and dataset middleware available to the router.
+        // Make the jwt, permissions and dataset middleware available to the router.
         $router = $this->app->make(Router::class);
         $router->aliasMiddleware('jwt', CheckJWT::class);
         $router->aliasMiddleware('dataset.access', AuthorizeDatasetAccess::class);
@@ -51,6 +55,9 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
         // Load our config.
         $this->mergeConfigFrom(__DIR__ . '/../config/mrd-auth0.php', 'mrd-auth0');
 
+        // In the Laravel-auth0 config, the persist_access_token should be set for the CheckPermissions
+        // middleware, thus it is also loaded.
+        $this->mergeConfigFrom(__DIR__ . '/../config/laravel-auth0.php', 'laravel-auth0');
 
         // Bind the auth0 user repository implementation.
         $this->app->bind(Auth0UserRepository::class, function (Application $app) {

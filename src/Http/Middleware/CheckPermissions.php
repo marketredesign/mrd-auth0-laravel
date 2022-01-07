@@ -8,6 +8,7 @@ use Closure;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class CheckPermissions
 {
@@ -28,10 +29,20 @@ class CheckPermissions
             return redirect()->route('login');
         }
 
+        // Fetch the access token of the user
+        $token = Auth::user()->getAuthPassword();
+        if ($token === null) {
+            if (!config('laravel-auth0.persist_access_token')) {
+                Log::error("The CheckPermissions middleware is being used, but a logged in user does not have 
+                    an access token attached. Set the config laravel-auth0.persist_access_token to true to fix this.");
+            }
+            abort(401, 'No access token present');
+        }
+
         // Verify the user has the required permission
         $auth0 = app()->make(Auth0Service::class);
-        $token = $auth0->decodeJWT(Auth::user()->getAuthPassword());
-        if ($permissionRequired !== null && !in_array($permissionRequired, $token['permissions'])) {
+        $decoded = $auth0->decodeJWT($token);
+        if ($permissionRequired !== null && !in_array($permissionRequired, $decoded['permissions'])) {
             abort(401, 'Insufficient permissions');
         }
 
