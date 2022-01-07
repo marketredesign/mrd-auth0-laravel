@@ -13,6 +13,7 @@ use Marketredesign\MrdAuth0Laravel\Contracts\DatasetRepository;
 use Marketredesign\MrdAuth0Laravel\Contracts\UserRepository;
 use Marketredesign\MrdAuth0Laravel\Http\Middleware\AuthorizeDatasetAccess;
 use Marketredesign\MrdAuth0Laravel\Http\Middleware\CheckJWT;
+use Marketredesign\MrdAuth0Laravel\Http\Middleware\CheckPermissions;
 
 class MrdAuth0LaravelServiceProvider extends ServiceProvider
 {
@@ -31,6 +32,7 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
         $router = $this->app->make(Router::class);
         $router->aliasMiddleware('jwt', CheckJWT::class);
         $router->aliasMiddleware('dataset.access', AuthorizeDatasetAccess::class);
+        $router->aliasMiddleware('permission', CheckPermissions::class);
 
         // Make sure the CheckJWT has a higher priority.
         $kernel = $this->app->make(Kernel::class);
