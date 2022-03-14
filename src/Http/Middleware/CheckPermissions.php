@@ -3,7 +3,6 @@
 namespace Marketredesign\MrdAuth0Laravel\Http\Middleware;
 
 use App;
-use Auth0\Login\Auth0Service;
 use Closure;
 use Exception;
 use Illuminate\Http\Request;
@@ -13,11 +12,21 @@ use Illuminate\Support\Facades\Log;
 class CheckPermissions
 {
     /**
+     * @var string Property name of the custom permissions claim that is included in the ID tokens issued by Auth0.
+     */
+    protected string $permissionsClaim;
+
+    public function __construct()
+    {
+        $this->permissionsClaim = config('mrd-auth0.permissions_claim');
+    }
+
+    /**
      * Validate the user is logged in, optionally requiring some permission.
      *
      * @param Request $request - Illuminate HTTP Request object.
      * @param Closure $next - Function to call when middleware is complete.
-     * @param string|null $permissionRequired - Optional, Oauth permission required
+     * @param string|null $permissionRequired - Optional, Auth0 permission (scope) required.
      *
      * @return mixed
      * @throws Exception
@@ -29,23 +38,34 @@ class CheckPermissions
             return redirect()->route('login');
         }
 
-        // Fetch the access token of the user
-        $token = Auth::user()->getAuthPassword();
-        if ($token === null) {
-            if (!config('laravel-auth0.persist_access_token')) {
-                Log::error("The CheckPermissions middleware is being used, but a logged in user does not have 
-                    an access token attached. Set the config laravel-auth0.persist_access_token to true to fix this.");
-            }
-            abort(401, 'No access token present');
-        }
-
-        // Verify the user has the required permission
-        $auth0 = app()->make(Auth0Service::class);
-        $decoded = $auth0->decodeJWT($token);
-        if ($permissionRequired !== null && !in_array($permissionRequired, $decoded['permissions'])) {
-            abort(401, 'Insufficient permissions');
+        // Verify the logged in user has the required permissions (scope), if one was provided.
+        if ($permissionRequired !== null && !$this->userHasPermission($permissionRequired)) {
+            abort(403, 'Insufficient permissions');
         }
 
         return $next($request);
+    }
+
+    /**
+     * Check if the logged in user has a specific permission (scope).
+     *
+     * @param string $permissionRequired - Permission (scope) to check for.
+     *
+     * @return bool true iff the logged in user has the required permission (scope).
+     */
+    protected function userHasPermission(string $permissionRequired)
+    {
+        // Find permissions claim in the userinfo (ID token).
+        $permissions = Auth::user()->{$this->permissionsClaim};
+
+        // The permissions claim is always expected in the ID token, so give warning if it's not present.
+        if (!isset($permissions)) {
+            Log::warning('Encountered user info (ID token) without permissions claim. This probably indicates
+                a misconfiguration somewhere in this application (like the mrd-auth0.permissions_claim config value) or 
+                within Auth0.');
+            return false;
+        }
+
+        return in_array($permissionRequired, $permissions);
     }
 }
