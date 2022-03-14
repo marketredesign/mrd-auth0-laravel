@@ -5,6 +5,8 @@ namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
 use Auth0\Login\Auth0User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
 use Marketredesign\MrdAuth0Laravel\Tests\TestCase;
@@ -12,6 +14,26 @@ use Marketredesign\MrdAuth0Laravel\Tests\TestCase;
 class PermissionAuthorizationTest extends TestCase
 {
     private const ROUTE_URI = 'test_route';
+
+    private string $permissionsClaim;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->permissionsClaim = config('mrd-auth0.permissions_claim');
+    }
+
+    private function beUser($permissions = [])
+    {
+        $userInfo = [
+            $this->permissionsClaim => $permissions,
+        ];
+        $user = new Auth0User($userInfo, 'anAccessToken');
+
+        $this->be($user);
+
+        return $user;
+    }
 
     /**
      * Perform a GET request to the test endpoint, which responds with a JSON with 'test_response' if successful.
@@ -24,14 +46,14 @@ class PermissionAuthorizationTest extends TestCase
         // Define a very simple testing endpoint, protected by the permission middleware.
         Route::middleware('permission' . (empty($permission) ? '' : ":$permission"))
             ->get(self::ROUTE_URI, function () {
-                    return response()->json('test_response');
-                });
+                return response()->json('test_response');
+            });
 
         return $this->getJson(self::ROUTE_URI);
     }
 
     /**
-     * Verifies that the user is redirected to the login page when not already logged in in the case where no specific
+     * Verifies that the user is redirected to the login page when not already logged in, in the case where no specific
      * permission is required.
      */
     public function testNotLoggedInNoPermRequested()
@@ -44,8 +66,8 @@ class PermissionAuthorizationTest extends TestCase
     }
 
     /**
-     * Verifies that the user is redirected to the login page when not already logged in in the case where some specific
-     * permission is required.
+     * Verifies that the user is redirected to the login page when not already logged in, in the case where some
+     * specific permission is required.
      */
     public function testNotLoggedInPermRequested()
     {
@@ -62,7 +84,7 @@ class PermissionAuthorizationTest extends TestCase
     public function testLoggedInNoPermRequested()
     {
         // Login as some user.
-        $this->be(new Auth0User([], 'anAccessToken'));
+        $this->beUser();
 
         // Sanity check; make sure a user is logged in.
         self::assertTrue(Auth::check());
@@ -75,22 +97,48 @@ class PermissionAuthorizationTest extends TestCase
     }
 
     /**
+     * Verifies authorization works properly, and a warning is logged, when permissions claim is missing from ID tokens.
+     */
+    public function testLoggedInNoPermissionsClaim()
+    {
+        // Sanity check; permissions is indeed not the permissions claim property name.
+        self::assertNotEquals('permissions', $this->permissionsClaim);
+
+        // Login as some user and add incorrect permissions claim to userinfo.
+        $this->be(new Auth0User(['permissions' => ['test']], 'anAccessToken'));
+
+        // Sanity check; user should be logged in now.
+        self::assertTrue(Auth::check());
+
+        // First verify without permission checking, which should not result in any log messages.
+        Log::shouldReceive('warning')->never();
+
+        // Verify the user is allowed access.
+        $this->request()->assertOk();
+
+        // Next, do request permission checking, which should result in a log message.
+        Log::shouldReceive('warning')->once()->withArgs(function ($message) {
+            return strpos($message, 'permissions claim') !== false;
+        });
+
+        // Verify request is forbidden (permissions are not in correct place in ID token).
+        $this->request('read:test')->assertForbidden()->assertSee('Insufficient permissions');
+    }
+
+    /**
      * Verifies that the user is refused access when the user is logged in but a permission is required while the user
      * has no permissions at all.
      */
     public function testLoggedInPermRequestedNonePresent()
     {
         // Login as some user.
-        $this->be(new Auth0User([], 'anAccessToken'));
+        $this->beUser();
 
         // Sanity check; make sure a user is logged in.
         self::assertTrue(Auth::check());
 
-        // Mock out the Auth0Service s.t. when the JWT is attempted to be decoded, it results in these permissions
-        $this->mockAuth0Service(['permissions' => []]);
-
         // Verify that the user is refused access because of insufficient permissions
-        $this->request('read:test')->assertUnauthorized()->assertSee('Insufficient permissions');
+        $this->request('read:test')->assertForbidden()->assertSee('Insufficient permissions');
     }
 
     /**
@@ -100,16 +148,13 @@ class PermissionAuthorizationTest extends TestCase
     public function testLoggedInPermRequestedWrongPresent()
     {
         // Login as some user.
-        $this->be(new Auth0User([], 'anAccessToken'));
+        $this->beUser(['write:test', 'read:another']);
 
         // Sanity check; make sure a user is logged in.
         self::assertTrue(Auth::check());
 
-        // Mock out the Auth0Service s.t. when the JWT is attempted to be decoded, it results in these permissions
-        $this->mockAuth0Service(['permissions' => ['write:test', 'read:another']]);
-
         // Verify that the user is refused access because of insufficient permissions
-        $this->request('read:test')->assertUnauthorized()->assertSee('Insufficient permissions');
+        $this->request('read:test')->assertForbidden()->assertSee('Insufficient permissions');
     }
 
     /**
@@ -119,35 +164,41 @@ class PermissionAuthorizationTest extends TestCase
     public function testLoggedInPermRequestedPresent()
     {
         // Login as some user.
-        $this->be(new Auth0User([], 'anAccessToken'));
+        $this->beUser(['write:test', 'read:test']);
 
         // Sanity check; make sure a user is logged in.
         self::assertTrue(Auth::check());
-
-        // Mock out the Auth0Service s.t. when the JWT is attempted to be decoded, it results in these permissions
-        $this->mockAuth0Service(['permissions' => ['write:test', 'read:test']]);
 
         // Verify that the user is allowed access
         $this->request('read:test')->assertOk();
     }
 
     /**
-     * Verifies that when the user does not have an access token attached, for example for a misconfigured login
-     * process, the user is denied access.
+     * Verifies that the permissions claim key can be configured.
      */
-    public function testLoggedInNoAccessToken()
+    public function testPermissionsClaimConfigurable()
     {
-        // Login as some user without an access token attached
-        $this->be(new Auth0User([], null));
+        // Set some other permissions claim in the config.
+        $otherClaim = 'some_other_permissions_claim';
+        Config::set('mrd-auth0.permissions_claim', $otherClaim);
 
-        // Sanity check; make sure a user is logged in without access token.
+        // Verify it is indeed than the one used in the rest of the tests.
+        self::assertNotEquals($this->permissionsClaim, $otherClaim);
+
+        // Login as some user, and verify indeed logged in.
+        $this->beUser(['write:test', 'read:another']);
         self::assertTrue(Auth::check());
-        self::assertNull(Auth::user()->getAuthPassword());
 
-        // Mock out the Auth0Service s.t. when the JWT is attempted to be decoded, it results in these permissions
-        $this->mockAuth0Service(['permissions' => ['read:test']]);
+        // Verify that the user is refused access because of insufficient permissions, even though the permissions
+        // are present in the token using the previous claim.
+        $this->request('write:test')->assertForbidden()->assertSee('Insufficient permissions');
 
-        // Verify that the user is not allowed access
-        $this->request('read:test')->assertUnauthorized()->assertSee('No access token present');
+        // Use the other claim in the tests as well now, login again, and verify that the request is allowed now.
+        $this->permissionsClaim = $otherClaim;
+        $this->beUser(['write:test', 'read:another']);
+        self::assertTrue(Auth::check());
+
+        // Verify that the request is authorized.
+        $this->request('write:test')->assertOk();
     }
 }
