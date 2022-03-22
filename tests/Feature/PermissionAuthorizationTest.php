@@ -89,9 +89,6 @@ class PermissionAuthorizationTest extends TestCase
         // Sanity check; make sure a user is logged in.
         self::assertTrue(Auth::check());
 
-        // Mock out the Auth0Service s.t. when the JWT is attempted to be decoded, it results in these permissions
-        $this->mockAuth0Service(['permissions' => ['read:test']]);
-
         // Verify the user is allowed access
         $this->request()->assertOk();
     }
@@ -105,7 +102,7 @@ class PermissionAuthorizationTest extends TestCase
         self::assertNotEquals('permissions', $this->permissionsClaim);
 
         // Login as some user and add incorrect permissions claim to userinfo.
-        $this->be(new Auth0User(['permissions' => ['test']], 'anAccessToken'));
+        $this->be(new Auth0User(['permissions' => ['read:test']], 'anAccessToken'));
 
         // Sanity check; user should be logged in now.
         self::assertTrue(Auth::check());
