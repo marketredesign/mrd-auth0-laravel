@@ -26,11 +26,25 @@ You can install the package via composer:
 composer require marketredesign/mrd-auth0-laravel
 ```
 
+For configuration, the default config files can be published using the following command.
+```bash
+php artisan vendor:publish
+```
+Select the option for `Marketredesign\MrdAuth0Laravel\MrdAuth0LaravelServiceProvider`. This creates the config file
+`config/mrd-auth0.php`.
+
 ## Usage
 
 ### Authentication
-Simply redirect the user to the `/login` route (named `login`). The rest will be handled by this package. For logout
-redirect to `/logout` (named `logout`).
+Ensure Laravel is configured to use Auth0 by setting `providers.users.driver = auth0` in the `config/auth.php`. 
+Also, make sure that the `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, and `APP_URL` are set and an
+allowed callback URL for the application is configured in Auth0. Then, simply redirect the user to the `/login` route 
+(named `login`). The rest will be handled by this package. For logout redirect to `/logout` (named `logout`).
+
+### Authorizing web endpoints
+Add the `permission` middleware to a web route to authenticate users for that route. Optionally, a permission (scope)
+can be added using `permission:scope`. The middleware will then verify that the requested scope is present in the
+`https://marketredesign.com/permissions` custom claim of the ID token.
 
 ### Authorizing API endpoints
 Add the `jwt` middleware to the API route. A scope can be added by using `jwt:scope`.
