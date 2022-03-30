@@ -75,9 +75,11 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
     /**
      * @inheritDoc
      */
-    public function getUserDatasetIds(): Collection
+    public function getUserDatasetIds(bool $managedOnly = false): Collection
     {
-        $datasets = collect($this->get('/datasets')->get('datasets'));
+        $datasets = collect(
+            $this->get('/datasets', ['query' => ['managed_only' => $managedOnly]])->get('datasets')
+        );
 
         return $datasets->pluck('id');
     }
@@ -85,9 +87,9 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
     /**
      * @inheritDoc
      */
-    public function getUserDatasets(): ResourceCollection
+    public function getUserDatasets(bool $managedOnly = false): ResourceCollection
     {
-        $datasets = $this->get('/datasets')->get('datasets');
+        $datasets = $this->get('/datasets', ['query' => ['managed_only' => $managedOnly]])->get('datasets');
 
         return DatasetResource::collection($datasets);
     }

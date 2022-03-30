@@ -74,6 +74,10 @@ class DatasetFacadeTest extends TestCase
             self::assertNotEmpty($dataset['created_at']);
             self::assertNotEmpty($dataset['updated_at']);
         }
+
+        // Verify no managed datasets.
+        self::assertEmpty(Datasets::getUserDatasetIds(true));
+        self::assertEmpty(Datasets::getUserDatasets(true));
     }
 
     /**
@@ -107,17 +111,23 @@ class DatasetFacadeTest extends TestCase
 
         // Add fake dataset to the repository.
         Datasets::fakeAddDatasets(collect([10]));
+        // Add fake managed dataset to the repository.
+        Datasets::fakeAddDatasets(collect([12]), true);
 
-        // Verify dataset exists.
+        // Verify datasets exist.
         self::assertContains(10, Datasets::getUserDatasetIds());
+        self::assertContains(12, Datasets::getUserDatasetIds(true));
         self::assertEquals(10, Datasets::getUserDatasets()->resolve()[0]['id']);
+        self::assertEquals(12, Datasets::getUserDatasets(true)->resolve()[0]['id']);
 
         // Now clear the repository.
         Datasets::fakeClear();
 
         // Verify dataset does not exist anymore.
         self::assertTrue(Datasets::getUserDatasetIds()->isEmpty());
+        self::assertTrue(Datasets::getUserDatasetIds(true)->isEmpty());
         self::assertEmpty(Datasets::getUserDatasets()->resolve());
+        self::assertEmpty(Datasets::getUserDatasets(true)->resolve());
     }
 
     /**
@@ -130,14 +140,18 @@ class DatasetFacadeTest extends TestCase
 
         // Add 3 fake datasets to the repository.
         Datasets::fakeAddDatasets(collect([4, 8, 12]));
+        // Add 2 additional repositories which the user is manager for.
+        Datasets::fakeAddDatasets(collect([5, 99]), true);
 
         // Verify count.
-        self::assertEquals(3, Datasets::fakeCount());
+        self::assertEquals(5, Datasets::fakeCount());
+        self::assertEquals(2, Datasets::fakeCount(true));
 
         // Now clear the repository.
         Datasets::fakeClear();
 
         // Verify count zero.
         self::assertEquals(0, Datasets::fakeCount());
+        self::assertEquals(0, Datasets::fakeCount(true));
     }
 }

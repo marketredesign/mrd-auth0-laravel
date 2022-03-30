@@ -212,4 +212,28 @@ class DatasetRepositoryTest extends TestCase
             self::assertEquals("Bearer $token", $request->getHeader('Authorization')[0]);
         }
     }
+
+    /**
+     * Verifies that the `managed_only` query parameter is sent to the user tool when requesting datasets (or IDs).
+     */
+    public function testManagedOnlyParameter()
+    {
+        // Return empty response 4 times.
+        $response = new Response(200, [], '{"datasets": []}');
+        $this->mockedResponses = [$response, $response, $response, $response];
+
+        foreach ([false, true] as $i => $bool) {
+            // Call functions under test.
+            $this->repo->getUserDatasetIds($bool);
+            $this->repo->getUserDatasets($bool);
+
+            $boolBit = $bool ? 1 : 0;
+            // Find the requests that are made to the user tool.
+            $requestIds = $this->guzzleContainer[2 * $i]['request'];
+            $requestObjects = $this->guzzleContainer[2 * $i + 1]['request'];
+
+            self::assertEquals("managed_only=$boolBit", $requestIds->getUri()->getQuery());
+            self::assertEquals("managed_only=$boolBit", $requestObjects->getUri()->getQuery());
+        }
+    }
 }
