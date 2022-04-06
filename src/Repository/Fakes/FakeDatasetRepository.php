@@ -99,7 +99,7 @@ class FakeDatasetRepository implements DatasetRepository
     /**
      * @inheritDoc
      */
-    public function getUserDatasetIds(bool $managedOnly = false): Collection
+    public function getUserDatasetIds(bool $managedOnly = false, bool $cached = true): Collection
     {
         if ($managedOnly) {
             return $this->managedDatasetIds;
@@ -111,7 +111,7 @@ class FakeDatasetRepository implements DatasetRepository
     /**
      * @inheritDoc
      */
-    public function getUserDatasets(bool $managedOnly = false): ResourceCollection
+    public function getUserDatasets(bool $managedOnly = false, bool $cached = true): ResourceCollection
     {
         $datasets = $this->getUserDatasetIds($managedOnly)->map(function ($datasetId) {
             return $this->getOrCreateDatasetForId($datasetId);
