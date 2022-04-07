@@ -15,11 +15,6 @@ use Marketredesign\MrdAuth0Laravel\Facades\Datasets;
 class AuthorizeDatasetAccess
 {
     /**
-     * @var int Time to store user allowed datasets in cache, in seconds.
-     */
-    protected $cacheTTL;
-
-    /**
      * @var array List of supported keys to represent the dataset ID in the requests (query/body/route).
      */
     protected const SUPPORTED_KEYS = [
@@ -27,14 +22,6 @@ class AuthorizeDatasetAccess
         'datasetId',
         'datasetID',
     ];
-
-    /**
-     * AuthorizedDatasetAccess constructor.
-     */
-    public function __construct()
-    {
-        $this->cacheTTL = config('mrd-auth0.cache_ttl');
-    }
 
     /**
      * Authorize access to the dataset ID contained in the request.
@@ -54,9 +41,9 @@ class AuthorizeDatasetAccess
             return $next($request);
         }
 
-        $authorizedDatasets = $this->getAuthorizedDatasetsCached();
+        $authorizedDatasetIds = $this->retrieveAuthorizedDatasets();
 
-        if (!$authorizedDatasets->contains($requestedDatasetId)) {
+        if (!$authorizedDatasetIds->contains($requestedDatasetId)) {
             abort(403, 'Unauthorized dataset');
         }
 
@@ -64,7 +51,7 @@ class AuthorizeDatasetAccess
     }
 
     /**
-     * Retrieve the authorized dataset IDs of the user making the request directly, without caching.
+     * Retrieve the authorized dataset IDs of the user. The underlying repository takes care of caching.
      *
      * @return Collection
      */
@@ -77,26 +64,6 @@ class AuthorizeDatasetAccess
             Log::error($e);
             abort(401, 'Unable to authorize dataset access.');
         }
-    }
-
-    /**
-     * Find, and cache, the authorized dataset IDs of the user making the request.
-     *
-     * @return Collection
-     */
-    protected function getAuthorizedDatasetsCached(): Collection
-    {
-        $userId = request()->user_id;
-
-        if ($userId == null) {
-            // We cannot read from cache since our normal method of retrieving the user ID apparently did not work.
-            Log::warning('Unable to find user ID in the request!');
-            return $this->retrieveAuthorizedDatasets();
-        }
-
-        return Cache::remember('auth-datasets-' . $userId, $this->cacheTTL, function () {
-            return $this->retrieveAuthorizedDatasets();
-        });
     }
 
     /**

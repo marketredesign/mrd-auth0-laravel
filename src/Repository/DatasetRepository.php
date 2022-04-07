@@ -8,12 +8,18 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Marketredesign\MrdAuth0Laravel\Http\Resources\DatasetResource;
 
 class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\DatasetRepository
 {
+    /**
+     * @var int Time to store user allowed datasets in cache, in seconds.
+     */
+    protected $cacheTTL;
+
     protected $guzzleOptions;
 
     /**
@@ -22,6 +28,7 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
     public function __construct()
     {
         $this->guzzleOptions = config('mrd-auth0.guzzle_options');
+        $this->cacheTTL = config('mrd-auth0.cache_ttl');
     }
 
     /**
@@ -73,22 +80,56 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
     }
 
     /**
-     * @inheritDoc
+     * Retrieve user datasets by calling the API of user tool directly, without caching.
+     *
+     * @param bool $managedOnly Only retrieve datasets that the user is a manager of.
+     * @return array
+     * @throws RequestException
      */
-    public function getUserDatasetIds(): Collection
+    private function retrieveDatasetsFromApi(bool $managedOnly): array
     {
-        $datasets = collect($this->get('/datasets')->get('datasets'));
+        return $this->get('/datasets', ['query' => ['managed_only' => $managedOnly]])->get('datasets');
+    }
 
-        return $datasets->pluck('id');
+    /**
+     * Get user datasets from cache, when enabled and present, or by retrieving from the API otherwise.
+     *
+     * @param bool $managedOnly Only get datasets that the user is a manager of.
+     * @param bool $cached Use {@code false} to disable retrieving from and storing in cache. Defaults to {@code true}.
+     * @return array
+     */
+    private function getRawDatasets(bool $managedOnly, bool $cached): array
+    {
+        if (!$cached) {
+            return $this->retrieveDatasetsFromApi($managedOnly);
+        }
+
+        $userId = request()->user_id;
+
+        if ($userId == null) {
+            // We cannot read from cache since our normal method of retrieving the user ID apparently did not work.
+            Log::warning('Unable to find user ID in the request!');
+            return $this->retrieveDatasetsFromApi($managedOnly);
+        }
+
+        return Cache::remember("datasets-user-$userId-$managedOnly", $this->cacheTTL, function () use ($managedOnly) {
+            return $this->retrieveDatasetsFromApi($managedOnly);
+        });
     }
 
     /**
      * @inheritDoc
      */
-    public function getUserDatasets(): ResourceCollection
+    public function getUserDatasetIds(bool $managedOnly = false, bool $cached = true): Collection
     {
-        $datasets = $this->get('/datasets')->get('datasets');
+        return collect($this->getRawDatasets($managedOnly, $cached))->pluck('id');
+    }
 
-        return DatasetResource::collection($datasets);
+    /**
+     * @inheritDoc
+     */
+    public function getUserDatasets(bool $managedOnly = false, bool $cached = true): ResourceCollection
+    {
+        return DatasetResource::collection($this->getRawDatasets($managedOnly, $cached));
     }
 }

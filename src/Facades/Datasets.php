@@ -10,11 +10,11 @@ use Marketredesign\MrdAuth0Laravel\Contracts\DatasetRepository;
 use Marketredesign\MrdAuth0Laravel\Repository\Fakes\FakeDatasetRepository;
 
 /**
- * @method static Collection getUserDatasetIds()
- * @method static ResourceCollection getUserDatasets()
- * @method static int fakeCount()
+ * @method static Collection getUserDatasetIds(bool $managedOnly = false, bool $cached = true)
+ * @method static ResourceCollection getUserDatasets(bool $managedOnly = false, bool $cached = true)
+ * @method static int fakeCount(bool $managedOnly = false)
  * @method static void fakeClear()
- * @method static void fakeAddDatasets(Collection $ids)
+ * @method static void fakeAddDatasets(Collection $ids, bool $isManager = false)
  *
  * @see DatasetRepository
  * @see FakeDatasetRepository

@@ -19,6 +19,11 @@ class FakeDatasetRepository implements DatasetRepository
     private $datasetIds;
 
     /**
+     * @var Collection Fake dataset IDs that the user is manager of.
+     */
+    private $managedDatasetIds;
+
+    /**
      * @var Collection Fake dataset objects, keyed by dataset ID.
      */
     private $datasets;
@@ -29,11 +34,16 @@ class FakeDatasetRepository implements DatasetRepository
     }
 
     /**
+     * @param bool $managedOnly Only count datasets that the user is manager of.
      * @return int Count number of datasets in the fake dataset repository.
      */
-    public function fakeCount(): int
+    public function fakeCount(bool $managedOnly = false): int
     {
-        return $this->datasetIds->count();
+        if ($managedOnly) {
+            return $this->managedDatasetIds->count();
+        } else {
+            return $this->datasetIds->count();
+        }
     }
 
     /**
@@ -42,6 +52,7 @@ class FakeDatasetRepository implements DatasetRepository
     public function fakeClear(): void
     {
         $this->datasetIds = collect();
+        $this->managedDatasetIds = collect();
         $this->datasets = collect();
         $this->setUpFaker();
     }
@@ -50,10 +61,15 @@ class FakeDatasetRepository implements DatasetRepository
      * Add collection of dataset IDs for which a random dataset object will be returned when the repository is queried.
      *
      * @param Collection $ids Dataset IDs the user has access to.
+     * @param bool $isManager Whether or not the user is manager of the given datasets.
      */
-    public function fakeAddDatasets(Collection $ids): void
+    public function fakeAddDatasets(Collection $ids, bool $isManager = false): void
     {
         $this->datasetIds = $this->datasetIds->concat($ids)->unique();
+
+        if ($isManager) {
+            $this->managedDatasetIds = $this->managedDatasetIds->concat($ids)->unique();
+        }
     }
 
     /**
@@ -83,17 +99,21 @@ class FakeDatasetRepository implements DatasetRepository
     /**
      * @inheritDoc
      */
-    public function getUserDatasetIds(): Collection
+    public function getUserDatasetIds(bool $managedOnly = false, bool $cached = true): Collection
     {
-        return $this->datasetIds;
+        if ($managedOnly) {
+            return $this->managedDatasetIds;
+        } else {
+            return $this->datasetIds;
+        }
     }
 
     /**
      * @inheritDoc
      */
-    public function getUserDatasets(): ResourceCollection
+    public function getUserDatasets(bool $managedOnly = false, bool $cached = true): ResourceCollection
     {
-        $datasets = $this->datasetIds->map(function ($datasetId) {
+        $datasets = $this->getUserDatasetIds($managedOnly)->map(function ($datasetId) {
             return $this->getOrCreateDatasetForId($datasetId);
         });
 

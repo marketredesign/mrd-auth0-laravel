@@ -17,7 +17,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
     /**
      * The maximum number of mocked responses a test case may use. Increase when not sufficient.
      */
-    protected const RESPONSE_QUEUE_SIZE = 5;
+    protected const RESPONSE_QUEUE_SIZE = 12;
 
     /**
      * @var array Fake responses that will be used by guzzle when using options from {@link createTestingGuzzleOptions}.
