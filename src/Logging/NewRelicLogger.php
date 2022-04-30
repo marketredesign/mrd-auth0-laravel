@@ -3,7 +3,6 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Logging;
 
-
 use Illuminate\Support\Facades\Config;
 use Monolog\Handler\BufferHandler;
 use Monolog\Logger;
