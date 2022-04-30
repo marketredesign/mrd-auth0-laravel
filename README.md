@@ -5,7 +5,9 @@
 [![Code Coverage](https://img.shields.io/codecov/c/gh/marketredesign/mrd-auth0-laravel/master.svg?style=flat-square)](https://codecov.io/gh/marketredesign/mrd-auth0-laravel)
 [![Total Downloads](https://img.shields.io/packagist/dt/marketredesign/mrd-auth0-laravel.svg?style=flat-square)](https://packagist.org/packages/marketredesign/mrd-auth0-laravel)
 
-Wrapper to easily configure Auth0 with a Laravel application
+Wrapper to easily configure Auth0 with a Laravel application.
+
+Also includes a logger for NewRelic.
 
 ## Getting Started
 
@@ -66,6 +68,53 @@ When testing a function that uses the DatasetRepository (or Datasets facade), ex
 version of the DatasetRepository that does not make any API calls to the underlying user tool API. The fake repository
 can be influenced using the `Datasets::fake...()` methods.
 
+### Logging to NewRelic
+Create a new logger in the `config/logging.php` file (example code below) and make sure that the `NEWRELIC_LICENSE_KEY` is set. 
+Then, this logger can be selected as any other logger, for example by setting the `LOG_CHANNEL` to `'newrelic'`.
+
+This logger looks for optional `app.repository` and `app.version` config values to log along with every 
+logged message, so add those fields to the `config/app.php` file if you want this to be included. 
+
+<details>
+<summary>Example code</summary>
+
+Logger for in `config/logging.php`:
+```php
+'newrelic' => [
+    'driver' => 'custom',
+    'via' => \Marketredesign\MrdAuth0Laravel\Logging\NewRelicLogger::class,
+    'license_key' => env('NEWRELIC_LICENSE_KEY'),
+],
+```
+
+Optional `app.repository` and `app.version` config values for in `config/app.php`:
+```php
+    /*
+    |--------------------------------------------------------------------------
+    | Repository Name
+    |--------------------------------------------------------------------------
+    |
+    | The name of the repository this application is an instance of.
+    | Used for example when logging to NewRelic.
+    |
+    */
+    'repository' => 'your-repository-name-here',
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Application Version
+    |--------------------------------------------------------------------------
+    |
+    | Version name of the code currently. When developing, this will be local.
+    | When the code is being built, a version.txt document at the root should
+    | be created containing the version number (or other build specification
+    | such as the commit hash), which is then loaded into this config variable.
+    |
+    */
+    'version' => file_exists('../version.txt') ? file('../version.txt')[0] : 'local',
+```
+</details>
+
 ## Running the tests
 
 Simply run:
@@ -78,7 +127,7 @@ vendor/bin/phpunit
 
 * **Marijn van der Horst** - *Initial work*
 
-See also the list of [contributors](https://github.com/marketredesign/your_project/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/marketredesign/mrd-auth0-laravel/contributors) who participated in this project.
 
 ## License
 
