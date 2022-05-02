@@ -46,7 +46,7 @@ class NewRelicLogger
 
         // Add info about the Auth0 user performing the request we are running (if any)
         $record['user'] = [
-            'authenticated' => optional(request())->user_id,
+            'authenticated' => request() && request()->user_id,
             'user_id' => optional(request())->user_id,
         ];
 
