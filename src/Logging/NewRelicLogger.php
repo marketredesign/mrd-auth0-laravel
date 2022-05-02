@@ -37,8 +37,8 @@ class NewRelicLogger
     {
         // Include info about which service this is
         $record['app'] = [
-            'repository' => Config::has('app.repository') ? config('app.repository') : 'Not implemented',
-            'version' => Config::has('app.version') ? config('app.version') : 'Not implemented',
+            'repository' => config('app.repository', 'Not implemented'),
+            'version' => config('app.version', 'Not implemented'),
             'name' => config('app.name'),
             'hostname' => gethostname(),
             'url' => config('app.url'),
