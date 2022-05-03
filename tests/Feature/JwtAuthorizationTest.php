@@ -23,9 +23,11 @@ class JwtAuthorizationTest extends TestCase
     protected function getEnvironmentSetUp($app)
     {
         // Set the Laravel Auth0 config values which are used to some values.
-        $app['config']->set('laravel-auth0', [
+        $app['config']->set('auth0', [
+            'strategy' => 'api',
             'domain'     => 'auth.marketredesign.com',
-            'client_id'  => '123',
+            'audience' => ['https://api.pricecypher.com'],
+            'clientId'  => '123',
         ]);
     }
 
@@ -41,7 +43,7 @@ class JwtAuthorizationTest extends TestCase
     private function request(bool $includeBearer, string $scope = '', ?Closure $responseHandler = null)
     {
         // Define a very simple testing endpoint, protected by the jwt middleware.
-        Route::middleware('jwt' . (empty($scope) ? '' : ":$scope"))
+        Route::middleware('auth0.authorize' . (empty($scope) ? '' : ":$scope"))
             ->get(self::ROUTE_URI, $responseHandler ?? function () {
                 return response()->json('test_response');
             });
@@ -60,11 +62,9 @@ class JwtAuthorizationTest extends TestCase
      */
     public function testBearerTokenMissing()
     {
-        $this->mockAuth0Service(null);
-
         $this->request(false)
-            ->assertUnauthorized()
-            ->assertSee('Bearer token missing');
+            ->assertForbidden()
+            ->assertSee('Unauthorized');
     }
 
     /**
@@ -72,9 +72,7 @@ class JwtAuthorizationTest extends TestCase
      */
     public function testInvalidToken()
     {
-        $this->mockAuth0Service(null);
-
-        $this->request(true)->assertUnauthorized();
+        $this->request(true)->assertForbidden();
     }
 
     /**
@@ -82,11 +80,9 @@ class JwtAuthorizationTest extends TestCase
      */
     public function testScopeRequiredNoneProvided()
     {
-        $this->mockAuth0Service([]);
-
         $this->request(true, 'test_scope')
             ->assertForbidden()
-            ->assertSee('Insufficient scope');
+            ->assertSee('Unauthorized');
     }
 
     /**
@@ -94,11 +90,11 @@ class JwtAuthorizationTest extends TestCase
      */
     public function testScopeRequiredEmptyScopesProvided()
     {
-        $this->mockAuth0Service(['scope' => '']);
+        $this->actingAsAuth0User(['scope' => '']);
 
         $this->request(true, 'test_scope')
             ->assertForbidden()
-            ->assertSee('Insufficient scope');
+            ->assertSee('Unauthorized');
     }
 
     /**
@@ -106,11 +102,11 @@ class JwtAuthorizationTest extends TestCase
      */
     public function testScopeRequiredIncorrectScopeProvided()
     {
-        $this->mockAuth0Service(['scope' => 'nottest_scope']);
+        $this->actingAsAuth0User(['scope' => 'nottest_scope']);
 
         $this->request(true, 'test_scope')
             ->assertForbidden()
-            ->assertSee('Insufficient scope');
+            ->assertSee('Unauthorized');
     }
 
     /**
@@ -118,7 +114,7 @@ class JwtAuthorizationTest extends TestCase
      */
     public function testScopeRequiredOneScopeProvided()
     {
-        $this->mockAuth0Service(['scope' => 'test_scope']);
+        $this->actingAsAuth0User(['scope' => 'test_scope']);
 
         $this->request(true, 'test_scope')
             ->assertOk()
@@ -130,7 +126,7 @@ class JwtAuthorizationTest extends TestCase
      */
     public function testScopeRequiredMultipleScopesProvided()
     {
-        $this->mockAuth0Service(['scope' => 'somescope test_scope somethingelse']);
+        $this->actingAsAuth0User(['scope' => 'somescope test_scope somethingelse']);
 
         $this->request(true, 'test_scope')
             ->assertOk()
@@ -143,20 +139,17 @@ class JwtAuthorizationTest extends TestCase
     public function testUserResolver()
     {
         // Create some user info as it would be returned from Auth0.
-        $userInfo = [
+        $jwt = [
             'sub' => 'someuser',
-            'given_name' => 'Test',
-            'family_name' => 'User',
-            'nickname' => 'test.user',
-            'name' => 'Test User',
-            'email' => 'test.user@company.com',
         ];
 
-        $this->mockAuth0Service(['sub' => 'someuser'], $userInfo);
+        $this->actingAsAuth0User($jwt);
 
         $this->request(true, '', function (Request $request) {
             // Apply the user resolver on the request and return its response.
-            return $request->user();
-        })->assertOk()->assertSimilarJson($userInfo);
+            return [
+                'sub' => $request->user()->sub
+            ];
+        })->assertOk()->assertSimilarJson($jwt);
     }
 }

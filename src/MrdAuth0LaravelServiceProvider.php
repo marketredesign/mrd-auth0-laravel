@@ -2,17 +2,13 @@
 
 namespace Marketredesign\MrdAuth0Laravel;
 
-use Auth0\Login\Contract\Auth0UserRepository;
-use Auth0\SDK\API\Authentication;
-use Auth0\SDK\API\Management;
+use Auth0\Laravel\Http\Middleware\Stateless\Authorize;
 use Illuminate\Contracts\Http\Kernel;
-use Illuminate\Foundation\Application;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Marketredesign\MrdAuth0Laravel\Contracts\DatasetRepository;
 use Marketredesign\MrdAuth0Laravel\Contracts\UserRepository;
 use Marketredesign\MrdAuth0Laravel\Http\Middleware\AuthorizeDatasetAccess;
-use Marketredesign\MrdAuth0Laravel\Http\Middleware\CheckJWT;
 use Marketredesign\MrdAuth0Laravel\Http\Middleware\CheckPermissions;
 
 class MrdAuth0LaravelServiceProvider extends ServiceProvider
@@ -28,15 +24,14 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
             ], 'mrd-auth0-config');
         }
 
-        // Make the jwt, permission and dataset middleware available to the router.
+        // Make the permission and dataset middleware available to the router.
         $router = $this->app->make(Router::class);
-        $router->aliasMiddleware('jwt', CheckJWT::class);
         $router->aliasMiddleware('dataset.access', AuthorizeDatasetAccess::class);
         $router->aliasMiddleware('permission', CheckPermissions::class);
 
-        // Make sure the CheckJWT has a higher priority.
+        // Make sure the Authorize middleware from Auth0 has a higher priority.
         $kernel = $this->app->make(Kernel::class);
-        $kernel->appendToMiddlewarePriority(CheckJWT::class);
+        $kernel->appendToMiddlewarePriority(Authorize::class);
         $kernel->appendToMiddlewarePriority(AuthorizeDatasetAccess::class);
     }
 
@@ -50,37 +45,6 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
 
         // Load our config.
         $this->mergeConfigFrom(__DIR__ . '/../config/mrd-auth0.php', 'mrd-auth0');
-
-        // Bind the auth0 user repository implementation.
-        $this->app->bind(Auth0UserRepository::class, function (Application $app) {
-            $config = $app['config']['mrd-auth0'];
-            return new Repository\Auth0UserRepository($config['model'], $config['jwt-model']);
-        });
-
-        // Add a singleton for the Authentication SDK using laravel-auth0 config values to the service container.
-        $this->app->singleton(Authentication::class, function () {
-            $config = config('laravel-auth0');
-            return new Authentication(
-                $config['domain'],
-                $config['client_id'],
-                $config['client_secret'] ?? '',
-                $config['api_identifier'] ?? '',
-                null,
-                $config['guzzle_options'] ?? []
-            );
-        });
-
-        // Add a singleton for the Auth0 Management SDK using mrd-auth0 config for the management audience.
-        $this->app->singleton(Management::class, function (Application $app) {
-            $mrdConfig = config('mrd-auth0');
-            $a0Config = config('laravel-auth0');
-            $token = $app->make(Authentication::class)->client_credentials([
-                'audience' => $mrdConfig['management_audience'],
-            ]);
-            $guzzleOptions = $a0Config['guzzle_options'] ?? [];
-
-            return new Management($token['access_token'], $a0Config['domain'], $guzzleOptions, 'object');
-        });
 
         // Bind repository implementations to the contracts.
         $this->app->bind(UserRepository::class, Repository\UserRepository::class);

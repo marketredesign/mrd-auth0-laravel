@@ -3,8 +3,11 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Repository;
 
-use Auth0\SDK\API\Management;
-use GuzzleHttp\Exception\RequestException;
+use Auth0\Laravel\Auth0;
+use Auth0\SDK\Contract\API\ManagementInterface;
+use Auth0\SDK\Utility\HttpResponse;
+use Auth0\SDK\Utility\Request\FilteredRequest;
+use Auth0\SDK\Utility\Request\RequestOptions;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -15,7 +18,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRepository
 {
     /**
-     * @var Management
+     * @var ManagementInterface
      */
     protected $mgmtApi;
 
@@ -26,11 +29,11 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
 
     /**
      * UserRepository constructor.
-     * @param Management $management
+     * @param Auth0 $auth0
      */
-    public function __construct(Management $management)
+    public function __construct(Auth0 $auth0)
     {
-        $this->mgmtApi = $management;
+        $this->mgmtApi = $auth0->getSdk()->management();
         $this->cacheTTL = config('mrd-auth0.cache_ttl');
     }
 
@@ -46,15 +49,14 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
         $cacheKey = 'auth0-users-get-' . $id;
 
         return Cache::remember($cacheKey, $this->cacheTTL, function () use ($id) {
-            try {
-                // TODO handle API rate limit. The limit is high enough that we should not get in trouble anytime soon.
-                return json_decode($this->mgmtApi->users()->get($id)->getBody());
-            } catch (RequestException $e) {
-                if ($e->getCode() == 404) {
-                    return null;
-                } else {
-                    throw $e;
-                }
+            $response = $this->mgmtApi->users()->get($id);
+
+            if (HttpResponse::wasSuccessful($response)) {
+                return json_decode($response->getBody());
+            } elseif (HttpResponse::getStatusCode($response) == 404) {
+                return null;
+            } else {
+                throw new HttpException(HttpResponse::getStatusCode($response), HttpResponse::getContent($response));
             }
         });
     }
@@ -79,8 +81,7 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
      */
     public function createUser(String $email, String $firstName, String $lastName): object
     {
-        $response = $this->mgmtApi->users()->create([
-            'connection' => config('mrd-auth0.connection'),
+        $response = $this->mgmtApi->users()->create(config('mrd-auth0.connection'), [
             'email' => $email,
             'given_name' => $firstName,
             'family_name' => $lastName,
@@ -116,15 +117,14 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
 
         // Create Lucene query on user IDs.
         $query = $queryField . ':("' . implode('" OR "', $queryValues->unique()->all()) . '")';
-        // Create comma separated string for fields.
-        $fields = $fields === null ? null : implode(',', $fields);
+        // Create request options including the requested fields.
+        $options = new RequestOptions(new FilteredRequest($fields, true));
         // Create cache key based on the query and fields.
-        $cacheKey = 'auth0-users-all-' . hash('sha256', $query . $fields);
+        $cacheKey = 'auth0-users-all-' . hash('sha256', $query . implode(',', $fields ?? []));
 
         // Send request to the Auth0 Management API and cache the result.
-        return Cache::remember($cacheKey, $this->cacheTTL, function () use ($query, $fields, $queryField) {
-            // TODO handle the API rate limit. The limit is high enough that we should not get in trouble anytime soon.
-            $response = $this->mgmtApi->users()->getAll(['q' => $query], $fields);
+        return Cache::remember($cacheKey, $this->cacheTTL, function () use ($query, $options, $queryField) {
+            $response = $this->mgmtApi->users()->getAll(['q' => $query], $options);
             $users = json_decode($response->getBody());
 
             return collect($users)->keyBy($queryField);

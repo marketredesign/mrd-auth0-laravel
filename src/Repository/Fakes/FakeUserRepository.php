@@ -3,7 +3,6 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Repository\Fakes;
 
-use Exception;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
