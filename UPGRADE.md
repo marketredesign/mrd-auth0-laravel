@@ -47,6 +47,11 @@ Thus, applications relying on detailed user information from `Request::user()` s
 user information using the `Users` facade in this package (or the `UserRepository` in this package directly).
 
 #### Update AUTH0_DOMAIN in the `.env`
-Applications that make use of the Auth0 Management SDK (e.g. to retrieve user information) should use the tenant
-sub-domain from Auth0 instead of the custom domain. An additional environment variable, `AUTH0_CUSTOM_DOMAIN`, can be
-used to configure the custom Auth0 domain (which was previously used in the `AUTH0_DOMAIN` variable instead).
+Applications that make use of the Auth0 Management SDK (e.g. to retrieve user information) should store the tenant
+sub-domain from Auth0 in the `AUTH0_DOMAIN` variable, instead of the custom domain. An additional environment variable, 
+`AUTH0_CUSTOM_DOMAIN`, can be used to configure the custom Auth0 domain 
+(which was previously used in the `AUTH0_DOMAIN` variable instead).
+
+So, the domain that was previously configured in `AUTH0_DOMAIN` should now be stored in the `AUTH0_CUSTOM_DOMAIN`
+environment variable. Subsequently, the Auth0 tenant domain (found in Auth0's Application settings page, has the form
+`[tenant].auth0.com`) should now be stored in the `AUTH0_DOMAIN` environment variable.
