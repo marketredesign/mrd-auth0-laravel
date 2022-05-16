@@ -6,8 +6,8 @@ namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 use Closure;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\TransferException;
-use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
@@ -81,7 +81,7 @@ class DatasetAuthorizationTest extends TestCase
         }
 
         if ($this->enableJWT) {
-            $middleware[] = 'jwt';
+            $middleware[] = 'auth0.authorize';
         }
 
         // Define a very simple testing endpoint, protected by the dataset authorization middleware.
@@ -449,29 +449,25 @@ class DatasetAuthorizationTest extends TestCase
         foreach (self::SUPPORTED_DATASET_KEYS as $routeParamKey) {
             // Make sure multiple requests are sent per user.
 
-            $this->userId = 'user1';
-            $this->mockAuth0Service([]);
+            $this->actingAsAuth0User(['sub' => 'user1']);
 
             $this->request('GET', $routeParamKey, 7)
                 ->assertOk()
                 ->assertSee('test_response');
 
-            $this->userId = 'user2';
-            $this->mockAuth0Service([]);
+            $this->actingAsAuth0User(['sub' => 'user2']);
 
             $this->request('GET', $routeParamKey, 7)
                 ->assertForbidden()
                 ->assertSee('Unauthorized dataset');
 
-            $this->userId = 'user1';
-            $this->mockAuth0Service([]);
+            $this->actingAsAuth0User(['sub' => 'user1']);
 
             $this->request('GET', $routeParamKey, 7)
                 ->assertOk()
                 ->assertSee('test_response');
 
-            $this->userId = 'user2';
-            $this->mockAuth0Service([]);
+            $this->actingAsAuth0User(['sub' => 'user2']);
 
             $this->request('GET', $routeParamKey, 7)
                 ->assertForbidden()
@@ -499,8 +495,7 @@ class DatasetAuthorizationTest extends TestCase
 
         // Send request to test endpoint for each supported dataset key as route parameter.
         foreach (self::SUPPORTED_DATASET_KEYS as $routeParamKey) {
-            $this->userId = 'user1';
-            $this->mockAuth0Service([]);
+            $this->actingAsAuth0User(['sub' => 'user1']);
 
             // Send same request twice.
             $this->request('GET', $routeParamKey, 7)
@@ -519,8 +514,7 @@ class DatasetAuthorizationTest extends TestCase
 
         // Send same request again, and expect a new API call to be made.
         foreach (self::SUPPORTED_DATASET_KEYS as $routeParamKey) {
-            $this->userId = 'user1';
-            $this->mockAuth0Service([]);
+            $this->actingAsAuth0User(['sub' => 'user1']);
 
             // Send same request twice.
             $this->request('GET', $routeParamKey, 7)

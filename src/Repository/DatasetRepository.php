@@ -8,6 +8,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
@@ -104,7 +105,7 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
             return $this->retrieveDatasetsFromApi($managedOnly);
         }
 
-        $userId = request()->user_id;
+        $userId = Auth::id();
 
         if ($userId == null) {
             // We cannot read from cache since our normal method of retrieving the user ID apparently did not work.

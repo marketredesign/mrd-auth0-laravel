@@ -3,17 +3,18 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Tests;
 
-use Auth0\Login\Auth0Service;
-use Auth0\SDK\API\Authentication;
-use Auth0\SDK\Exception\InvalidTokenException;
+use Auth0\Laravel\Auth\User\Repository;
+use Auth0\Laravel\ServiceProvider;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
-use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Config;
 use Marketredesign\MrdAuth0Laravel\MrdAuth0LaravelServiceProvider;
+use Marketredesign\MrdAuth0Laravel\Traits\ActingAsAuth0User;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {
+    use ActingAsAuth0User;
     /**
      * The maximum number of mocked responses a test case may use. Increase when not sufficient.
      */
@@ -29,45 +30,27 @@ class TestCase extends \Orchestra\Testbench\TestCase
      */
     protected $guzzleContainer = [];
 
-    protected $userId = 'test';
-
     protected function getPackageProviders($app)
     {
         return [
+            ServiceProvider::class,
             MrdAuth0LaravelServiceProvider::class,
         ];
     }
 
-    /**
-     * Mock the Auth0Service. When the provided {@code jwt} is null, the JWT decoding is mocked to
-     * throw an {@code InvalidTokenException}. Otherwise, it is mocked to return the provided JWT. When the provided
-     * JWT does not include a `sub` field, it is added and set to {@code $this->userId}. The userinfo method is
-     * mocked to return the provided {@code $userInfo} array.
-     *
-     * @param array|null $jwt Mocked "decoded" JWT.
-     * @param array|null $userInfo Mocked userinfo.
-     * @return TestCase this
-     */
-    protected function mockAuth0Service(?array $jwt, ?array $userInfo = null)
+    protected function setUp(): void
     {
-        $this->mock(Auth0Service::class, function ($mock) use ($jwt) {
-            $decodeJwt = $mock->shouldReceive('decodeJWT');
+        parent::setUp();
 
-            if ($jwt === null) {
-                $decodeJwt->andThrow(InvalidTokenException::class);
-            } else {
-                // Add sub to the JWT if it's not already defined.
-                $jwt = Arr::add($jwt, 'sub', $this->userId);
-                $decodeJwt->andReturn($jwt);
-            }
-        });
+        Config::set('auth.guards.auth0', [
+            'driver' => 'auth0',
+            'provider' => 'auth0',
+        ]);
 
-        // Mock the userinfo method in the Authentication SDK such that it does not call Auth0's API.
-        $this->mock(Authentication::class, function ($mock) use ($userInfo) {
-            $mock->shouldReceive('userinfo')->andReturn($userInfo);
-        });
-
-        return $this;
+        Config::set('auth.providers.auth0', [
+            'driver' => 'auth0',
+            'repository' => Repository::class,
+        ]);
     }
 
     /**
