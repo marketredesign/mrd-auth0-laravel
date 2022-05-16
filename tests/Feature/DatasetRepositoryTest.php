@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Marketredesign\MrdAuth0Laravel\Contracts\DatasetRepository;
 use Marketredesign\MrdAuth0Laravel\Tests\TestCase;
@@ -245,7 +246,7 @@ class DatasetRepositoryTest extends TestCase
     public function testMultipleUsersNoUserId()
     {
         // Sanity check; no user ID in request.
-        self::assertNull(request()->user_id);
+        self::assertNull(Auth::id());
 
         // Create 2 different fake responses, for 2 different users.
         $response1 = new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset",
@@ -294,21 +295,21 @@ class DatasetRepositoryTest extends TestCase
         "name":"Spotify","created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
         $this->mockedResponses = [$response1, $response2];
 
-        request()->user_id = 'user1';
+        $this->actingAsAuth0User(['sub' => 'user1']);
         self::assertEquals([1,6,7], $this->repo->getUserDatasetIds()->sort()->values()->all());
         self::assertEquals(
             [1,6,7],
             collect($this->repo->getUserDatasets()->resolve())->pluck('id')->sort()->values()->all()
         );
 
-        request()->user_id = 'user2';
+        $this->actingAsAuth0User(['sub' => 'user2']);
         self::assertEquals([1,6], $this->repo->getUserDatasetIds()->sort()->values()->all());
         self::assertEquals(
             [1,6],
             collect($this->repo->getUserDatasets()->resolve())->pluck('id')->sort()->values()->all()
         );
 
-        request()->user_id = 'user1';
+        $this->actingAsAuth0User(['sub' => 'user1']);
         self::assertEquals([1,6,7], $this->repo->getUserDatasetIds()->sort()->values()->all());
         self::assertEquals(
             [1,6,7],
@@ -336,7 +337,7 @@ class DatasetRepositoryTest extends TestCase
         "Spotify","created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"}]}');
         $this->mockedResponses = [$response1, $respEmpty, $response2, $response3];
 
-        request()->user_id = 'user1';
+        $this->actingAsAuth0User(['sub' => 'user1']);
         self::assertEquals([1,6,7], $this->repo->getUserDatasetIds()->sort()->values()->all());
         self::assertEquals(
             [1,6,7],
@@ -345,7 +346,7 @@ class DatasetRepositoryTest extends TestCase
         self::assertEmpty($this->repo->getUserDatasetIds(true));
         self::assertEmpty($this->repo->getUserDatasets(true));
 
-        request()->user_id = 'user2';
+        $this->actingAsAuth0User(['sub' => 'user2']);
         self::assertEquals([1,6], $this->repo->getUserDatasetIds()->sort()->values()->all());
         self::assertEquals(
             [1,6],
@@ -357,7 +358,7 @@ class DatasetRepositoryTest extends TestCase
             collect($this->repo->getUserDatasets(true)->resolve())->pluck('id')->sort()->values()->all()
         );
 
-        request()->user_id = 'user1';
+        $this->actingAsAuth0User(['sub' => 'user1']);
         self::assertEquals([1,6,7], $this->repo->getUserDatasetIds()->sort()->values()->all());
         self::assertEquals(
             [1,6,7],
@@ -388,7 +389,7 @@ class DatasetRepositoryTest extends TestCase
         $this->mockedResponses = [$response1, $response1, $respEmpty, $respEmpty, $response2, $response2, $response3,
             $response3, $response1, $response1, $respEmpty, $respEmpty];
 
-        request()->user_id = 'user1';
+        $this->actingAsAuth0User(['sub' => 'user1']);
         self::assertEquals([1,6,7], $this->repo->getUserDatasetIds(false, false)->sort()->values()->all());
         self::assertEquals(
             [1,6,7],
@@ -397,7 +398,7 @@ class DatasetRepositoryTest extends TestCase
         self::assertEmpty($this->repo->getUserDatasetIds(true, false));
         self::assertEmpty($this->repo->getUserDatasets(true, false));
 
-        request()->user_id = 'user2';
+        $this->actingAsAuth0User(['sub' => 'user2']);
         self::assertEquals([1,6], $this->repo->getUserDatasetIds(false, false)->sort()->values()->all());
         self::assertEquals(
             [1,6],
@@ -409,7 +410,7 @@ class DatasetRepositoryTest extends TestCase
             collect($this->repo->getUserDatasets(true, false)->resolve())->pluck('id')->sort()->values()->all()
         );
 
-        request()->user_id = 'user1';
+        $this->actingAsAuth0User(['sub' => 'user1']);
         self::assertEquals([1,6,7], $this->repo->getUserDatasetIds(false, false)->sort()->values()->all());
         self::assertEquals(
             [1,6,7],
@@ -428,7 +429,7 @@ class DatasetRepositoryTest extends TestCase
     public function testCachingTtlConfigurable()
     {
         // Set user ID in request to make sure caching is going to be performed.
-        request()->user_id = 'user1';
+        $this->actingAsAuth0User(['sub' => 'user1']);
 
         // Return empty response twice.
         $response = new Response(200, [], '{"datasets": []}');

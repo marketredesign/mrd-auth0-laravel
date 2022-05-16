@@ -3,7 +3,7 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
-use Auth0\SDK\API\Authentication;
+use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Carbon;
@@ -23,16 +23,6 @@ class UserRepositoryTest extends TestCase
     {
         parent::setUp();
 
-        // Mock the client_credentials method in the Authentication SDK such that it does not call Auth0's API.
-        $this->mock(Authentication::class, function ($mock) {
-            $mock->shouldReceive('client_credentials')->andReturn([
-                'access_token' => 'token',
-                'scope' => 'read:users',
-                'expires_in' => 86400,
-                'token_type' => 'Bearer',
-            ]);
-        });
-
         $this->repo = App::make(UserRepository::class);
     }
 
@@ -45,11 +35,12 @@ class UserRepositoryTest extends TestCase
     protected function getEnvironmentSetUp($app)
     {
         // Set the Laravel Auth0 config values which are used to some values.
-        $app['config']->set('laravel-auth0', [
+        $app['config']->set('auth0', [
             'domain'     => 'auth.marketredesign.com',
-            'client_id'  => '123',
-            'client_secret' => 'secret',
-            'guzzle_options' => $this->createTestingGuzzleOptions(),
+            'clientId'  => '123',
+            'clientSecret' => 'secret',
+            'managementToken' => 'token',
+            'httpClient' => new Client($this->createTestingGuzzleOptions()),
         ]);
     }
 
@@ -732,7 +723,7 @@ class UserRepositoryTest extends TestCase
 
         // Call function under test
         $userID = 'test';
-        $response = $this->repo->delete($userID);
+        $this->repo->delete($userID);
 
         // Find the request that was sent to Auth0
         $request = $this->guzzleContainer[0]['request'];

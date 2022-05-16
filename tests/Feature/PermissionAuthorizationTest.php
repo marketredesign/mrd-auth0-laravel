@@ -25,14 +25,11 @@ class PermissionAuthorizationTest extends TestCase
 
     private function beUser($permissions = [])
     {
-        $userInfo = [
+        $jwt = [
             $this->permissionsClaim => $permissions,
         ];
-        $user = new Auth0User($userInfo, 'anAccessToken');
 
-        $this->be($user);
-
-        return $user;
+        return $this->actingAsAuth0User($jwt);
     }
 
     /**
@@ -102,7 +99,7 @@ class PermissionAuthorizationTest extends TestCase
         self::assertNotEquals('permissions', $this->permissionsClaim);
 
         // Login as some user and add incorrect permissions claim to userinfo.
-        $this->be(new Auth0User(['permissions' => ['read:test']], 'anAccessToken'));
+        $this->actingAsAuth0User(['permissions' => ['read:test']]);
 
         // Sanity check; user should be logged in now.
         self::assertTrue(Auth::check());
