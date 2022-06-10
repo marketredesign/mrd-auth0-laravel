@@ -41,22 +41,21 @@ class DatasetRepositoryTest extends TestCase
     /**
      * Asserts that the given dataset is as expected.
      *
-     * @param array|null $dataset
-     * @param string $name
-     * @param string $createdAt
-     * @param string $updatedAt
+     * @param array $expDataset
+     * @param array|null $actDataset
      */
-    protected function assertDataset(?array $dataset, string $name, string $createdAt, string $updatedAt)
+    protected function assertDataset(array $expDataset, ?array $actDataset)
     {
-        self::assertNotNull($dataset);
+        self::assertNotNull($actDataset);
         
-        self::assertEquals($name, $dataset['name']);
+        self::assertEquals($expDataset['name'], $actDataset['name']);
+        self::assertEquals($expDataset['dss_url'], $actDataset['dss_url']);
 
-        $actCreatedAt = Carbon::parse($dataset['created_at']);
-        $actUpdatedAt = Carbon::parse($dataset['updated_at']);
+        $actCreatedAt = Carbon::parse($actDataset['created_at']);
+        $actUpdatedAt = Carbon::parse($actDataset['updated_at']);
 
-        self::assertTrue(Carbon::parse($createdAt)->equalTo($actCreatedAt));
-        self::assertTrue(Carbon::parse($updatedAt)->equalTo($actUpdatedAt));
+        self::assertTrue(Carbon::parse($expDataset['created_at'])->equalTo($actCreatedAt));
+        self::assertTrue(Carbon::parse($expDataset['updated_at'])->equalTo($actUpdatedAt));
     }
 
     /**
@@ -143,9 +142,10 @@ class DatasetRepositoryTest extends TestCase
     {
         // Return mocked response as given by user tool.
         $this->mockedResponses = [new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset",
-        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z"},{"id":6,"name":
-        "Sjaak & Co","created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,
-        "name":"Spotify","created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}')];
+        "dss_url":"http://c.com","created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z"},
+        {"id":6,"name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
+        "updated_at":"2021-03-06T00:23:00.000060Z"},{"id":1,"name":"Spotify","dss_url": "https://spotify.com",
+        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-12-10T18:09:22.000000Z"}]}')];
 
         // Call function under test.
         $datasetIds = $this->repo->getUserDatasetIds();
@@ -165,9 +165,10 @@ class DatasetRepositoryTest extends TestCase
     {
         // Return mocked response as given by user tool.
         $this->mockedResponses = [new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset",
-        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z"},{"id":6,"name":
-        "Sjaak & Co","created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-06T00:23:00.000060Z"},{"id":1,
-        "name":"Spotify","created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-12-10T18:09:22.000000Z"}]}')];
+        "dss_url":"http://c.com","created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z"},
+        {"id":6,"name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
+        "updated_at":"2021-03-06T00:23:00.000060Z"},{"id":1,"name":"Spotify","dss_url": "https://spotify.com",
+        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-12-10T18:09:22.000000Z"}]}')];
 
         // Call function under test.
         $resourceCollection = $this->repo->getUserDatasets();
@@ -184,9 +185,24 @@ class DatasetRepositoryTest extends TestCase
         $dataset7 = $datasets->firstWhere('id', 7);
 
         // Verify that datasets are as expected.
-        $this->assertDataset($dataset1, 'Spotify', '2020-11-10T17:09:16.000000Z', '2020-12-10T18:09:22.000000Z');
-        $this->assertDataset($dataset6, 'Sjaak & Co', '2021-03-04T00:42:10.000000Z', '2021-03-06T00:23:00.000060Z');
-        $this->assertDataset($dataset7, 'Cool dataset', '2021-03-15T15:02:59.000000Z', '2021-03-15T15:02:59.000000Z');
+        $this->assertDataset([
+            'name' => 'Spotify',
+            'dss_url' => 'https://spotify.com',
+            'created_at' => '2020-11-10T17:09:16.000000Z',
+            'updated_at' => '2020-12-10T18:09:22.000000Z',
+        ], $dataset1);
+        $this->assertDataset([
+            'name' => 'Sjaak & Co',
+            'dss_url' => null,
+            'created_at' => '2021-03-04T00:42:10.000000Z',
+            'updated_at' => '2021-03-06T00:23:00.000060Z',
+        ], $dataset6);
+        $this->assertDataset([
+            'name' => 'Cool dataset',
+            'dss_url' => 'http://c.com',
+            'created_at' => '2021-03-15T15:02:59.000000Z',
+            'updated_at' => '2021-03-15T15:02:59.000000Z',
+        ], $dataset7);
     }
 
     /**
@@ -249,13 +265,14 @@ class DatasetRepositoryTest extends TestCase
         self::assertNull(Auth::id());
 
         // Create 2 different fake responses, for 2 different users.
-        $response1 = new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset",
-        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z"},{"id":6,"name":
-        "Sjaak & Co","created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,
-        "name":"Spotify","created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
-        $response2 = new Response(200, [], '{"datasets":[{"id":6,"name":
-        "Sjaak & Co","created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,
-        "name":"Spotify","created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
+        $response1 = new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset","dss_url":null,
+        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z"},{"id":6,
+        "name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
+        "updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,"name":"Spotify","dss_url":null,
+        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
+        $response2 = new Response(200, [], '{"datasets":[{"id":6,"name":"Sjaak & Co","dss_url":null,
+        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,"name":"Spotify",
+        "dss_url":null,"created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
         $this->mockedResponses = [$response1, $response1, $response2, $response2, $response1, $response1];
 
         self::assertEquals([1,6,7], $this->repo->getUserDatasetIds()->sort()->values()->all());
@@ -286,13 +303,14 @@ class DatasetRepositoryTest extends TestCase
     public function testMultipleUsersWithUserId()
     {
         // Create 2 different fake responses, for 2 different users.
-        $response1 = new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset",
-        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z"},{"id":6,"name":
-        "Sjaak & Co","created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,
-        "name":"Spotify","created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
-        $response2 = new Response(200, [], '{"datasets":[{"id":6,"name":
-        "Sjaak & Co","created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,
-        "name":"Spotify","created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
+        $response1 = new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset","dss_url":null,
+        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z"},{"id":6,
+        "name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
+        "updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,"name":"Spotify","dss_url":null,
+        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
+        $response2 = new Response(200, [], '{"datasets":[{"id":6,"name":"Sjaak & Co","dss_url":null,
+        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,"name":"Spotify",
+        "dss_url":null,"created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
         $this->mockedResponses = [$response1, $response2];
 
         $this->actingAsAuth0User(['sub' => 'user1']);
@@ -326,15 +344,16 @@ class DatasetRepositoryTest extends TestCase
     public function testCachingManagedOnly()
     {
         $respEmpty = new Response(200, [], '{"datasets": []}');
-        $response1 = new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset",
-        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z"},{"id":6,"name":
-        "Sjaak & Co","created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,
-        "name":"Spotify","created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
-        $response2 = new Response(200, [], '{"datasets":[{"id":6,"name":
-        "Sjaak & Co","created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,
-        "name":"Spotify","created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
-        $response3 = new Response(200, [], '{"datasets":[{"id":1,"name":
-        "Spotify","created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"}]}');
+        $response1 = new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset","dss_url":null,
+        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z"},{"id":6,
+        "name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
+        "updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,"name":"Spotify","dss_url":null,
+        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
+        $response2 = new Response(200, [], '{"datasets":[{"id":6,"name":"Sjaak & Co","dss_url":null,
+        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,"name":"Spotify",
+        "dss_url":null,"created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
+        $response3 = new Response(200, [], '{"datasets":[{"id":1,"name":"Spotify","dss_url":null,
+        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"}]}');
         $this->mockedResponses = [$response1, $respEmpty, $response2, $response3];
 
         $this->actingAsAuth0User(['sub' => 'user1']);
@@ -377,15 +396,16 @@ class DatasetRepositoryTest extends TestCase
     public function testDisableCaching()
     {
         $respEmpty = new Response(200, [], '{"datasets": []}');
-        $response1 = new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset",
-        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z"},{"id":6,"name":
-        "Sjaak & Co","created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,
-        "name":"Spotify","created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
-        $response2 = new Response(200, [], '{"datasets":[{"id":6,"name":
-        "Sjaak & Co","created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,
-        "name":"Spotify","created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
-        $response3 = new Response(200, [], '{"datasets":[{"id":1,"name":
-        "Spotify","created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"}]}');
+        $response1 = new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset","dss_url":null,
+        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z"},{"id":6,
+        "name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
+        "updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,"name":"Spotify","dss_url":null,
+        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
+        $response2 = new Response(200, [], '{"datasets":[{"id":6,"name":"Sjaak & Co","dss_url":null,
+        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,"name":"Spotify",
+        "dss_url":null,"created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
+        $response3 = new Response(200, [], '{"datasets":[{"id":1,"name":"Spotify","dss_url":null,
+        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"}]}');
         $this->mockedResponses = [$response1, $response1, $respEmpty, $respEmpty, $response2, $response2, $response3,
             $response3, $response1, $response1, $respEmpty, $respEmpty];
 

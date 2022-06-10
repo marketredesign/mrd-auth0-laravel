@@ -87,6 +87,7 @@ class FakeDatasetRepository implements DatasetRepository
         $dataset = (object)[
             'id' => $id,
             'name' => $this->faker->firstName,
+            'dss_url' => $this->faker->url,
             'created_at' => $this->faker->dateTime,
             'updated_at' => $this->faker->dateTime,
         ];
