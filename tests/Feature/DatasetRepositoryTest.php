@@ -47,7 +47,7 @@ class DatasetRepositoryTest extends TestCase
     protected function assertDataset(array $expDataset, ?array $actDataset)
     {
         self::assertNotNull($actDataset);
-        
+
         self::assertEquals($expDataset['name'], $actDataset['name']);
         self::assertEquals($expDataset['dss_url'], $actDataset['dss_url']);
 
@@ -142,10 +142,11 @@ class DatasetRepositoryTest extends TestCase
     {
         // Return mocked response as given by user tool.
         $this->mockedResponses = [new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset",
-        "dss_url":"http://c.com","created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z"},
-        {"id":6,"name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
-        "updated_at":"2021-03-06T00:23:00.000060Z"},{"id":1,"name":"Spotify","dss_url": "https://spotify.com",
-        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-12-10T18:09:22.000000Z"}]}')];
+        "dss_url":"http://c.com","created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z",
+        "modules":[]},{"id":6,"name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
+        "updated_at":"2021-03-06T00:23:00.000060Z","modules":["module_A"]},{"id":1,"name":"Spotify",
+        "dss_url": "https://spotify.com","created_at":"2020-11-10T17:09:16.000000Z",
+        "updated_at":"2020-12-10T18:09:22.000000Z","modules":[]}]}')];
 
         // Call function under test.
         $datasetIds = $this->repo->getUserDatasetIds();
@@ -165,10 +166,11 @@ class DatasetRepositoryTest extends TestCase
     {
         // Return mocked response as given by user tool.
         $this->mockedResponses = [new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset",
-        "dss_url":"http://c.com","created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z"},
-        {"id":6,"name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
-        "updated_at":"2021-03-06T00:23:00.000060Z"},{"id":1,"name":"Spotify","dss_url": "https://spotify.com",
-        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-12-10T18:09:22.000000Z"}]}')];
+        "dss_url":"http://c.com","created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z",
+        "modules":[]},{"id":6,"name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
+        "updated_at":"2021-03-06T00:23:00.000060Z","modules":["module_A","module_B"]},{"id":1,"name":"Spotify",
+        "dss_url": "https://spotify.com","created_at":"2020-11-10T17:09:16.000000Z",
+        "updated_at":"2020-12-10T18:09:22.000000Z","modules":["module_B","module_C"]}]}')];
 
         // Call function under test.
         $resourceCollection = $this->repo->getUserDatasets();
@@ -190,18 +192,21 @@ class DatasetRepositoryTest extends TestCase
             'dss_url' => 'https://spotify.com',
             'created_at' => '2020-11-10T17:09:16.000000Z',
             'updated_at' => '2020-12-10T18:09:22.000000Z',
+            'modules' => [],
         ], $dataset1);
         $this->assertDataset([
             'name' => 'Sjaak & Co',
             'dss_url' => null,
             'created_at' => '2021-03-04T00:42:10.000000Z',
             'updated_at' => '2021-03-06T00:23:00.000060Z',
+            'modules' => ['module_A', 'module_B'],
         ], $dataset6);
         $this->assertDataset([
             'name' => 'Cool dataset',
             'dss_url' => 'http://c.com',
             'created_at' => '2021-03-15T15:02:59.000000Z',
             'updated_at' => '2021-03-15T15:02:59.000000Z',
+            'modules' => ['module_B', 'module_C'],
         ], $dataset7);
     }
 
@@ -266,13 +271,14 @@ class DatasetRepositoryTest extends TestCase
 
         // Create 2 different fake responses, for 2 different users.
         $response1 = new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset","dss_url":null,
-        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z"},{"id":6,
+        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z","modules":[]},{"id":6,
         "name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
-        "updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,"name":"Spotify","dss_url":null,
-        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
+        "updated_at":"2021-03-04T00:42:10.000000Z","modules":[]},{"id":1,"name":"Spotify","dss_url":null,
+        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z","modules":[]}]}');
         $response2 = new Response(200, [], '{"datasets":[{"id":6,"name":"Sjaak & Co","dss_url":null,
-        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,"name":"Spotify",
-        "dss_url":null,"created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
+        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z","modules":[]},{"id":1,
+        "name":"Spotify","dss_url":null,"created_at":"2020-11-10T17:09:16.000000Z",
+        "updated_at":"2020-11-10T17:09:16.000000Z","modules":[]}]}');
         $this->mockedResponses = [$response1, $response1, $response2, $response2, $response1, $response1];
 
         self::assertEquals([1,6,7], $this->repo->getUserDatasetIds()->sort()->values()->all());
@@ -304,13 +310,14 @@ class DatasetRepositoryTest extends TestCase
     {
         // Create 2 different fake responses, for 2 different users.
         $response1 = new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset","dss_url":null,
-        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z"},{"id":6,
+        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z","modules":[]},{"id":6,
         "name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
-        "updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,"name":"Spotify","dss_url":null,
-        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
+        "updated_at":"2021-03-04T00:42:10.000000Z","modules":[]},{"id":1,"name":"Spotify","dss_url":null,
+        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z","modules":[]}]}');
         $response2 = new Response(200, [], '{"datasets":[{"id":6,"name":"Sjaak & Co","dss_url":null,
-        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,"name":"Spotify",
-        "dss_url":null,"created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
+        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z","modules":[]},{"id":1,
+        "name":"Spotify","dss_url":null,"created_at":"2020-11-10T17:09:16.000000Z",
+        "updated_at":"2020-11-10T17:09:16.000000Z","modules":[]}]}');
         $this->mockedResponses = [$response1, $response2];
 
         $this->actingAsAuth0User(['sub' => 'user1']);
@@ -345,15 +352,16 @@ class DatasetRepositoryTest extends TestCase
     {
         $respEmpty = new Response(200, [], '{"datasets": []}');
         $response1 = new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset","dss_url":null,
-        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z"},{"id":6,
+        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z","modules":[]},{"id":6,
         "name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
-        "updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,"name":"Spotify","dss_url":null,
-        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
+        "updated_at":"2021-03-04T00:42:10.000000Z","modules":[]},{"id":1,"name":"Spotify","dss_url":null,
+        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z","modules":[]}]}');
         $response2 = new Response(200, [], '{"datasets":[{"id":6,"name":"Sjaak & Co","dss_url":null,
-        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,"name":"Spotify",
-        "dss_url":null,"created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
+        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z","modules":[]},{"id":1,
+        "name":"Spotify","dss_url":null,"created_at":"2020-11-10T17:09:16.000000Z",
+        "updated_at":"2020-11-10T17:09:16.000000Z","modules":[]}]}');
         $response3 = new Response(200, [], '{"datasets":[{"id":1,"name":"Spotify","dss_url":null,
-        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"}]}');
+        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z","modules":[]}]}');
         $this->mockedResponses = [$response1, $respEmpty, $response2, $response3];
 
         $this->actingAsAuth0User(['sub' => 'user1']);
@@ -397,15 +405,16 @@ class DatasetRepositoryTest extends TestCase
     {
         $respEmpty = new Response(200, [], '{"datasets": []}');
         $response1 = new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset","dss_url":null,
-        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z"},{"id":6,
+        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z","modules":[]},{"id":6,
         "name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
-        "updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,"name":"Spotify","dss_url":null,
-        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
+        "updated_at":"2021-03-04T00:42:10.000000Z","modules":[]},{"id":1,"name":"Spotify","dss_url":null,
+        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z","modules":[]}]}');
         $response2 = new Response(200, [], '{"datasets":[{"id":6,"name":"Sjaak & Co","dss_url":null,
-        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"},{"id":1,"name":"Spotify",
-        "dss_url":null,"created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z"}]}');
+        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z","modules":[]},{"id":1,
+        "name":"Spotify","dss_url":null,"created_at":"2020-11-10T17:09:16.000000Z",
+        "updated_at":"2020-11-10T17:09:16.000000Z","modules":[]}]}');
         $response3 = new Response(200, [], '{"datasets":[{"id":1,"name":"Spotify","dss_url":null,
-        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z"}]}');
+        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z","modules":[]}]}');
         $this->mockedResponses = [$response1, $response1, $respEmpty, $respEmpty, $response2, $response2, $response3,
             $response3, $response1, $response1, $respEmpty, $respEmpty];
 
