@@ -128,7 +128,7 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
         $options = new RequestOptions(new FilteredRequest($fields, true));
 
         // Create cache key based on the query and fields.
-        $qValsString = implode(',', $uniqueQueryValues);
+        $qValsString = implode(',', $uniqueQueryValues->all());
         $fieldsString = implode(',', $fields ?? []);
         $cacheKey = 'auth0-users-all-' . hash('sha256', "$queryField:$qValsString;$fieldsString");
 
