@@ -28,13 +28,19 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
     protected $cacheTTL;
 
     /**
+     * @var int User chunk size.
+     */
+    protected $chunkSize;
+
+    /**
      * UserRepository constructor.
      * @param Auth0 $auth0
      */
     public function __construct(Auth0 $auth0)
     {
         $this->mgmtApi = $auth0->getSdk()->management();
-        $this->cacheTTL = config('mrd-auth0.cache_ttl');
+        $this->cacheTTL = config('mrd-auth0.cache_ttl', 300);
+        $this->chunkSize = config('mrd-auth0.chunk_size', 50);
     }
 
     /**
@@ -115,17 +121,30 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
             $fields[] = $queryField;
         }
 
-        // Create Lucene query on user IDs.
-        $query = $queryField . ':("' . implode('" OR "', $queryValues->unique()->all()) . '")';
+        // Find the unique query values.
+        $uniqueQueryValues = $queryValues->unique();
+
         // Create request options including the requested fields.
         $options = new RequestOptions(new FilteredRequest($fields, true));
-        // Create cache key based on the query and fields.
-        $cacheKey = 'auth0-users-all-' . hash('sha256', $query . implode(',', $fields ?? []));
 
-        // Send request to the Auth0 Management API and cache the result.
-        return Cache::remember($cacheKey, $this->cacheTTL, function () use ($query, $options, $queryField) {
-            $response = $this->mgmtApi->users()->getAll(['q' => $query], $options);
-            $users = json_decode($response->getBody());
+        // Create cache key based on the query and fields.
+        $qValsString = implode(',', $uniqueQueryValues);
+        $fieldsString = implode(',', $fields ?? []);
+        $cacheKey = 'auth0-users-all-' . hash('sha256', "$queryField:$qValsString;$fieldsString");
+
+        // Send request(s) to the Auth0 Management API and cache the result.
+        return Cache::remember($cacheKey, $this->cacheTTL, function () use ($options, $queryField, $uniqueQueryValues) {
+            $users = collect();
+
+            // Chunk query values
+            foreach ($uniqueQueryValues->chunk($this->chunkSize) as $qValsChunk) {
+                // Create Lucene query on user IDs.
+                $query = $queryField . ':("' . implode('" OR "', $qValsChunk->all()) . '")';
+                // Send request to Auth0 Management API.
+                $response = $this->mgmtApi->users()->getAll(['q' => $query], $options);
+                // Find users in the response and add to collection.
+                $users = $users->concat(json_decode($response->getBody()));
+            }
 
             return collect($users)->keyBy($queryField);
         });
