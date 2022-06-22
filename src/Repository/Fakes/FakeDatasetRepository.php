@@ -81,7 +81,7 @@ class FakeDatasetRepository implements DatasetRepository
     }
 
     /**
-     * Gets the dataset object for the given ID or creates, stores and returns a random one if it doesn't already exist.
+     * Create and store a dataset. Any fields that are not provided are generated randomly.
      *
      * @param $dataset Collection Dataset to add, including at least the 'id' field.
      */

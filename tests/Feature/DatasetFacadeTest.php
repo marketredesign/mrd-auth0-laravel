@@ -234,7 +234,7 @@ class DatasetFacadeTest extends TestCase
         // Add 3 fake datasets to the repository.
         Datasets::fakeAddDatasets(collect([4, 8]));
         Datasets::fakeAddDatasets(collect([collect(['id' => 12, 'name' => 'Sjaak'])]));
-        // Add 2 additional repositories which the user is manager for.
+        // Add 2 additional datasets which the user is manager for.
         Datasets::fakeAddDatasets(collect([5]), true);
         Datasets::fakeAddDatasets(collect([collect(['id' => 99, 'modules' => ['some_module']])]), true);
 
