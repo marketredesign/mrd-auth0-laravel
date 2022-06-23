@@ -8,6 +8,7 @@ use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Marketredesign\MrdAuth0Laravel\Contracts\UserRepository;
 use Marketredesign\MrdAuth0Laravel\Tests\TestCase;
@@ -238,23 +239,14 @@ class UserRepositoryTest extends TestCase
      */
     public function testGetByIdEmpty()
     {
-        $this->mockedResponses = [new Response(200, [], '[]')];
-
         // Call function under test.
         $users = $this->repo->getByIds(collect());
 
         // Users should be empty.
         self::assertTrue($users->isEmpty());
 
-        // Expect 1 api call.
-        self::assertCount(1, $this->guzzleContainer);
-
-        $request = $this->guzzleContainer[0]['request'];
-
-        // Verify correct endpoint was called.
-        self::assertEquals('/api/v2/users', $request->getUri()->getPath());
-        // Verify that no user IDs were requested.
-        self::assertStringContainsString('user_id:("")', urldecode($request->getUri()->getQuery()));
+        // Expect no api calls.
+        self::assertCount(0, $this->guzzleContainer);
     }
 
     /**
@@ -319,7 +311,7 @@ class UserRepositoryTest extends TestCase
         // Call function under test.
         $users = $this->repo->getByIds(collect(['auth0|507f1f77bcf86cd799439020', 'other_user']));
 
-        // Expect one user returned.
+        // Expect two users returned.
         self::assertEquals(2, $users->count());
         // Verify keyed by user id.
         self::assertContains('auth0|507f1f77bcf86cd799439020', $users->keys());
@@ -478,23 +470,14 @@ class UserRepositoryTest extends TestCase
      */
     public function testGetByEmailEmpty()
     {
-        $this->mockedResponses = [new Response(200, [], '[]')];
-
         // Call function under test.
         $users = $this->repo->getByEmails(collect());
 
         // Users should be empty.
         self::assertTrue($users->isEmpty());
 
-        // Expect 1 api call.
-        self::assertCount(1, $this->guzzleContainer);
-
-        $request = $this->guzzleContainer[0]['request'];
-
-        // Verify correct endpoint was called.
-        self::assertEquals('/api/v2/users', $request->getUri()->getPath());
-        // Verify that no user emails were requested.
-        self::assertStringContainsString('email:("")', urldecode($request->getUri()->getQuery()));
+        // Expect no api calls.
+        self::assertCount(0, $this->guzzleContainer);
     }
 
     /**
@@ -559,7 +542,7 @@ class UserRepositoryTest extends TestCase
         // Call function under test.
         $users = $this->repo->getByEmails(collect(['john.doe@gmail.com', 'other@gmail.com']));
 
-        // Expect one user returned.
+        // Expect two users returned.
         self::assertEquals(2, $users->count());
         // Verify keyed by email.
         self::assertContains('john.doe@gmail.com', $users->keys());
@@ -775,13 +758,13 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('/api/v2/users', $request->getUri()->getPath());
     }
 
-
     /**
      * Verifies that the correct data is queried from the auth0 management API
      */
     public function testGetAllUsers()
     {
-        $this->mockedResponses = [new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
+        $this->mockedResponses = [new Response(200, [], '{
+        "start": 0, "limit": 50, "length": 2, "users": [{"user_id":"auth0|507f1f77bcf86cd799439020",
         "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
         "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
         "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
@@ -791,7 +774,7 @@ class UserRepositoryTest extends TestCase
         "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
         "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
         "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
-        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]')];
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}], "total": 2}')];
 
         // Call function under test.
         $users = $this->repo->getAllUsers();
@@ -820,5 +803,362 @@ class UserRepositoryTest extends TestCase
 
         // Verify correct endpoint was called.
         self::assertEquals('/api/v2/users', $request->getUri()->getPath());
+    }
+
+    /**
+     * Verifies that the `getAllUsers()` function requests multiple pages when applicable.
+     */
+    public function testGetAllUsersPaginated()
+    {
+        $response1 = new Response(200, [], '{
+        "start": 0, "limit": 2, "length": 2, "users": [{"user_id":"auth0|507f1f77bcf86cd799439020",
+        "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
+        "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
+        "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
+        "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
+        "blocked":false,"given_name":"","family_name":""},{"user_id":"other_user",
+        "email":"other@gmail.com","email_verified":false,"username":"other","phone_number":
+        "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
+        "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
+        "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}], "total": 3}');
+        $response2 = new Response(200, [], '{
+        "start": 2, "limit": 2, "length": 1, "users": [{"user_id":"third_user",
+        "email":"three@gmail.com","email_verified":false,"username":"user3","phone_number":
+        "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
+        "Initial-Connection","user_id":"507f1f77bcf86cd799439022","provider":"auth0","isSocial":false}],
+        "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}], "total": 3}');
+        $this->mockedResponses = [$response1, $response2];
+
+        // Call function under test.
+        $users = $this->repo->getAllUsers();
+
+        // Expect three users returned.
+        self::assertEquals(3, $users->count());
+
+        // Verify keyed by user id.
+        self::assertContains('auth0|507f1f77bcf86cd799439020', $users->keys());
+        self::assertContains('other_user', $users->keys());
+        self::assertContains('third_user', $users->keys());
+
+        // Verify the three users
+        $user1 = $users->get('auth0|507f1f77bcf86cd799439020');
+        self::assertNotNull($user1);
+        self::assertEquals('johndoe', $user1->username);
+
+        $user2 = $users->get('other_user');
+        self::assertNotNull($user2);
+        self::assertEquals('other', $user2->username);
+
+        $user3 = $users->get('third_user');
+        self::assertNotNull($user3);
+        self::assertEquals('user3', $user3->username);
+
+        // Expect 2 api calls.
+        self::assertCount(2, $this->guzzleContainer);
+
+        // Find the requests that were sent to Auth0.
+        $request1 = $this->guzzleContainer[0]['request'];
+        $request2 = $this->guzzleContainer[1]['request'];
+
+        // Verify correct endpoints were called and include_totals=true was included in requests.
+        foreach ([$request1, $request2] as $request) {
+            dump($request->getUri()->getQuery());
+            self::assertEquals('/api/v2/users', $request2->getUri()->getPath());
+            self::assertTrue(str_contains(urldecode($request->getUri()->getQuery()), 'include_totals=true'));
+        }
+
+        // Verify correct pages were included in the requests.
+        self::assertTrue(str_contains(urldecode($request1->getUri()->getQuery()), 'page=0'));
+        self::assertTrue(str_contains(urldecode($request2->getUri()->getQuery()), 'page=1'));
+    }
+
+    /**
+     * Verifies that the underlying API is only called once for subsequent retrievals for the same email, multiple.
+     */
+    public function testGetAllUsersCaching()
+    {
+        // Response base on Auth0 API documentation
+        $this->mockedResponses = [new Response(200, [], '{
+        "start": 0, "limit": 50, "length": 2, "users": [{"user_id":"auth0|507f1f77bcf86cd799439020",
+        "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
+        "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
+        "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
+        "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
+        "blocked":false,"given_name":"","family_name":""},{"user_id":"other_user",
+        "email":"other@gmail.com","email_verified":false,"username":"other","phone_number":
+        "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
+        "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
+        "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}], "total": 2}')];
+
+        // Call function under test, twice.
+        $users1 = $this->repo->getAllUsers();
+        $users2 = $this->repo->getAllUsers();
+
+        // Verify the same object is returned.
+        self::assertEquals($users1, $users2);
+
+        // Verify only 1 api call was made.
+        self::assertCount(1, $this->guzzleContainer);
+    }
+
+    /**
+     * Verifies that the chunk size can be set using a config value for get multiple users by ID.
+     * Does not verify response.
+     */
+    public function testGetByIdsConfigurableChunkSize()
+    {
+        // Response based on Auth0 API documentation
+        $response1 = new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
+        "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
+        "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
+        "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
+        "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
+        "blocked":false,"given_name":"","family_name":""}]');
+        $response2 = new Response(200, [], '[{"user_id":"other_user",
+        "email":"other@gmail.com","email_verified":false,"username":"other","phone_number":
+        "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
+        "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
+        "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]');
+        $response3 = new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
+        "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
+        "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
+        "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
+        "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
+        "blocked":false,"given_name":"","family_name":""},{"user_id":"other_user",
+        "email":"other@gmail.com","email_verified":false,"username":"other","phone_number":
+        "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
+        "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
+        "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]');
+        $this->mockedResponses = [$response1, $response2, $response3];
+
+        // Set chunk size to 1 in the config, and create new repository using this chunk size.
+        Config::set('mrd-auth0.chunk_size', 1);
+        $this->resetRepo();
+
+        // Request two users.
+        $this->repo->getByIds(collect(['auth0|507f1f77bcf86cd799439020', 'other_user']));
+        // Flush cache such that it does not interfere with this test.
+        Cache::flush();
+
+        // Verify 2 api calls were made.
+        self::assertCount(2, $this->guzzleContainer);
+
+        // Set chunk size to 2 in the config, and create new repository using this chunk size.
+        Config::set('mrd-auth0.chunk_size', 2);
+        $this->resetRepo();
+
+        // Execute function under test again, and expect only 1 api call to be made in this case (so total of 3).
+        $this->repo->getByIds(collect(['auth0|507f1f77bcf86cd799439020', 'other_user']));
+        self::assertCount(3, $this->guzzleContainer);
+    }
+
+    /**
+     * Verifies that retrieving by ID is chunked when requesting more users than the configured chunk size.
+     */
+    public function testGetByIdChunking()
+    {
+        // Responses based on Auth0 API documentation
+        $response1 = new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
+        "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
+        "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
+        "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
+        "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
+        "blocked":false,"given_name":"","family_name":""},{"user_id":"other_user",
+        "email":"other@gmail.com","email_verified":false,"username":"other","phone_number":
+        "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
+        "Initial-Connection","user_id":"507f1f77bcf86cd799439021","provider":"auth0","isSocial":false}],
+        "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]');
+        $response2 = new Response(200, [], '[{"user_id":"third_user",
+        "email":"three@gmail.com","email_verified":false,"username":"user3","phone_number":
+        "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
+        "Initial-Connection","user_id":"507f1f77bcf86cd799439022","provider":"auth0","isSocial":false}],
+        "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]');
+        $this->mockedResponses = [$response1, $response2];
+
+        // Set chunk size to 2 in the config, and create new repository using this chunk size.
+        Config::set('mrd-auth0.chunk_size', 2);
+        $this->resetRepo();
+
+        // Call function under test.
+        $users = $this->repo->getByIds(collect(['auth0|507f1f77bcf86cd799439020', 'other_user', 'third_user']));
+
+        // Expect three users returned.
+        self::assertEquals(3, $users->count());
+        // Verify keyed by user id.
+        self::assertContains('auth0|507f1f77bcf86cd799439020', $users->keys());
+        self::assertContains('other_user', $users->keys());
+        self::assertContains('third_user', $users->keys());
+
+        // Verify three users
+        $user1 = $users->get('auth0|507f1f77bcf86cd799439020');
+        self::assertNotNull($user1);
+        self::assertEquals('johndoe', $user1->username);
+
+        $user2 = $users->get('other_user');
+        self::assertNotNull($user2);
+        self::assertEquals('other', $user2->username);
+
+        $user3 = $users->get('third_user');
+        self::assertNotNull($user3);
+        self::assertEquals('user3', $user3->username);
+
+        // Expect 2 api calls.
+        self::assertCount(2, $this->guzzleContainer);
+
+        // Find the request that was sent to Auth0
+        $request1 = $this->guzzleContainer[0]['request'];
+        $request2 = $this->guzzleContainer[1]['request'];
+        $query1 = urldecode($request1->getUri()->getQuery());
+        $query2 = urldecode($request2->getUri()->getQuery());
+
+        // Verify correct endpoint was called.
+        self::assertEquals('/api/v2/users', $request1->getUri()->getPath());
+        self::assertEquals('/api/v2/users', $request2->getUri()->getPath());
+        // Verify correct query sent to Auth0. Order of IDs does not matter.
+        self::assertTrue(
+            str_contains($query1, 'q=user_id:("auth0|507f1f77bcf86cd799439020" OR "other_user")') ||
+            str_contains($query1, 'q=user_id:("other_user" OR "auth0|507f1f77bcf86cd799439020")'),
+            $query1
+        );
+        self::assertTrue(
+            str_contains($query2, 'q=user_id:("third_user")'),
+            $query2
+        );
+    }
+
+    /**
+     * Verifies that the chunk size can be set using a config value for get multiple users by email.
+     * Does not verify response.
+     */
+    public function testGetByEmailsConfigurableChunkSize()
+    {
+        // Response based on Auth0 API documentation
+        $response1 = new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
+        "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
+        "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
+        "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
+        "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
+        "blocked":false,"given_name":"","family_name":""}]');
+        $response2 = new Response(200, [], '[{"user_id":"other_user",
+        "email":"other@gmail.com","email_verified":false,"username":"other","phone_number":
+        "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
+        "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
+        "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]');
+        $response3 = new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
+        "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
+        "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
+        "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
+        "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
+        "blocked":false,"given_name":"","family_name":""},{"user_id":"other_user",
+        "email":"other@gmail.com","email_verified":false,"username":"other","phone_number":
+        "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
+        "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
+        "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]');
+        $this->mockedResponses = [$response1, $response2, $response3];
+
+        // Set chunk size to 1 in the config, and create new repository using this chunk size.
+        Config::set('mrd-auth0.chunk_size', 1);
+        $this->resetRepo();
+
+        // Request two users.
+        $this->repo->getByEmails(collect(['john.doe@gmail.com', 'other@gmail.com']));
+        // Flush cache such that it does not interfere with this test.
+        Cache::flush();
+
+        // Verify 2 api calls were made.
+        self::assertCount(2, $this->guzzleContainer);
+
+        // Set chunk size to 2 in the config, and create new repository using this chunk size.
+        Config::set('mrd-auth0.chunk_size', 2);
+        $this->resetRepo();
+
+        // Execute function under test again, and expect only 1 api call to be made in this case (so total of 3).
+        $this->repo->getByIds(collect(['john.doe@gmail.com', 'other@gmail.com']));
+        self::assertCount(3, $this->guzzleContainer);
+    }
+
+    /**
+     * Verifies that retrieving by email is chunked when requesting more users than the configured chunk size.
+     */
+    public function testGetByEmailsChunking()
+    {
+        // Responses based on Auth0 API documentation
+        $response1 = new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
+        "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
+        "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
+        "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
+        "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
+        "blocked":false,"given_name":"","family_name":""},{"user_id":"other_user",
+        "email":"other@gmail.com","email_verified":false,"username":"other","phone_number":
+        "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
+        "Initial-Connection","user_id":"507f1f77bcf86cd799439021","provider":"auth0","isSocial":false}],
+        "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]');
+        $response2 = new Response(200, [], '[{"user_id":"third_user",
+        "email":"three@gmail.com","email_verified":false,"username":"user3","phone_number":
+        "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
+        "Initial-Connection","user_id":"507f1f77bcf86cd799439022","provider":"auth0","isSocial":false}],
+        "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]');
+        $this->mockedResponses = [$response1, $response2];
+
+        // Set chunk size to 2 in the config, and create new repository using this chunk size.
+        Config::set('mrd-auth0.chunk_size', 2);
+        $this->resetRepo();
+
+        // Call function under test.
+        $users = $this->repo->getByEmails(collect(['john.doe@gmail.com', 'other@gmail.com', 'three@gmail.com']));
+
+        // Expect three users returned.
+        self::assertEquals(3, $users->count());
+        // Verify keyed by email.
+        self::assertContains('john.doe@gmail.com', $users->keys());
+        self::assertContains('other@gmail.com', $users->keys());
+        self::assertContains('three@gmail.com', $users->keys());
+
+        // Verify three users
+        $user1 = $users->get('john.doe@gmail.com');
+        self::assertNotNull($user1);
+        self::assertEquals('johndoe', $user1->username);
+
+        $user2 = $users->get('other@gmail.com');
+        self::assertNotNull($user2);
+        self::assertEquals('other', $user2->username);
+
+        $user3 = $users->get('three@gmail.com');
+        self::assertNotNull($user3);
+        self::assertEquals('user3', $user3->username);
+
+        // Expect 2 api calls.
+        self::assertCount(2, $this->guzzleContainer);
+
+        // Find the request that was sent to Auth0
+        $request1 = $this->guzzleContainer[0]['request'];
+        $request2 = $this->guzzleContainer[1]['request'];
+        $query1 = urldecode($request1->getUri()->getQuery());
+        $query2 = urldecode($request2->getUri()->getQuery());
+
+        // Verify correct endpoint was called.
+        self::assertEquals('/api/v2/users', $request1->getUri()->getPath());
+        self::assertEquals('/api/v2/users', $request2->getUri()->getPath());
+        // Verify correct query sent to Auth0. Order of IDs does not matter.
+        self::assertTrue(
+            str_contains($query1, 'q=email:("john.doe@gmail.com" OR "other@gmail.com")') ||
+            str_contains($query1, 'q=user_id:("other@gmail.com" OR "john.doe@gmail.com")'),
+            $query1
+        );
+        self::assertTrue(
+            str_contains($query2, 'q=email:("three@gmail.com")'),
+            $query2
+        );
     }
 }
