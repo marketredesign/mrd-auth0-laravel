@@ -49,7 +49,7 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
 
     /**
      * Extract the content from an HTTP response as returned by the management API and parse as JSON.
-     * An HTTP exception is thrown when in case the request was not successful to begin with.
+     * An HTTP exception is thrown in case the request was not successful to begin with.
      * An internal server error is generated when the JSON response could not be parsed.
      *
      * @param ResponseInterface $response
