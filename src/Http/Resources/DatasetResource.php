@@ -22,6 +22,7 @@ class DatasetResource extends JsonResource
             'dss_url' => $this->dss_url,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'modules' => $this->modules,
         ];
     }
 }
