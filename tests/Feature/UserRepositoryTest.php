@@ -875,7 +875,7 @@ class UserRepositoryTest extends TestCase
     }
 
     /**
-     * Verifies that the underlying API is only called once for subsequent retrievals for the same email, multiple.
+     * Verifies that the underlying API is only called once for subsequent retrievals of all users.
      */
     public function testGetAllUsersCaching()
     {
