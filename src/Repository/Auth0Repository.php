@@ -10,6 +10,14 @@ use Illuminate\Support\Facades\Cache;
 class Auth0Repository implements \Marketredesign\MrdAuth0Laravel\Contracts\Auth0Repository
 {
     /**
+     * @return string The cache key that stores the machine-to-machine token.
+     */
+    protected function getM2mTokenCacheKey(): string
+    {
+        return 'auth0-m2m-token';
+    }
+
+    /**
      * Retrieve the machine-to-machine token (from underlying SDK).
      *
      * @return array Decoded response, containing 'expires_in' and 'access_token' attributes.
@@ -36,7 +44,7 @@ class Auth0Repository implements \Marketredesign\MrdAuth0Laravel\Contracts\Auth0
         $m2mResp = null;
 
         return Cache::remember(
-            'auth0-m2m-token',
+            $this->getM2mTokenCacheKey(),
             function () use (&$m2mResp) {
                 $m2mResp ??= $this->retrieveDecodedM2mTokenResponse();
                 return (int) ($m2mResp['expires_in'] / 2);

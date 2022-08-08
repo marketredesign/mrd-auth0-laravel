@@ -2,6 +2,7 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Repository\Fakes;
 
+use Illuminate\Support\Facades\Cache;
 use Marketredesign\MrdAuth0Laravel\Repository\Auth0Repository;
 
 class FakeAuth0Repository extends Auth0Repository
@@ -29,6 +30,8 @@ class FakeAuth0Repository extends Auth0Repository
     public function fakeSetM2mAccessToken(string $accessToken): void
     {
         $this->m2mAccessToken = $accessToken;
+        // Make sure any previously cached m2m tokens are removed from cache.
+        Cache::forget($this->getM2mTokenCacheKey());
     }
 
     /**
