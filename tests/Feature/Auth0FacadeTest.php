@@ -23,7 +23,7 @@ class Auth0FacadeTest extends TestCase
     }
 
     /**
-     * verifies that the Auth0 facade can be faked and returns some machine to machine token when queried.
+     * Verifies that the Auth0 facade can be faked and returns some machine to machine token when queried.
      */
     public function testFake()
     {
