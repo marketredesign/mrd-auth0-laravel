@@ -6,6 +6,7 @@ use Auth0\Laravel\Http\Middleware\Stateless\Authorize;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
+use Marketredesign\MrdAuth0Laravel\Contracts\Auth0Repository;
 use Marketredesign\MrdAuth0Laravel\Contracts\DatasetRepository;
 use Marketredesign\MrdAuth0Laravel\Contracts\UserRepository;
 use Marketredesign\MrdAuth0Laravel\Http\Middleware\AuthorizeDatasetAccess;
@@ -47,7 +48,8 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/../config/mrd-auth0.php', 'mrd-auth0');
 
         // Bind repository implementations to the contracts.
-        $this->app->bind(UserRepository::class, Repository\UserRepository::class);
+        $this->app->bind(Auth0Repository::class, Repository\Auth0Repository::class);
         $this->app->bind(DatasetRepository::class, Repository\DatasetRepository::class);
+        $this->app->bind(UserRepository::class, Repository\UserRepository::class);
     }
 }
