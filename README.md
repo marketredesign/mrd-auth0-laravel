@@ -47,6 +47,12 @@ Add the `dataset.access` middleware to the API route. Then, make sure the datase
 `dataset_id` or `datasetId`. It can be part of the route itself or part of the request data (query param, 
 request body, etc.) 
 
+### Requesting machine-to-machine tokens from Auth0
+Use `Auth0` facade. Can be used to retrieve a machine-to-machine token, only when running in console (e.g. from async
+job). The tokens are automatically cached for half their expiration time.
+When testing a function that retrieves a m2m token, execute `Auth0::fake()` to use a mocked Auth0Repository which does
+not make any API calls to Auth0. The fake repository can be influenced using the `Auth0::fake...()` functions.
+
 ### User repository
 Use `Users` facade. Can be used to retrieve a single user, or multiple users, by ID.
 Also includes functionality to retrieve multiple users by email addresses.
@@ -60,8 +66,8 @@ version of the DatasetRepository that does not make any API calls to the underly
 can be influenced using the `Datasets::fake...()` methods.
 
 ### Logging to NewRelic
-Create a new logger in the `config/logging.php` file (example code below) and make sure that the `NEWRELIC_LICENSE_KEY` is set. 
-Then, this logger can be selected as any other logger, for example by setting the `LOG_CHANNEL` to `'newrelic'`.
+Create a new logger in the `config/logging.php` file (example code below) and make sure that the `NEWRELIC_LICENSE_KEY`
+is set. Then, this logger can be selected as any other logger, for example by setting the `LOG_CHANNEL` to `'newrelic'`.
 
 This logger looks for optional `app.repository` and `app.version` config values to log along with every 
 logged message, so add those fields to the `config/app.php` file if you want this to be included. 

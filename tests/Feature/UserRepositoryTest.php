@@ -864,7 +864,6 @@ class UserRepositoryTest extends TestCase
 
         // Verify correct endpoints were called and include_totals=true was included in requests.
         foreach ([$request1, $request2] as $request) {
-            dump($request->getUri()->getQuery());
             self::assertEquals('/api/v2/users', $request2->getUri()->getPath());
             self::assertTrue(str_contains(urldecode($request->getUri()->getQuery()), 'include_totals=true'));
         }
