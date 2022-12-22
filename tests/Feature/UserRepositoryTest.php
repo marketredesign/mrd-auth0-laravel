@@ -3,9 +3,10 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
-use GuzzleHttp\Client;
+use Auth0\Laravel\Facade\Auth0;
+use Auth0\Laravel\Store\LaravelSession;
 use GuzzleHttp\Psr7\Response;
-use Illuminate\Foundation\Application;
+use Http\Mock\Client;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
@@ -20,29 +21,30 @@ class UserRepositoryTest extends TestCase
      */
     protected $repo;
 
+    protected Client $httpClient;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->repo = App::make(UserRepository::class);
-    }
+        // Let the Auth0 SDK use our mocked HTTP client.
+        $this->httpClient = new Client();
 
-    /**
-     * Define environment setup.
-     *
-     * @param  Application  $app
-     * @return void
-     */
-    protected function getEnvironmentSetUp($app)
-    {
-        // Set the Laravel Auth0 config values which are used to some values.
-        $app['config']->set('auth0', [
-            'domain'     => 'auth.marketredesign.com',
-            'clientId'  => '123',
-            'clientSecret' => 'secret',
+        Config::set('auth0', [
+            'domain'   => 'auth.marketredesign.com',
+            'audience' => ['https://api.pricecypher.com'],
+            'redirectUri' => 'https://redirect.com/oauth/callback',
+            'sessionStorage' => new LaravelSession(),
+            'transientStorage' => new LaravelSession(),
+            'clientId' => '123',
+            'cookieSecret' => 'secret',
             'managementToken' => 'token',
-            'httpClient' => new Client($this->createTestingGuzzleOptions()),
+            'httpClient' => $this->httpClient,
         ]);
+
+        $this->resetAuth0Config();
+
+        $this->repo = App::make(UserRepository::class);
     }
 
     /**
@@ -78,7 +80,8 @@ class UserRepositoryTest extends TestCase
     public function testGetNoneExisting()
     {
         // Generate 404 response on mocked auth0 management call.
-        $this->mockedResponses = [new Response(404)];
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponse(new Response(404));
 
         $user = $this->repo->get('sjaak');
 
@@ -86,12 +89,12 @@ class UserRepositoryTest extends TestCase
         self::assertNull($user);
 
         // Expect 1 api call.
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
 
-        $request = $this->guzzleContainer[0]['request'];
+        $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
 
         // Verify correct endpoint was called.
-        self::assertEquals('/api/v2/users/sjaak', $request->getUri()->getPath());
+        self::assertEquals('users/sjaak', $request->getUrl());
     }
 
     /**
@@ -100,12 +103,13 @@ class UserRepositoryTest extends TestCase
     public function testGetExisting()
     {
         // Return example response, taken from Auth0 documentation.
-        $this->mockedResponses = [new Response(200, [], '{"user_id":"auth0|507f1f77bcf86cd799439020",
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponse(new Response(200, [], '{"user_id":"auth0|507f1f77bcf86cd799439020",
         "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
         "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
         "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
         "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
-        "blocked":false,"given_name":"","family_name":""}')];
+        "blocked":false,"given_name":"","family_name":""}'));
 
         // Execute function under test
         $user = $this->repo->get('auth0|507f1f77bcf86cd799439020');
@@ -117,14 +121,13 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('507f1f77bcf86cd799439020', $user->identities[0]->user_id);
 
         // Expect 1 api call.
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
 
         // Find the request that was sent to Auth0
-        $request = $this->guzzleContainer[0]['request'];
+        $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
 
         // Verify correct endpoint was called.
-        $urlencodedId = urlencode('auth0|507f1f77bcf86cd799439020');
-        self::assertEquals("/api/v2/users/{$urlencodedId}", $request->getUri()->getPath());
+        self::assertEquals("users/auth0|507f1f77bcf86cd799439020", $request->getUrl());
     }
 
     /**
@@ -133,24 +136,26 @@ class UserRepositoryTest extends TestCase
     public function testGetDifferentUsers()
     {
         // Return two different responses on subsequent calls.
-        $this->mockedResponses = [
-            new Response(200, [], '{"user_id":"auth0|507f1f77bcf86cd799439020",
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponse(new Response(200, [], '{"user_id":"auth0|507f1f77bcf86cd799439020",
                 "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":
                 "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
                 "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
                 "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],
-                "last_ip":"","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}'),
-            new Response(200, [], '{"user_id":"some_user_id",
+                "last_ip":"","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}'))
+            ->mockResponse(new Response(200, [], '{"user_id":"some_user_id",
                 "email":"different@gmail.com","email_verified":false,"username":"testing_user","phone_number":
                 "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
                 "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
                 "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],
-                "last_ip":"","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}'),
-        ];
+                "last_ip":"","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}'));
 
-        // Execute function under test twice, for different users
+        // Execute function under test twice, for different users. Each time finding the request that was sent.
         $user1 = $this->repo->get('auth0|507f1f77bcf86cd799439020');
+        $request1 = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
+
         $user2 = $this->repo->get('some_user_id');
+        $request2 = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
 
         // Verify 1st user object.
         self::assertNotNull($user1);
@@ -163,16 +168,11 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('testing_user', $user2->username);
 
         // Expect 2 api calls.
-        self::assertCount(2, $this->guzzleContainer);
-
-        // Find the requests that were sent to Auth0
-        $request1 = $this->guzzleContainer[0]['request'];
-        $request2 = $this->guzzleContainer[1]['request'];
+        self::assertCount(2, $this->httpClient->getRequests());
 
         // Verify correct endpoints were called.
-        $urlencodedId = urlencode('auth0|507f1f77bcf86cd799439020');
-        self::assertEquals("/api/v2/users/{$urlencodedId}", $request1->getUri()->getPath());
-        self::assertEquals("/api/v2/users/some_user_id", $request2->getUri()->getPath());
+        self::assertEquals("users/auth0|507f1f77bcf86cd799439020", $request1->getUrl());
+        self::assertEquals("users/some_user_id", $request2->getUrl());
     }
 
     /**
@@ -181,12 +181,13 @@ class UserRepositoryTest extends TestCase
     public function testGetCaching()
     {
         // Return example response, taken from Auth0 documentation.
-        $this->mockedResponses = [new Response(200, [], '{"user_id":"auth0|507f1f77bcf86cd799439020",
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponse(new Response(200, [], '{"user_id":"auth0|507f1f77bcf86cd799439020",
         "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
         "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
         "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
         "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
-        "blocked":false,"given_name":"","family_name":""}')];
+        "blocked":false,"given_name":"","family_name":""}'));
 
         // Execute function under test twice for the same user ID.
         $user = $this->repo->get('auth0|507f1f77bcf86cd799439020');
@@ -196,7 +197,7 @@ class UserRepositoryTest extends TestCase
         self::assertEquals($user, $user2);
 
         // Verify only 1 api call was made.
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
     }
 
     /**
@@ -211,7 +212,8 @@ class UserRepositoryTest extends TestCase
         "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
         "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
         "blocked":false,"given_name":"","family_name":""}');
-        $this->mockedResponses = [$response, $response];
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponses([clone $response, clone $response]);
 
         // Set cache TTL to 10 seconds in the config, and create new repository using this cache value.
         Config::set('mrd-auth0.cache_ttl', 10);
@@ -222,7 +224,7 @@ class UserRepositoryTest extends TestCase
         $this->repo->get('auth0|507f1f77bcf86cd799439020');
 
         // Verify only 1 api call was made.
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
 
         // Increment time such that cache TTL should have passed.
         Carbon::setTestNow(Carbon::now()->addSeconds(11));
@@ -231,7 +233,7 @@ class UserRepositoryTest extends TestCase
         $this->repo->get('auth0|507f1f77bcf86cd799439020');
 
         // Verify now a total of two api calls was made.
-        self::assertCount(2, $this->guzzleContainer);
+        self::assertCount(2, $this->httpClient->getRequests());
     }
 
     /**
@@ -255,12 +257,13 @@ class UserRepositoryTest extends TestCase
     public function testGetByIdOne()
     {
         // Response from Auth0 API documentation
-        $this->mockedResponses = [new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponse(new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
         "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
         "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
         "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
         "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
-        "blocked":false,"given_name":"","family_name":""}]')];
+        "blocked":false,"given_name":"","family_name":""}]'));
 
         // Call function under test.
         $users = $this->repo->getByIds(collect('auth0|507f1f77bcf86cd799439020'));
@@ -276,17 +279,17 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('507f1f77bcf86cd799439020', $users->first()->identities[0]->user_id);
 
         // Expect 1 api call.
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
 
         // Find the request that was sent to Auth0
-        $request = $this->guzzleContainer[0]['request'];
+        $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
 
         // Verify correct endpoint was called.
-        self::assertEquals('/api/v2/users', $request->getUri()->getPath());
+        self::assertStringStartsWith('users?', $request->getUrl());
         // Verify that one ID was requested, and is as expected.
         self::assertStringContainsString(
             'q=user_id:("auth0|507f1f77bcf86cd799439020")',
-            urldecode($request->getUri()->getQuery())
+            urldecode($request->getParams())
         );
     }
 
@@ -296,7 +299,8 @@ class UserRepositoryTest extends TestCase
     public function testGetByIdMultiple()
     {
         // Response base on Auth0 API documentation
-        $this->mockedResponses = [new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponse(new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
         "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
         "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
         "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
@@ -306,7 +310,7 @@ class UserRepositoryTest extends TestCase
         "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
         "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
         "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
-        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]')];
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]'));
 
         // Call function under test.
         $users = $this->repo->getByIds(collect(['auth0|507f1f77bcf86cd799439020', 'other_user']));
@@ -327,14 +331,15 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('other', $user2->username);
 
         // Expect 1 api call.
-        self::assertCount(1, $this->guzzleContainer);
+        // Expect 1 api call.
+        self::assertCount(1, $this->httpClient->getRequests());
 
         // Find the request that was sent to Auth0
-        $request = $this->guzzleContainer[0]['request'];
-        $query = urldecode($request->getUri()->getQuery());
+        $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
+        $query = urldecode($request->getParams());
 
         // Verify correct endpoint was called.
-        self::assertEquals('/api/v2/users', $request->getUri()->getPath());
+        self::assertStringStartsWith('users?', $request->getUrl());
         // Verify correct query sent to Auth0. Order of IDs does not matter.
         self::assertTrue(
             str_contains($query, 'q=user_id:("auth0|507f1f77bcf86cd799439020" OR "other_user")') ||
@@ -349,11 +354,12 @@ class UserRepositoryTest extends TestCase
     public function testGetByIdFieldScoping()
     {
         // Altered response from Auth0 API documentation
-        $this->mockedResponses = [new Response(200, [], '[{
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponse(new Response(200, [], '[{
             "family_name":"Tester",
             "given_name":"Sjaak",
             "user_id":"some_id"
-        }]')];
+        }]'));
 
         // Call function under test.
         $users = $this->repo->getByIds(collect('some_id'), ['family_name', 'given_name']);
@@ -368,14 +374,14 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('Sjaak', $users->first()->given_name);
 
         // Expect 1 api call.
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
 
         // Find the request that was sent to Auth0
-        $request = $this->guzzleContainer[0]['request'];
+        $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
         $queryVars = [];
 
         // Parse query parameter and store in queryVars.
-        parse_str($request->getUri()->getQuery(), $queryVars);
+        parse_str($request->getParams(), $queryVars);
 
         // Verify fields present in query.
         self::assertArrayHasKey('fields', $queryVars);
@@ -388,11 +394,11 @@ class UserRepositoryTest extends TestCase
         self::assertContains('user_id', $requestedFields);
 
         // Verify correct endpoint was called.
-        self::assertEquals('/api/v2/users', $request->getUri()->getPath());
+        self::assertStringStartsWith('users?', $request->getUrl());
         // Verify that one ID was requested, and is as expected.
         self::assertStringContainsString(
             'q=user_id:("some_id")',
-            urldecode($request->getUri()->getQuery())
+            urldecode($request->getParams())
         );
     }
 
@@ -402,7 +408,8 @@ class UserRepositoryTest extends TestCase
     public function testGetByIdsCaching()
     {
         // Response base on Auth0 API documentation
-        $this->mockedResponses = [new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponse(new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
         "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
         "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
         "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
@@ -412,7 +419,7 @@ class UserRepositoryTest extends TestCase
         "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
         "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
         "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
-        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]')];
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]'));
 
         // Call function under test, twice.
         $users1 = $this->repo->getByIds(collect(['auth0|507f1f77bcf86cd799439020', 'other_user']));
@@ -422,7 +429,7 @@ class UserRepositoryTest extends TestCase
         self::assertEquals($users1, $users2);
 
         // Verify only 1 api call was made.
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
     }
 
     /**
@@ -442,7 +449,8 @@ class UserRepositoryTest extends TestCase
         "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
         "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
         "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]');
-        $this->mockedResponses = [$response, $response];
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponses([clone $response, clone $response]);
 
         // Set cache TTL to 10 seconds in the config, and create new repository using this cache value.
         Config::set('mrd-auth0.cache_ttl', 10);
@@ -453,7 +461,7 @@ class UserRepositoryTest extends TestCase
         $this->repo->getByIds(collect(['auth0|507f1f77bcf86cd799439020', 'other_user']));
 
         // Verify only 1 api call was made.
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
 
         // Increment time such that cache TTL should have passed.
         Carbon::setTestNow(Carbon::now()->addSeconds(11));
@@ -462,7 +470,7 @@ class UserRepositoryTest extends TestCase
         $this->repo->getByIds(collect(['auth0|507f1f77bcf86cd799439020', 'other_user']));
 
         // Verify now a total of two api calls was made.
-        self::assertCount(2, $this->guzzleContainer);
+        self::assertCount(2, $this->httpClient->getRequests());
     }
 
     /**
@@ -486,12 +494,13 @@ class UserRepositoryTest extends TestCase
     public function testGetByEmailOne()
     {
         // Response from Auth0 API documentation
-        $this->mockedResponses = [new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponse(new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
         "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
         "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
         "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
         "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
-        "blocked":false,"given_name":"","family_name":""}]')];
+        "blocked":false,"given_name":"","family_name":""}]'));
 
         // Call function under test.
         $users = $this->repo->getByEmails(collect('john.doe@gmail.com'));
@@ -507,17 +516,17 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('507f1f77bcf86cd799439020', $users->first()->identities[0]->user_id);
 
         // Expect 1 api call.
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
 
         // Find the request that was sent to Auth0
-        $request = $this->guzzleContainer[0]['request'];
+        $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
 
         // Verify correct endpoint was called.
-        self::assertEquals('/api/v2/users', $request->getUri()->getPath());
+        self::assertStringStartsWith('users?', $request->getUrl());
         // Verify that one email was requested, and is as expected.
         self::assertStringContainsString(
             'q=email:("john.doe@gmail.com")',
-            urldecode($request->getUri()->getQuery())
+            urldecode($request->getParams())
         );
     }
 
@@ -527,7 +536,8 @@ class UserRepositoryTest extends TestCase
     public function testGetByEmailMultiple()
     {
         // Response base on Auth0 API documentation
-        $this->mockedResponses = [new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponse(new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
         "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
         "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
         "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
@@ -537,7 +547,7 @@ class UserRepositoryTest extends TestCase
         "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
         "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
         "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
-        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]')];
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]'));
 
         // Call function under test.
         $users = $this->repo->getByEmails(collect(['john.doe@gmail.com', 'other@gmail.com']));
@@ -558,14 +568,14 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('other', $user2->username);
 
         // Expect 1 api call.
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
 
         // Find the request that was sent to Auth0
-        $request = $this->guzzleContainer[0]['request'];
-        $query = urldecode($request->getUri()->getQuery());
+        $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
+        $query = urldecode($request->getParams());
 
         // Verify correct endpoint was called.
-        self::assertEquals('/api/v2/users', $request->getUri()->getPath());
+        self::assertStringStartsWith('users?', $request->getUrl());
         // Verify correct query sent to Auth0. Order of emails does not matter.
         self::assertTrue(
             str_contains($query, 'q=email:("john.doe@gmail.com" OR "other@gmail.com")') ||
@@ -580,11 +590,12 @@ class UserRepositoryTest extends TestCase
     public function testGetByEmailFieldScoping()
     {
         // Altered response from Auth0 API documentation
-        $this->mockedResponses = [new Response(200, [], '[{
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponse(new Response(200, [], '[{
             "family_name":"Tester",
             "given_name":"Sjaak",
             "email":"some@mail.com"
-        }]')];
+        }]'));
 
         // Call function under test.
         $users = $this->repo->getByEmails(collect('some@mail.com'), ['family_name', 'given_name']);
@@ -599,14 +610,14 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('Sjaak', $users->first()->given_name);
 
         // Expect 1 api call.
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
 
         // Find the request that was sent to Auth0
-        $request = $this->guzzleContainer[0]['request'];
+        $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
         $queryVars = [];
 
         // Parse query parameter and store in queryVars.
-        parse_str($request->getUri()->getQuery(), $queryVars);
+        parse_str($request->getParams(), $queryVars);
 
         // Verify fields present in query.
         self::assertArrayHasKey('fields', $queryVars);
@@ -619,11 +630,11 @@ class UserRepositoryTest extends TestCase
         self::assertContains('email', $requestedFields);
 
         // Verify correct endpoint was called.
-        self::assertEquals('/api/v2/users', $request->getUri()->getPath());
+        self::assertStringStartsWith('users?', $request->getUrl());
         // Verify that one email was requested, and is as expected.
         self::assertStringContainsString(
             'q=email:("some@mail.com")',
-            urldecode($request->getUri()->getQuery())
+            urldecode($request->getParams())
         );
     }
 
@@ -633,7 +644,8 @@ class UserRepositoryTest extends TestCase
     public function testGetByEmailsCaching()
     {
         // Response base on Auth0 API documentation
-        $this->mockedResponses = [new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
+       Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponse(new Response(200, [], '[{"user_id":"auth0|507f1f77bcf86cd799439020",
         "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
         "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
         "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
@@ -643,7 +655,7 @@ class UserRepositoryTest extends TestCase
         "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
         "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
         "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
-        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]')];
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]'));
 
         // Call function under test, twice.
         $users1 = $this->repo->getByIds(collect(['john.doe@gmail.com', 'other@gmail.com']));
@@ -653,7 +665,7 @@ class UserRepositoryTest extends TestCase
         self::assertEquals($users1, $users2);
 
         // Verify only 1 api call was made.
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
     }
 
     /**
@@ -673,7 +685,8 @@ class UserRepositoryTest extends TestCase
         "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
         "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
         "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]');
-        $this->mockedResponses = [$response, $response];
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponses([clone $response, clone $response]);
 
         // Set cache TTL to 10 seconds in the config, and create new repository using this cache value.
         Config::set('mrd-auth0.cache_ttl', 10);
@@ -684,7 +697,7 @@ class UserRepositoryTest extends TestCase
         $this->repo->getByIds(collect(['john.doe@gmail.com', 'other@gmail.com']));
 
         // Verify only 1 api call was made.
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
 
         // Increment time such that cache TTL should have passed.
         Carbon::setTestNow(Carbon::now()->addSeconds(11));
@@ -693,7 +706,7 @@ class UserRepositoryTest extends TestCase
         $this->repo->getByIds(collect(['john.doe@gmail.com', 'other@gmail.com']));
 
         // Verify now a total of two api calls was made.
-        self::assertCount(2, $this->guzzleContainer);
+        self::assertCount(2, $this->httpClient->getRequests());
     }
 
     /**
@@ -702,23 +715,24 @@ class UserRepositoryTest extends TestCase
     public function testDeleteOne()
     {
         // Altered response from Auth0 API documentation
-        $this->mockedResponses = [new Response(204, [], '')];
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponse(new Response(204, [], ''));
 
         // Call function under test
         $userID = 'test';
         $this->repo->delete($userID);
 
         // Find the request that was sent to Auth0
-        $request = $this->guzzleContainer[0]['request'];
+        $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
 
         // Expect a Delete request
-        self::assertEquals("DELETE", $request->getMethod());
+        self::assertEquals("DELETE", $request->getLastRequest()->getMethod());
 
         // Expect 1 api call
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
 
         // Verify correct endpoint was called
-        self::assertEquals('/api/v2/users/' . $userID, $request->getUri()->getPath());
+        self::assertEquals('users/' . $userID, $request->getUrl());
     }
 
     /**
@@ -727,14 +741,13 @@ class UserRepositoryTest extends TestCase
     public function testCreateOne()
     {
         // response based on Auth0 documentation
-        $response = new Response(201, [], '{"user_id":"auth0|507f1f77bcf86cd799439020",
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponse(new Response(201, [], '{"user_id":"auth0|507f1f77bcf86cd799439020",
         "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
         "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
         "user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],"app_metadata":{},"user_metadata":{},
         "picture":"","name":"","nickname":"","multifactor":[""],"last_ip":"","last_login":"","logins_count":0,
-        "blocked":false,"given_name":"John","family_name":"Doe"}');
-
-        $this->mockedResponses = [$response];
+        "blocked":false,"given_name":"John","family_name":"Doe"}'));
 
         // call function under test
         $user = $this->repo->createUser("john.doe@gmail.com", "John", "Doe");
@@ -746,16 +759,16 @@ class UserRepositoryTest extends TestCase
         self::assertEquals("Doe", $user->family_name);
 
         // Find the request that was sent to Auth0
-        $request = $this->guzzleContainer[0]['request'];
+        $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
 
         // Expect a Post request
-        self::assertEquals("POST", $request->getMethod());
+        self::assertEquals("POST", $request->getLastRequest()->getMethod());
 
         // Expect 1 api call
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
 
         // Verify correct endpoint was called
-        self::assertEquals('/api/v2/users', $request->getUri()->getPath());
+        self::assertEquals('users', $request->getUrl());
     }
 
     /**
@@ -763,7 +776,8 @@ class UserRepositoryTest extends TestCase
      */
     public function testGetAllUsers()
     {
-        $this->mockedResponses = [new Response(200, [], '{
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponse(new Response(200, [], '{
         "start": 0, "limit": 50, "length": 2, "users": [{"user_id":"auth0|507f1f77bcf86cd799439020",
         "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
         "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
@@ -774,7 +788,7 @@ class UserRepositoryTest extends TestCase
         "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
         "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
         "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
-        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}], "total": 2}')];
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}], "total": 2}'));
 
         // Call function under test.
         $users = $this->repo->getAllUsers();
@@ -796,13 +810,13 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('other', $user2->username);
 
         // Expect 1 api call.
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
 
         // Find the request that was sent to Auth0
-        $request = $this->guzzleContainer[0]['request'];
+        $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
 
         // Verify correct endpoint was called.
-        self::assertEquals('/api/v2/users', $request->getUri()->getPath());
+        self::assertStringStartsWith('users?', $request->getUrl());
     }
 
     /**
@@ -829,7 +843,9 @@ class UserRepositoryTest extends TestCase
         "Initial-Connection","user_id":"507f1f77bcf86cd799439022","provider":"auth0","isSocial":false}],
         "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
         "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}], "total": 3}');
-        $this->mockedResponses = [$response1, $response2];
+
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponses([$response1, $response2]);
 
         // Call function under test.
         $users = $this->repo->getAllUsers();
@@ -856,11 +872,11 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('user3', $user3->username);
 
         // Expect 2 api calls.
-        self::assertCount(2, $this->guzzleContainer);
+        self::assertCount(2, $this->httpClient->getRequests());
 
         // Find the requests that were sent to Auth0.
-        $request1 = $this->guzzleContainer[0]['request'];
-        $request2 = $this->guzzleContainer[1]['request'];
+        $request1 = $this->httpClient->getRequests()[0];
+        $request2 = $this->httpClient->getRequests()[1];
 
         // Verify correct endpoints were called and include_totals=true was included in requests.
         foreach ([$request1, $request2] as $request) {
@@ -879,7 +895,8 @@ class UserRepositoryTest extends TestCase
     public function testGetAllUsersCaching()
     {
         // Response base on Auth0 API documentation
-        $this->mockedResponses = [new Response(200, [], '{
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponse(new Response(200, [], '{
         "start": 0, "limit": 50, "length": 2, "users": [{"user_id":"auth0|507f1f77bcf86cd799439020",
         "email":"john.doe@gmail.com","email_verified":false,"username":"johndoe","phone_number":"+199999999999999",
         "phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":"Initial-Connection",
@@ -890,7 +907,7 @@ class UserRepositoryTest extends TestCase
         "+199999999999999","phone_verified":false,"created_at":"","updated_at":"","identities":[{"connection":
         "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
         "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
-        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}], "total": 2}')];
+        "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}], "total": 2}'));
 
         // Call function under test, twice.
         $users1 = $this->repo->getAllUsers();
@@ -900,7 +917,7 @@ class UserRepositoryTest extends TestCase
         self::assertEquals($users1, $users2);
 
         // Verify only 1 api call was made.
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
     }
 
     /**
@@ -933,7 +950,9 @@ class UserRepositoryTest extends TestCase
         "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
         "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
         "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]');
-        $this->mockedResponses = [$response1, $response2, $response3];
+
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponses([$response1, $response2, $response3]);
 
         // Set chunk size to 1 in the config, and create new repository using this chunk size.
         Config::set('mrd-auth0.chunk_size', 1);
@@ -945,7 +964,7 @@ class UserRepositoryTest extends TestCase
         Cache::flush();
 
         // Verify 2 api calls were made.
-        self::assertCount(2, $this->guzzleContainer);
+        self::assertCount(2, $this->httpClient->getRequests());
 
         // Set chunk size to 2 in the config, and create new repository using this chunk size.
         Config::set('mrd-auth0.chunk_size', 2);
@@ -953,7 +972,7 @@ class UserRepositoryTest extends TestCase
 
         // Execute function under test again, and expect only 1 api call to be made in this case (so total of 3).
         $this->repo->getByIds(collect(['auth0|507f1f77bcf86cd799439020', 'other_user']));
-        self::assertCount(3, $this->guzzleContainer);
+        self::assertCount(3, $this->httpClient->getRequests());
     }
 
     /**
@@ -979,7 +998,9 @@ class UserRepositoryTest extends TestCase
         "Initial-Connection","user_id":"507f1f77bcf86cd799439022","provider":"auth0","isSocial":false}],
         "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
         "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]');
-        $this->mockedResponses = [$response1, $response2];
+
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponses([$response1, $response2]);
 
         // Set chunk size to 2 in the config, and create new repository using this chunk size.
         Config::set('mrd-auth0.chunk_size', 2);
@@ -1009,11 +1030,11 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('user3', $user3->username);
 
         // Expect 2 api calls.
-        self::assertCount(2, $this->guzzleContainer);
+        self::assertCount(2, $this->httpClient->getRequests());
 
         // Find the request that was sent to Auth0
-        $request1 = $this->guzzleContainer[0]['request'];
-        $request2 = $this->guzzleContainer[1]['request'];
+        $request1 = $this->httpClient->getRequests()[0];
+        $request2 = $this->httpClient->getRequests()[1];
         $query1 = urldecode($request1->getUri()->getQuery());
         $query2 = urldecode($request2->getUri()->getQuery());
 
@@ -1062,7 +1083,9 @@ class UserRepositoryTest extends TestCase
         "Initial-Connection","user_id":"507f1f77bcf86cd799439020","provider":"auth0","isSocial":false}],
         "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
         "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]');
-        $this->mockedResponses = [$response1, $response2, $response3];
+
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponses([$response1, $response2, $response3]);
 
         // Set chunk size to 1 in the config, and create new repository using this chunk size.
         Config::set('mrd-auth0.chunk_size', 1);
@@ -1074,7 +1097,7 @@ class UserRepositoryTest extends TestCase
         Cache::flush();
 
         // Verify 2 api calls were made.
-        self::assertCount(2, $this->guzzleContainer);
+        self::assertCount(2, $this->httpClient->getRequests());
 
         // Set chunk size to 2 in the config, and create new repository using this chunk size.
         Config::set('mrd-auth0.chunk_size', 2);
@@ -1082,7 +1105,7 @@ class UserRepositoryTest extends TestCase
 
         // Execute function under test again, and expect only 1 api call to be made in this case (so total of 3).
         $this->repo->getByIds(collect(['john.doe@gmail.com', 'other@gmail.com']));
-        self::assertCount(3, $this->guzzleContainer);
+        self::assertCount(3, $this->httpClient->getRequests());
     }
 
     /**
@@ -1108,7 +1131,9 @@ class UserRepositoryTest extends TestCase
         "Initial-Connection","user_id":"507f1f77bcf86cd799439022","provider":"auth0","isSocial":false}],
         "app_metadata":{},"user_metadata":{},"picture":"","name":"","nickname":"","multifactor":[""],"last_ip":
         "","last_login":"","logins_count":0,"blocked":false,"given_name":"","family_name":""}]');
-        $this->mockedResponses = [$response1, $response2];
+
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponses([$response1, $response2]);
 
         // Set chunk size to 2 in the config, and create new repository using this chunk size.
         Config::set('mrd-auth0.chunk_size', 2);
@@ -1138,11 +1163,11 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('user3', $user3->username);
 
         // Expect 2 api calls.
-        self::assertCount(2, $this->guzzleContainer);
+        self::assertCount(2, $this->httpClient->getRequests());
 
         // Find the request that was sent to Auth0
-        $request1 = $this->guzzleContainer[0]['request'];
-        $request2 = $this->guzzleContainer[1]['request'];
+        $request1 = $this->httpClient->getRequests()[0];
+        $request2 = $this->httpClient->getRequests()[1];
         $query1 = urldecode($request1->getUri()->getQuery());
         $query2 = urldecode($request2->getUri()->getQuery());
 

@@ -495,12 +495,13 @@ class DatasetAuthorizationTest extends TestCase
 
         // Send request to test endpoint for each supported dataset key as route parameter.
         foreach (self::SUPPORTED_DATASET_KEYS as $routeParamKey) {
-            $this->actingAsAuth0User(['sub' => 'user1']);
-
             // Send same request twice.
+            $this->actingAsAuth0User(['sub' => 'user1']);
             $this->request('GET', $routeParamKey, 7)
                 ->assertForbidden()
                 ->assertSee('Unauthorized dataset');
+
+            $this->actingAsAuth0User(['sub' => 'user1']);
             $this->request('GET', $routeParamKey, 7)
                 ->assertForbidden()
                 ->assertSee('Unauthorized dataset');
