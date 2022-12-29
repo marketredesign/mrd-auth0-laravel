@@ -27,7 +27,7 @@ steps:
       sudo apt-get update
       sudo apt-get install php$(php_version)
       sudo apt-get install php$(php_version)-cli php$(php_version)-mbstring php$(php_version)-xml php$(php_version)-curl
-      sudo apt-get install php$(php_version)-dom php$(php_version)-curl php$(php_version)-simplexml
+      sudo apt-get install php$(php_version)-dom php$(php_version)-simplexml
       sudo update-alternatives --set php /usr/bin/php$(php_version)
       sudo update-alternatives --set phar /usr/bin/phar$(php_version)
       sudo update-alternatives --set phpdbg /usr/bin/phpdbg$(php_version)
