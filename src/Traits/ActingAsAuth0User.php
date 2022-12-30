@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Marketredesign\MrdAuth0Laravel\Traits;
 
-use Auth0\Laravel\Model\Stateless\User;
+use Auth0\Laravel\Model\Stateful\User as StatefulUser;
+use Auth0\Laravel\Model\Stateless\User as StatelessUser;
 use Auth0\Laravel\StateInstance;
 use Illuminate\Contracts\Auth\Authenticatable;
 
@@ -24,7 +25,7 @@ trait ActingAsAuth0User
      *
      * @return mixed
      */
-    public function actingAsAuth0User(array $attributes = [])
+    public function actingAsAuth0User(array $attributes = [], $stateless = true)
     {
         $defaults = [
             'sub' => 'some-auth0-user-id',
@@ -34,7 +35,11 @@ trait ActingAsAuth0User
             'scope' => '',
         ];
 
-        $auth0user = new User(array_merge($defaults, $attributes));
+        if ($stateless) {
+            $auth0user = new StatelessUser(array_merge($defaults, $attributes));
+        } else {
+            $auth0user = new StatefulUser(array_merge($defaults, $attributes));
+        }
 
         if ($auth0user->getAttribute('scope')) {
             app()->make(StateInstance::class)->setAccessTokenScope(explode(' ', $auth0user->getAttribute('scope')));
