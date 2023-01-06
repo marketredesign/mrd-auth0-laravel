@@ -3,7 +3,7 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
-use Illuminate\Foundation\Application;
+use Auth0\Laravel\Store\LaravelSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Redirect;
@@ -13,21 +13,22 @@ class LogoutTest extends TestCase
 {
     private const ROUTE_NAME = 'logout';
 
-    /**
-     * Define environment setup.
-     *
-     * @param  Application  $app
-     * @return void
-     */
-    protected function getEnvironmentSetUp($app)
+    protected function setUp(): void
     {
-        // Set the Laravel Auth0 config values which are used to some values.
-        $app['config']->set('auth0', [
+        parent::setUp();
+
+        Config::set('auth0', [
             'strategy' => 'webapp',
-            'domain'     => 'auth.marketredesign.com',
+            'domain'   => 'auth.marketredesign.com',
             'audience' => ['https://api.pricecypher.com'],
-            'clientId'  => '123',
+            'redirectUri' => 'https://redirect.com/oauth/callback',
+            'sessionStorage' => new LaravelSession(),
+            'transientStorage' => new LaravelSession(),
+            'clientId' => '123',
+            'cookieSecret' => 'abc',
         ]);
+
+        $this->resetAuth0Config();
     }
 
     /**

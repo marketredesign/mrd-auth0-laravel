@@ -4,7 +4,11 @@
 namespace Marketredesign\MrdAuth0Laravel\Tests;
 
 use Auth0\Laravel\Auth\User\Repository;
+use Auth0\Laravel\Facade\Auth0;
 use Auth0\Laravel\ServiceProvider;
+use Auth0\SDK\Auth0 as Auth0Sdk;
+use Auth0\SDK\Configuration\SdkConfiguration;
+use Auth0\SDK\Exception\ConfigurationException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
@@ -15,6 +19,7 @@ use Marketredesign\MrdAuth0Laravel\Traits\ActingAsAuth0User;
 class TestCase extends \Orchestra\Testbench\TestCase
 {
     use ActingAsAuth0User;
+
     /**
      * The maximum number of mocked responses a test case may use. Increase when not sufficient.
      */
@@ -80,5 +85,18 @@ class TestCase extends \Orchestra\Testbench\TestCase
         return [
             'handler' => $handlerStack,
         ];
+    }
+
+    /**
+     * Resets the config used by the Auth0 SDK that is used by the Auth0 Facade.
+     * Should be called after updating the auth0 config.
+     *
+     * @return void
+     * @throws ConfigurationException
+     */
+    protected function resetAuth0Config(): void
+    {
+        Auth0::setConfiguration(new SdkConfiguration(Config::get('auth0')));
+        Auth0::setSdk(new Auth0Sdk(Auth0::getConfiguration()));
     }
 }

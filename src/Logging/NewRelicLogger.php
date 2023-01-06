@@ -3,6 +3,7 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Logging;
 
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Monolog\Handler\BufferHandler;
 use Monolog\Logger;
@@ -45,13 +46,16 @@ class NewRelicLogger
         ];
 
         // Add info about the Auth0 user performing the request we are running (if any)
-        $record['user'] = [
-            'authenticated' => Auth::check(),
-            'user_id' => Auth::id(),
-        ];
+        if (!App::runningInConsole()) {
+            $record['user'] = [
+                'authenticated' => Auth::check(),
+                'user_id' => Auth::id(),
+            ];
+        }
 
         // Add info about the state which we are running for
         $record['state'] = [
+            'running_in_console' => App::runningInConsole(),
             'request_method' => optional(request())->getMethod(),
             'route_name' => optional(optional(request())->route())->getName(),
             'uri' => optional(request())->getRequestUri(),
