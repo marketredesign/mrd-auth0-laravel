@@ -98,15 +98,13 @@ class PermissionAuthorizationTest extends TestCase
         // Sanity check; permissions is indeed not the permissions claim property name.
         self::assertNotEquals('permissions', $this->permissionsClaim);
 
-        // Login as some user and add incorrect permissions claim to userinfo.
-        $this->actingAsAuth0User(['permissions' => ['read:test']]);
-
-        // Sanity check; user should be logged in now.
-        self::assertTrue(Auth::check());
-
         // First verify without permission checking, which should not result in any log messages.
         Log::shouldReceive('warning')->never();
 
+        // Login as some user and add incorrect permissions claim to userinfo.
+        $this->actingAsAuth0User(['permissions' => ['read:test']]);
+        // Sanity check; user should be logged in now.
+        self::assertTrue(Auth::check());
         // Verify the user is allowed access.
         $this->request()->assertOk();
 
@@ -115,6 +113,10 @@ class PermissionAuthorizationTest extends TestCase
             return strpos($message, 'permissions claim') !== false;
         });
 
+        // Login as some user and add incorrect permissions claim to userinfo.
+        $this->actingAsAuth0User(['permissions' => ['read:test']]);
+        // Sanity check; user should be logged in now.
+        self::assertTrue(Auth::check());
         // Verify request is forbidden (permissions are not in correct place in ID token).
         $this->request('read:test')->assertForbidden()->assertSee('Insufficient permissions');
     }

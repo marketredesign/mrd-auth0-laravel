@@ -4,8 +4,8 @@
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
 use Closure;
-use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
 use Marketredesign\MrdAuth0Laravel\Tests\TestCase;
@@ -14,21 +14,18 @@ class JwtAuthorizationTest extends TestCase
 {
     private const ROUTE_URI = 'test_route';
 
-    /**
-     * Define environment setup.
-     *
-     * @param  Application  $app
-     * @return void
-     */
-    protected function getEnvironmentSetUp($app)
+    protected function setUp(): void
     {
-        // Set the Laravel Auth0 config values which are used to some values.
-        $app['config']->set('auth0', [
+        parent::setUp();
+
+        Config::set('auth0', [
             'strategy' => 'api',
-            'domain'     => 'auth.marketredesign.com',
+            'domain'   => 'auth.marketredesign.com',
             'audience' => ['https://api.pricecypher.com'],
-            'clientId'  => '123',
+            'clientId' => '123',
         ]);
+
+        $this->resetAuth0Config();
     }
 
     /**
@@ -63,7 +60,7 @@ class JwtAuthorizationTest extends TestCase
     public function testBearerTokenMissing()
     {
         $this->request(false)
-            ->assertForbidden()
+            ->assertUnauthorized()
             ->assertSee('Unauthorized');
     }
 
@@ -72,7 +69,7 @@ class JwtAuthorizationTest extends TestCase
      */
     public function testInvalidToken()
     {
-        $this->request(true)->assertForbidden();
+        $this->request(true)->assertUnauthorized();
     }
 
     /**
@@ -81,7 +78,7 @@ class JwtAuthorizationTest extends TestCase
     public function testScopeRequiredNoneProvided()
     {
         $this->request(true, 'test_scope')
-            ->assertForbidden()
+            ->assertUnauthorized()
             ->assertSee('Unauthorized');
     }
 
@@ -94,7 +91,7 @@ class JwtAuthorizationTest extends TestCase
 
         $this->request(true, 'test_scope')
             ->assertForbidden()
-            ->assertSee('Unauthorized');
+            ->assertSee('Forbidden');
     }
 
     /**
@@ -106,7 +103,7 @@ class JwtAuthorizationTest extends TestCase
 
         $this->request(true, 'test_scope')
             ->assertForbidden()
-            ->assertSee('Unauthorized');
+            ->assertSee('Forbidden');
     }
 
     /**

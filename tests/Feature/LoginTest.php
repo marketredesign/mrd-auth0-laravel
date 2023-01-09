@@ -4,7 +4,8 @@
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
 use Auth0\Laravel\Facade\Auth0;
-use Illuminate\Foundation\Application;
+use Auth0\Laravel\Store\LaravelSession;
+use Auth0\SDK\Contract\Auth0Interface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Redirect;
@@ -15,21 +16,22 @@ class LoginTest extends TestCase
 {
     private const ROUTE_NAME = 'login';
 
-    /**
-     * Define environment setup.
-     *
-     * @param  Application  $app
-     * @return void
-     */
-    protected function getEnvironmentSetUp($app)
+    protected function setUp(): void
     {
-        // Set the Laravel Auth0 config values which are used to some values.
-        $app['config']->set('auth0', [
+        parent::setUp();
+
+        Config::set('auth0', [
             'strategy' => 'webapp',
-            'domain'     => 'auth.marketredesign.com',
+            'domain'   => 'auth.marketredesign.com',
             'audience' => ['https://api.pricecypher.com'],
-            'clientId'  => '123',
+            'redirectUri' => 'https://redirect.com/oauth/callback',
+            'sessionStorage' => new LaravelSession(),
+            'transientStorage' => new LaravelSession(),
+            'clientId' => '123',
+            'cookieSecret' => 'abc',
         ]);
+
+        $this->resetAuth0Config();
     }
 
     /**
@@ -39,17 +41,17 @@ class LoginTest extends TestCase
     {
         Config::set('auth0.routes.home', '/some-home-url');
 
-        // Login as some user.
+        // Verify we are redirected to the configured home URL.
         $this->actingAsAuth0User();
-
         // Sanity check; make sure a user is logged in.
         self::assertTrue(Auth::check());
-
-        // Verify we are redirected to the configured home URL.
         $this->get(route(self::ROUTE_NAME))->assertRedirect('/some-home-url');
 
         // Now set an intended URL in the user session and verify we are redirected there instead.
         Redirect::setIntendedUrl('/something');
+        $this->actingAsAuth0User();
+        // Sanity check; make sure a user is logged in.
+        self::assertTrue(Auth::check());
         $this->get(route(self::ROUTE_NAME))->assertRedirect('/something');
     }
 
@@ -61,17 +63,16 @@ class LoginTest extends TestCase
         // Sanity check; make sure no user is logged in.
         self::assertFalse(Auth::check());
 
-        // Mock out the Auth0 SDK, and expect 'login' method to be called exactly once.
-        $sdkMock = Mockery::mock(Auth0::getSdk())
-            ->shouldReceive('login')
+        // Mock out the Auth0 SDK, and expect 'getCredentials' and 'login' methods to be called exactly once.
+        $sdkMock = Mockery::mock(Auth0Interface::class)
+            ->shouldReceive([
+                'getCredentials' => null,
+                'login' => 'https://login.com',
+            ])
             ->once()
-            ->andReturn('https://login.com')
             ->getMock();
         // Make sure the mocked SDK is used by the Auth0 Facade.
-        $this->mock('auth0')
-            ->shouldReceive('getSdk')
-            ->andReturn($sdkMock)
-            ->getMock();
+        Auth0::setSdk($sdkMock);
 
         // Expect redirect away to login.com
         $this->get(route(self::ROUTE_NAME))->assertRedirect('https://login.com');

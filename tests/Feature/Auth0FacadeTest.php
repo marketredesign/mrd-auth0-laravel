@@ -48,7 +48,7 @@ class Auth0FacadeTest extends TestCase
         // Mock cache remember and verify called with TTL 500/2 = 250.
         Cache::shouldReceive('remember')->withArgs(function ($key, $ttl) {
             return value($ttl) == 250;
-        })->andReturn('unused');
+        })->once()->andReturn('unused');
 
         // Retrieve m2m function such that we can verify the cache call.
         Auth0::getMachineToMachineToken();

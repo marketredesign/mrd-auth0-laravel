@@ -3,10 +3,11 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
+use Auth0\Laravel\Facade\Auth0;
 use Carbon\Carbon;
 use Exception;
-use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
+use Http\Mock\Client;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
@@ -19,6 +20,8 @@ class Auth0RepositoryTest extends TestCase
     /** Repository under test */
     protected Auth0Repository $repo;
 
+    private Client $httpClient;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -29,8 +32,12 @@ class Auth0RepositoryTest extends TestCase
         Config::set('auth0.domain', 'domain.test');
         Config::set('auth0.clientId', 'clientId.test');
         Config::set('auth0.clientSecret', 'clientSecret.test');
+
         // Let the Auth0 SDK use our mocked HTTP client.
-        Config::set('auth0.httpClient', new Client($this->createTestingGuzzleOptions()));
+        $this->httpClient = new Client();
+        Config::set('auth0.httpClient', $this->httpClient);
+
+        $this->resetAuth0Config();
     }
 
     /**
@@ -77,10 +84,8 @@ class Auth0RepositoryTest extends TestCase
      */
     public function testGetM2mToken()
     {
-        // Add one mocked response to our fake HTTP client. NB: we expect exactly 1 request to be made.
-        $this->mockedResponses = [
-            new Response(200, [], '{"expires_in": 200, "access_token": "some_access_token"}')
-        ];
+        Auth0::getSdk()->authentication()->getHttpClient()
+            ->mockResponse(new Response(200, [], '{"expires_in": 200, "access_token": "some_access_token"}'));
 
         // Call the function under test.
         $token = $this->repo->getMachineToMachineToken();
@@ -89,13 +94,12 @@ class Auth0RepositoryTest extends TestCase
         self::assertEquals('some_access_token', $token);
 
         // Expect only 1 API call was made.
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
 
         // Find the request that was sent to "Auth0".
-        $request = $this->guzzleContainer[0]['request'];
-
+        $request = Auth0::getSdk()->authentication()->getHttpClient()->getLastRequest();
         // Verify correct url was called.
-        self::assertEquals('https://domain.test/oauth/token', (string) $request->getUri());
+        self::assertEquals('oauth/token', $request->getUrl());
     }
 
     /**
@@ -104,18 +108,17 @@ class Auth0RepositoryTest extends TestCase
     public function testGetM2mTokenCaching()
     {
         // Add some mocked responses, each with different access token.
-        $this->mockedResponses = [
-            new Response(200, [], '{"expires_in": 200, "access_token": "some_access_token"}'),
-            new Response(200, [], '{"expires_in": 683, "access_token": "other_access_token"}'),
-            new Response(200, [], '{"expires_in": 0, "access_token": "last_access_token"}'),
-        ];
+        Auth0::getSdk()->authentication()->getHttpClient()
+            ->mockResponse(new Response(200, [], '{"expires_in": 200, "access_token": "some_access_token"}'))
+            ->mockResponse(new Response(200, [], '{"expires_in": 683, "access_token": "other_access_token"}'))
+            ->mockResponse(new Response(200, [], '{"expires_in": 0, "access_token": "last_access_token"}'));
 
         // Call function under test twice and verify access token.
         self::assertEquals('some_access_token', $this->repo->getMachineToMachineToken());
         self::assertEquals('some_access_token', $this->repo->getMachineToMachineToken());
 
         // Verify only 1 api call was made.
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
 
         // Increment time such that cache TTL should not have passed yet.
         Carbon::setTestNow(Carbon::now()->addSeconds(98));
@@ -123,7 +126,7 @@ class Auth0RepositoryTest extends TestCase
         // Call function under test again and verify access token still the same.
         self::assertEquals('some_access_token', $this->repo->getMachineToMachineToken());
         // Verify still only 1 api call was made.
-        self::assertCount(1, $this->guzzleContainer);
+        self::assertCount(1, $this->httpClient->getRequests());
 
         // Increment time such that cache TTL should have passed now. NB: it expires after half the time has passed.
         Carbon::setTestNow(Carbon::now()->addSeconds(101));
@@ -133,7 +136,7 @@ class Auth0RepositoryTest extends TestCase
         self::assertEquals('other_access_token', $this->repo->getMachineToMachineToken());
 
         // Verify now 2 API calls have been made.
-        self::assertCount(2, $this->guzzleContainer);
+        self::assertCount(2, $this->httpClient->getRequests());
 
         // Now let's also verify an expires_in attribute that is odd.
         Carbon::setTestNow(Carbon::now()->addSeconds(340));
