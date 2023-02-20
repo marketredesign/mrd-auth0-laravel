@@ -24,7 +24,9 @@
         "guzzlehttp/guzzle": "^6.0|^7.0",
         "illuminate/contracts": "^10.0",
         "illuminate/support": "^10.0",
-        "marketredesign/newrelic-monolog-enricher": "^3.0"
+        "marketredesign/newrelic-monolog-enricher": "^3.0",
+        "nyholm/psr7": "^1.5",
+        "symfony/psr-http-message-bridge": "^2.1"
     },
     "require-dev": {
         "nunomaduro/larastan": "^2.5",
