@@ -105,7 +105,7 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
             return $this->retrieveDatasetsFromApi($managedOnly);
         }
 
-        $userId = Auth::id();
+        $userId = Auth::id() ?? Auth::guard('jwt')->id() ?? Auth::guard('pc-openid')->id();
 
         if ($userId == null) {
             // We cannot read from cache since our normal method of retrieving the user ID apparently did not work.

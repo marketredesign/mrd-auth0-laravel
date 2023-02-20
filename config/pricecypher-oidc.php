@@ -8,9 +8,18 @@ return [
     | TODO
     |
     */
-    'issuer' =>  env('OIDC_ISSUER'),
+    'issuer' => env('OIDC_ISSUER'),
 
-    'client_id' =>  env('OIDC_CLIENT_ID'),
+    'client_id' => env('OIDC_CLIENT_ID'),
+    'client_secret' => env('OIDC_CLIENT_SECRET'),
 
-    'scope_prefix' =>  env('OIDC_SCOPE_PREFIX', ''),
+    'logout_endpoint' => env('OIDC_LOGOUT_ENDPOINT'),
+
+    'scope_prefix' => env('OIDC_SCOPE_PREFIX', ''),
+
+    'id_scopes' => explode(' ', env('OIDC_ID_SCOPES', 'openid')),
+
+    'routes' => [
+        'home' => env('OIDC_ROUTE_HOME', '/'),
+    ],
 ];
