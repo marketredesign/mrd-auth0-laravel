@@ -206,7 +206,7 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
                     'sub' => $id,
                     'user_id' => $id,
                     'email' => $id,
-                ];
+                 ];
             });
         }
 
