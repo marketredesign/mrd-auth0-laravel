@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Marketredesign\MrdAuth0Laravel\Traits;
 
-
 use Illuminate\Contracts\Auth\Authenticatable;
 use Marketredesign\MrdAuth0Laravel\Model\Stateless\User as StatefulUser;
 use Marketredesign\MrdAuth0Laravel\Model\Stateless\User as StatelessUser;

@@ -9,8 +9,11 @@ use Illuminate\Support\Facades\Auth;
 
 class Login
 {
-    public function __invoke(AuthRequestInterface $authRequest, AuthorizationService $authService, ClientInterface $oidcClient)
-    {
+    public function __invoke(
+        AuthRequestInterface $authRequest,
+        AuthorizationService $authService,
+        ClientInterface $oidcClient
+    ) {
         $guard = Auth::guard('pc-oidc');
 
         if ($guard->check()) {

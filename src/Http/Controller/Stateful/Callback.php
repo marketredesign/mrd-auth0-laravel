@@ -10,7 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class Callback
 {
-    public function __invoke(AuthorizationService $authService, ClientInterface $oidcClient, ServerRequestInterface $sri)
+    public function __invoke(AuthorizationService $authService, ClientInterface $client, ServerRequestInterface $sri)
     {
         $guard = Auth::guard('pc-oidc');
 
@@ -18,10 +18,10 @@ class Callback
             return redirect()->intended(config('pricecypher-oidc.routes.home', '/'));
         }
 
-        $params = $authService->getCallbackParams($sri, $oidcClient);
+        $params = $authService->getCallbackParams($sri, $client);
 
         try {
-            $tokenSet = $authService->callback($oidcClient, $params, route('oidc-callback'));
+            $tokenSet = $authService->callback($client, $params, route('oidc-callback'));
         } catch (\Throwable $e) {
             $guard->logout();
             Log::error("OIDC callback failed with message {$e->getMessage()}.", [
