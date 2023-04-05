@@ -139,6 +139,7 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr-mock/http-message-implementation" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr-mock/http-factory-implementation" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr-mock/http-client-implementation" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/marketredesign/newrelic-monolog-enricher" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

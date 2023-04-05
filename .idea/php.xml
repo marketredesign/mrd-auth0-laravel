@@ -175,6 +175,7 @@
       <path value="$PROJECT_DIR$/vendor/psr-mock/http-message-implementation" />
       <path value="$PROJECT_DIR$/vendor/psr-mock/http-factory-implementation" />
       <path value="$PROJECT_DIR$/vendor/psr-mock/http-client-implementation" />
+      <path value="$PROJECT_DIR$/vendor/marketredesign/newrelic-monolog-enricher" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.1" />
