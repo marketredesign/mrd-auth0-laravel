@@ -23,7 +23,7 @@
         "guzzlehttp/guzzle": "^6.0|^7.0",
         "illuminate/contracts": "^10.0",
         "illuminate/support": "^10.0",
-        "marketredesign/newrelic-monolog-enricher": "dev-feature/monolog-v3"
+        "marketredesign/newrelic-monolog-enricher": "^3.0"
     },
     "require-dev": {
         "nunomaduro/larastan": "^2.5",

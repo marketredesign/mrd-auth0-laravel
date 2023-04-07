@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9c7c9ce8d8e140da833fadc9b4db0c2c",
+    "content-hash": "bd45075f25876cbf4289679896895eb6",
     "packages": [
         {
             "name": "auth0/auth0-php",
@@ -1863,16 +1863,16 @@
         },
         {
             "name": "marketredesign/newrelic-monolog-enricher",
-            "version": "dev-feature/monolog-v3",
+            "version": "v3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/marketredesign/newrelic-monolog-logenricher-php.git",
-                "reference": "3d067619fceccf3a4c498f9a7727a370567db8a6"
+                "reference": "654a588f67052c8bd0fdec53c63ece1b7118dd43"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/marketredesign/newrelic-monolog-logenricher-php/zipball/3d067619fceccf3a4c498f9a7727a370567db8a6",
-                "reference": "3d067619fceccf3a4c498f9a7727a370567db8a6",
+                "url": "https://api.github.com/repos/marketredesign/newrelic-monolog-logenricher-php/zipball/654a588f67052c8bd0fdec53c63ece1b7118dd43",
+                "reference": "654a588f67052c8bd0fdec53c63ece1b7118dd43",
                 "shasum": ""
             },
             "require": {
@@ -1904,9 +1904,9 @@
             ],
             "description": "Monolog components to enable New Relic Logs",
             "support": {
-                "source": "https://github.com/marketredesign/newrelic-monolog-logenricher-php/tree/feature/monolog-v3"
+                "source": "https://github.com/marketredesign/newrelic-monolog-logenricher-php/tree/v3.0.0"
             },
-            "time": "2023-04-05T11:07:38+00:00"
+            "time": "2023-04-07T13:57:43+00:00"
         },
         {
             "name": "monolog/monolog",
@@ -10195,9 +10195,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "marketredesign/newrelic-monolog-enricher": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
