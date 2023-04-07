@@ -3,10 +3,13 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
+use DateTimeImmutable;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Marketredesign\MrdAuth0Laravel\Logging\NewRelicLogger;
 use Marketredesign\MrdAuth0Laravel\Tests\TestCase;
+use Monolog\Level;
+use Monolog\LogRecord;
 
 class NewRelicLoggerTest extends TestCase
 {
@@ -34,12 +37,14 @@ class NewRelicLoggerTest extends TestCase
         App::shouldReceive('runningInConsole')->andReturn(true);
 
         $logger = new NewRelicLogger();
+        $context = [];
+        $record = new LogRecord(new DateTimeImmutable(now()), 'channel', Level::Debug, 'message', $context);
 
         // Execute function under test.
-        $meta = $logger->includeMetaData(['context' => []]);
+        $meta = $logger->includeMetaData($record);
 
         // Verify running in console metadata.
-        self::assertTrue($meta['state']['running_in_console']);
+        self::assertTrue($meta->extra['state']['running_in_console']);
         // Verify no user metadata since we are running in console.
         self::assertArrayNotHasKey('user', $meta);
     }
