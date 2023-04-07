@@ -5,14 +5,15 @@ namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
 use Auth0\Laravel\Facade\Auth0;
 use Auth0\Laravel\Store\LaravelSession;
+use Auth0\SDK\Configuration\SdkConfiguration;
 use GuzzleHttp\Psr7\Response;
-use Http\Mock\Client;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Marketredesign\MrdAuth0Laravel\Contracts\UserRepository;
 use Marketredesign\MrdAuth0Laravel\Tests\TestCase;
+use PsrMock\Psr18\Client;
 
 class UserRepositoryTest extends TestCase
 {
@@ -31,6 +32,7 @@ class UserRepositoryTest extends TestCase
         $this->httpClient = new Client();
 
         Config::set('auth0', [
+            'strategy' => SdkConfiguration::STRATEGY_API,
             'domain'   => 'auth.marketredesign.com',
             'audience' => ['https://api.pricecypher.com'],
             'redirectUri' => 'https://redirect.com/oauth/callback',
@@ -89,7 +91,7 @@ class UserRepositoryTest extends TestCase
         self::assertNull($user);
 
         // Expect 1 api call.
-        self::assertCount(1, $this->httpClient->getRequests());
+        self::assertCount(1, $this->httpClient->getTimeline());
 
         $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
 
@@ -121,7 +123,7 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('507f1f77bcf86cd799439020', $user->identities[0]->user_id);
 
         // Expect 1 api call.
-        self::assertCount(1, $this->httpClient->getRequests());
+        self::assertCount(1, $this->httpClient->getTimeline());
 
         // Find the request that was sent to Auth0
         $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
@@ -168,7 +170,7 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('testing_user', $user2->username);
 
         // Expect 2 api calls.
-        self::assertCount(2, $this->httpClient->getRequests());
+        self::assertCount(2, $this->httpClient->getTimeline());
 
         // Verify correct endpoints were called.
         self::assertEquals("users/auth0|507f1f77bcf86cd799439020", $request1->getUrl());
@@ -197,7 +199,7 @@ class UserRepositoryTest extends TestCase
         self::assertEquals($user, $user2);
 
         // Verify only 1 api call was made.
-        self::assertCount(1, $this->httpClient->getRequests());
+        self::assertCount(1, $this->httpClient->getTimeline());
     }
 
     /**
@@ -224,7 +226,7 @@ class UserRepositoryTest extends TestCase
         $this->repo->get('auth0|507f1f77bcf86cd799439020');
 
         // Verify only 1 api call was made.
-        self::assertCount(1, $this->httpClient->getRequests());
+        self::assertCount(1, $this->httpClient->getTimeline());
 
         // Increment time such that cache TTL should have passed.
         Carbon::setTestNow(Carbon::now()->addSeconds(11));
@@ -233,7 +235,7 @@ class UserRepositoryTest extends TestCase
         $this->repo->get('auth0|507f1f77bcf86cd799439020');
 
         // Verify now a total of two api calls was made.
-        self::assertCount(2, $this->httpClient->getRequests());
+        self::assertCount(2, $this->httpClient->getTimeline());
     }
 
     /**
@@ -279,7 +281,7 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('507f1f77bcf86cd799439020', $users->first()->identities[0]->user_id);
 
         // Expect 1 api call.
-        self::assertCount(1, $this->httpClient->getRequests());
+        self::assertCount(1, $this->httpClient->getTimeline());
 
         // Find the request that was sent to Auth0
         $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
@@ -332,7 +334,7 @@ class UserRepositoryTest extends TestCase
 
         // Expect 1 api call.
         // Expect 1 api call.
-        self::assertCount(1, $this->httpClient->getRequests());
+        self::assertCount(1, $this->httpClient->getTimeline());
 
         // Find the request that was sent to Auth0
         $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
@@ -374,7 +376,7 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('Sjaak', $users->first()->given_name);
 
         // Expect 1 api call.
-        self::assertCount(1, $this->httpClient->getRequests());
+        self::assertCount(1, $this->httpClient->getTimeline());
 
         // Find the request that was sent to Auth0
         $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
@@ -429,7 +431,7 @@ class UserRepositoryTest extends TestCase
         self::assertEquals($users1, $users2);
 
         // Verify only 1 api call was made.
-        self::assertCount(1, $this->httpClient->getRequests());
+        self::assertCount(1, $this->httpClient->getTimeline());
     }
 
     /**
@@ -461,7 +463,7 @@ class UserRepositoryTest extends TestCase
         $this->repo->getByIds(collect(['auth0|507f1f77bcf86cd799439020', 'other_user']));
 
         // Verify only 1 api call was made.
-        self::assertCount(1, $this->httpClient->getRequests());
+        self::assertCount(1, $this->httpClient->getTimeline());
 
         // Increment time such that cache TTL should have passed.
         Carbon::setTestNow(Carbon::now()->addSeconds(11));
@@ -470,7 +472,7 @@ class UserRepositoryTest extends TestCase
         $this->repo->getByIds(collect(['auth0|507f1f77bcf86cd799439020', 'other_user']));
 
         // Verify now a total of two api calls was made.
-        self::assertCount(2, $this->httpClient->getRequests());
+        self::assertCount(2, $this->httpClient->getTimeline());
     }
 
     /**
@@ -516,7 +518,7 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('507f1f77bcf86cd799439020', $users->first()->identities[0]->user_id);
 
         // Expect 1 api call.
-        self::assertCount(1, $this->httpClient->getRequests());
+        self::assertCount(1, $this->httpClient->getTimeline());
 
         // Find the request that was sent to Auth0
         $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
@@ -568,7 +570,7 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('other', $user2->username);
 
         // Expect 1 api call.
-        self::assertCount(1, $this->httpClient->getRequests());
+        self::assertCount(1, $this->httpClient->getTimeline());
 
         // Find the request that was sent to Auth0
         $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
@@ -610,7 +612,7 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('Sjaak', $users->first()->given_name);
 
         // Expect 1 api call.
-        self::assertCount(1, $this->httpClient->getRequests());
+        self::assertCount(1, $this->httpClient->getTimeline());
 
         // Find the request that was sent to Auth0
         $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
@@ -665,7 +667,7 @@ class UserRepositoryTest extends TestCase
         self::assertEquals($users1, $users2);
 
         // Verify only 1 api call was made.
-        self::assertCount(1, $this->httpClient->getRequests());
+        self::assertCount(1, $this->httpClient->getTimeline());
     }
 
     /**
@@ -697,7 +699,7 @@ class UserRepositoryTest extends TestCase
         $this->repo->getByIds(collect(['john.doe@gmail.com', 'other@gmail.com']));
 
         // Verify only 1 api call was made.
-        self::assertCount(1, $this->httpClient->getRequests());
+        self::assertCount(1, $this->httpClient->getTimeline());
 
         // Increment time such that cache TTL should have passed.
         Carbon::setTestNow(Carbon::now()->addSeconds(11));
@@ -706,7 +708,7 @@ class UserRepositoryTest extends TestCase
         $this->repo->getByIds(collect(['john.doe@gmail.com', 'other@gmail.com']));
 
         // Verify now a total of two api calls was made.
-        self::assertCount(2, $this->httpClient->getRequests());
+        self::assertCount(2, $this->httpClient->getTimeline());
     }
 
     /**
@@ -729,7 +731,7 @@ class UserRepositoryTest extends TestCase
         self::assertEquals("DELETE", $request->getLastRequest()->getMethod());
 
         // Expect 1 api call
-        self::assertCount(1, $this->httpClient->getRequests());
+        self::assertCount(1, $this->httpClient->getTimeline());
 
         // Verify correct endpoint was called
         self::assertEquals('users/' . $userID, $request->getUrl());
@@ -765,7 +767,7 @@ class UserRepositoryTest extends TestCase
         self::assertEquals("POST", $request->getLastRequest()->getMethod());
 
         // Expect 1 api call
-        self::assertCount(1, $this->httpClient->getRequests());
+        self::assertCount(1, $this->httpClient->getTimeline());
 
         // Verify correct endpoint was called
         self::assertEquals('users', $request->getUrl());
@@ -810,7 +812,7 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('other', $user2->username);
 
         // Expect 1 api call.
-        self::assertCount(1, $this->httpClient->getRequests());
+        self::assertCount(1, $this->httpClient->getTimeline());
 
         // Find the request that was sent to Auth0
         $request = Auth0::getSdk()->management()->getHttpClient()->getLastRequest();
@@ -872,11 +874,11 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('user3', $user3->username);
 
         // Expect 2 api calls.
-        self::assertCount(2, $this->httpClient->getRequests());
+        self::assertCount(2, $this->httpClient->getTimeline());
 
         // Find the requests that were sent to Auth0.
-        $request1 = $this->httpClient->getRequests()[0];
-        $request2 = $this->httpClient->getRequests()[1];
+        $request1 = $this->httpClient->getTimeline()[0]['request'];
+        $request2 = $this->httpClient->getTimeline()[1]['request'];
 
         // Verify correct endpoints were called and include_totals=true was included in requests.
         foreach ([$request1, $request2] as $request) {
@@ -917,7 +919,7 @@ class UserRepositoryTest extends TestCase
         self::assertEquals($users1, $users2);
 
         // Verify only 1 api call was made.
-        self::assertCount(1, $this->httpClient->getRequests());
+        self::assertCount(1, $this->httpClient->getTimeline());
     }
 
     /**
@@ -964,7 +966,7 @@ class UserRepositoryTest extends TestCase
         Cache::flush();
 
         // Verify 2 api calls were made.
-        self::assertCount(2, $this->httpClient->getRequests());
+        self::assertCount(2, $this->httpClient->getTimeline());
 
         // Set chunk size to 2 in the config, and create new repository using this chunk size.
         Config::set('mrd-auth0.chunk_size', 2);
@@ -972,7 +974,7 @@ class UserRepositoryTest extends TestCase
 
         // Execute function under test again, and expect only 1 api call to be made in this case (so total of 3).
         $this->repo->getByIds(collect(['auth0|507f1f77bcf86cd799439020', 'other_user']));
-        self::assertCount(3, $this->httpClient->getRequests());
+        self::assertCount(3, $this->httpClient->getTimeline());
     }
 
     /**
@@ -1030,11 +1032,11 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('user3', $user3->username);
 
         // Expect 2 api calls.
-        self::assertCount(2, $this->httpClient->getRequests());
+        self::assertCount(2, $this->httpClient->getTimeline());
 
         // Find the request that was sent to Auth0
-        $request1 = $this->httpClient->getRequests()[0];
-        $request2 = $this->httpClient->getRequests()[1];
+        $request1 = $this->httpClient->getTimeline()[0]['request'];
+        $request2 = $this->httpClient->getTimeline()[1]['request'];
         $query1 = urldecode($request1->getUri()->getQuery());
         $query2 = urldecode($request2->getUri()->getQuery());
 
@@ -1097,7 +1099,7 @@ class UserRepositoryTest extends TestCase
         Cache::flush();
 
         // Verify 2 api calls were made.
-        self::assertCount(2, $this->httpClient->getRequests());
+        self::assertCount(2, $this->httpClient->getTimeline());
 
         // Set chunk size to 2 in the config, and create new repository using this chunk size.
         Config::set('mrd-auth0.chunk_size', 2);
@@ -1105,7 +1107,7 @@ class UserRepositoryTest extends TestCase
 
         // Execute function under test again, and expect only 1 api call to be made in this case (so total of 3).
         $this->repo->getByIds(collect(['john.doe@gmail.com', 'other@gmail.com']));
-        self::assertCount(3, $this->httpClient->getRequests());
+        self::assertCount(3, $this->httpClient->getTimeline());
     }
 
     /**
@@ -1163,11 +1165,11 @@ class UserRepositoryTest extends TestCase
         self::assertEquals('user3', $user3->username);
 
         // Expect 2 api calls.
-        self::assertCount(2, $this->httpClient->getRequests());
+        self::assertCount(2, $this->httpClient->getTimeline());
 
         // Find the request that was sent to Auth0
-        $request1 = $this->httpClient->getRequests()[0];
-        $request2 = $this->httpClient->getRequests()[1];
+        $request1 = $this->httpClient->getTimeline()[0]['request'];
+        $request2 = $this->httpClient->getTimeline()[1]['request'];
         $query1 = urldecode($request1->getUri()->getQuery());
         $query2 = urldecode($request2->getUri()->getQuery());
 
