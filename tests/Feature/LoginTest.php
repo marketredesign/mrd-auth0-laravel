@@ -68,6 +68,8 @@ class LoginTest extends TestCase
             ->shouldReceive([
                 'getCredentials' => null,
                 'login' => 'https://login.com',
+                'configuration' => Auth0::getConfiguration(),
+                'refreshState' => Auth0::getSdk(),
             ])
             ->once()
             ->getMock();

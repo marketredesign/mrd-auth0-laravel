@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Monolog\Handler\BufferHandler;
 use Monolog\Logger;
+use Monolog\LogRecord;
 use NewRelic\Monolog\Enricher\Handler;
 use NewRelic\Monolog\Enricher\Processor;
 
@@ -34,10 +35,10 @@ class NewRelicLogger
     /**
      * Add extra metadata to every request
      */
-    public function includeMetaData(array $record): array
+    public function includeMetaData(LogRecord $record): LogRecord
     {
         // Include info about which service this is
-        $record['app'] = [
+        $record->extra['app'] = [
             'repository' => config('app.repository', 'Not implemented'),
             'version' => config('app.version', 'Not implemented'),
             'name' => config('app.name'),
@@ -47,14 +48,14 @@ class NewRelicLogger
 
         // Add info about the Auth0 user performing the request we are running (if any)
         if (!App::runningInConsole()) {
-            $record['user'] = [
+            $record->extra['user'] = [
                 'authenticated' => Auth::check(),
                 'user_id' => Auth::id(),
             ];
         }
 
         // Add info about the state which we are running for
-        $record['state'] = [
+        $record->extra['state'] = [
             'running_in_console' => App::runningInConsole(),
             'request_method' => optional(request())->getMethod(),
             'route_name' => optional(optional(request())->route())->getName(),
@@ -63,7 +64,7 @@ class NewRelicLogger
 
         // For exceptions, include the stack trace
         if (array_key_exists('exception', $record['context'])) {
-            $record['context']['trace'] = $record['context']['exception']->getTraceAsString();
+            $record->extra['context']['trace'] = $record['context']['exception']->getTraceAsString();
         }
 
         return $record;
