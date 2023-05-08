@@ -7,6 +7,7 @@ use Auth0\Laravel\Auth0;
 use Auth0\SDK\Contract\API\ManagementInterface;
 use Auth0\SDK\Utility\HttpResponse;
 use Auth0\SDK\Utility\Request\FilteredRequest;
+use Auth0\SDK\Utility\Request\PaginatedRequest;
 use Auth0\SDK\Utility\Request\RequestOptions;
 use Closure;
 use Illuminate\Support\Arr;
@@ -125,6 +126,9 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
             'password' => Hash::make(Str::random())
         ]);
 
+        // Bust cache for getAllUsers function since it is now outdated.
+        Cache::forget('auth0-all-users');
+
         // body of response should be the newly created user object
         return $this->decodeResponse($response, 201);
     }
@@ -205,26 +209,28 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
         // Keep track of current page.
         $page = 0;
         // Function to create management API parameters including the requested page.
-        $createParams = fn($page) => ['include_totals' => true, 'page' => $page];
+        $createOptions = fn($page) => new RequestOptions(
+            pagination: new PaginatedRequest(page: $page, perPage: 100, includeTotals: true)
+        );
         // Perform initial call to management API and decode the response.
-        $initialResponse = $this->decodeResponse($callApi($createParams($page)));
+        $initialResponse = $this->decodeResponse($callApi($createOptions($page)));
         // Collect the desired results from the response.
         $result = collect($initialResponse->$responseKey);
         // Find page metadata in the response.
         $total = $initialResponse->total;
         $start = $initialResponse->start;
-        $length = $initialResponse->length;
+        $limit = $initialResponse->limit;
 
         // We keep calling the management API until there is no data left.
-        while ($start + $length < $total) {
+        while ($start + $limit < $total) {
             $page++;
             // Get new response for the next page.
-            $response = $this->decodeResponse($callApi($createParams($page)));
+            $response = $this->decodeResponse($callApi($createOptions($page)));
             // Add the results of the new response to the collection.
             $result = $result->concat($response->$responseKey);
             // Update start and length values such that we know when we are finished.
             $start = $response->start;
-            $length = $initialResponse->length;
+            $limit = $initialResponse->limit;
         }
 
         // Finally, return the collection with the combined results.
@@ -237,9 +243,47 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
     public function getAllUsers(): Collection
     {
         return Cache::remember('auth0-all-users', $this->cacheTTL, function () {
-            $users = $this->getFromMgmtPaginated('users', fn($params) => $this->mgmtApi->users()->getAll($params));
+            $users = $this->getFromMgmtPaginated(
+                'users',
+                fn($options) => $this->mgmtApi->users()->getAll(options: $options),
+            );
 
             return $users->keyBy('user_id');
         });
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getRoles(string $userId): Collection
+    {
+        return $this->getFromMgmtPaginated(
+            'roles',
+            fn($options) => $this->mgmtApi->users()->getRoles($userId, $options),
+        );
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function addRoles(string $userId, Collection $roleIds): void
+    {
+        $resp = $this->mgmtApi->users()->addRoles($userId, $roleIds->all());
+
+        if (!HttpResponse::wasSuccessful($resp, 204)) {
+            throw new HttpException($resp->getStatusCode(), HttpResponse::getContent($resp));
+        }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function removeRoles(string $userId, Collection $roleIds): void
+    {
+        $resp = $this->mgmtApi->users()->removeRoles($userId, $roleIds->all());
+
+        if (!HttpResponse::wasSuccessful($resp, 204)) {
+            throw new HttpException($resp->getStatusCode(), HttpResponse::getContent($resp));
+        }
     }
 }

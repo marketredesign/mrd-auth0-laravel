@@ -58,4 +58,28 @@ interface UserRepository
      * @param mixed $id
      */
     public function delete($id);
+
+    /**
+     * Get all assigned roles of the given user.
+     *
+     * @param string $userId
+     * @return Collection
+     */
+    public function getRoles(string $userId): Collection;
+
+    /**
+     * Assign the given roles to the given user.
+     *
+     * @param string $userId
+     * @param Collection $roleIds
+     */
+    public function addRoles(string $userId, Collection $roleIds): void;
+
+    /**
+     * Remove the given roles from the given user's assigned roles.
+     *
+     * @param string $userId
+     * @param Collection $roleIds
+     */
+    public function removeRoles(string $userId, Collection $roleIds): void;
 }
