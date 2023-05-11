@@ -68,7 +68,7 @@ interface UserRepository
     public function getRoles(string $userId): Collection;
 
     /**
-     * Assign the given roles to the given user.
+     * Assign the given roles to the given user. Any roles that are already assigned, are ignored.
      *
      * @param string $userId
      * @param Collection $roleIds
@@ -76,7 +76,7 @@ interface UserRepository
     public function addRoles(string $userId, Collection $roleIds): void;
 
     /**
-     * Remove the given roles from the given user's assigned roles.
+     * Remove the given roles from the given user's assigned roles. Any roles that are not assigned, are ignored.
      *
      * @param string $userId
      * @param Collection $roleIds
