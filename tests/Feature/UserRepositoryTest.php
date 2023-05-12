@@ -1187,4 +1187,178 @@ class UserRepositoryTest extends TestCase
             $query2
         );
     }
+
+    /**
+     * Verifies that the getAllUsers function returns a newly created user, even when the initial result was cached.
+     */
+    public function testAddUserCacheBusting()
+    {
+        // Responses based on Auth0 API documentation, stripped down.
+        $response1 = new Response(200, [], '{"start": 0, "limit": 50, "length": 1, "users": 
+        [{"user_id":"auth0|507f1f77bcf86cd799439020"}], "total": 1}');
+        $response2 = new Response(201, [], '{"user_id":"other_user"}');
+        $response3 = new Response(200, [], '{"start": 0, "limit": 50, "length": 2, "users": 
+        [{"user_id":"auth0|507f1f77bcf86cd799439020"},{"user_id":"other_user"}], "total": 2}');
+        Auth0::getSdk()->management()->getHttpClient()->mockResponses([$response1, $response2, $response3]);
+
+        // Call function under test, twice.
+        $users1 = $this->repo->getAllUsers();
+        $users2 = $this->repo->getAllUsers();
+
+        // Verify the same collection of 1 user was returned twice.
+        self::assertEquals($users1, $users2);
+        self::assertCount(1, $users1);
+
+        // Verify only 1 api call was made.
+        self::assertCount(1, $this->httpClient->getTimeline());
+
+        // Create new user and verify an extra API call was made.
+        $this->repo->createUser('other@gmail.com', 'Test', 'Test');
+        self::assertCount(2, $this->httpClient->getTimeline());
+
+        // Call function under test twice again.
+        $users1 = $this->repo->getAllUsers();
+        $users2 = $this->repo->getAllUsers();
+
+         // Verify the same collection of now 2 users was returned.
+        self::assertEquals($users1, $users2);
+        self::assertCount(2, $users1);
+
+        // Verify now only 3 api call are made in total.
+        self::assertCount(3, $this->httpClient->getTimeline());
+    }
+
+    /**
+     * Verifies that getRoles function behaves as expected.
+     */
+    public function testGetRoles()
+    {
+        Auth0::getSdk()->management()->getHttpClient()
+            ->mockResponse(new Response(200, [], '{"roles":[
+            {"id":"rol_yIOCuH6JBK7T7EWS","name":"test-role","description":"Test role"},
+            {"id":"rol_asks94wjfslik4Fs","name":"other-role","description":"Other role"}
+            ],"start":0,"limit":100,"total":2}'));
+
+        // Call function under test.
+        $roles = $this->repo->getRoles('user1');
+
+        // Expect two roles returned.
+        self::assertEquals(2, $roles->count());
+
+        // Verify contents
+        $role1 = $roles->firstWhere('id', 'rol_yIOCuH6JBK7T7EWS');
+        self::assertNotNull($role1);
+        self::assertEquals('test-role', $role1->name);
+
+        $role2 = $roles->firstWhere('id', 'rol_asks94wjfslik4Fs');
+        self::assertNotNull($role2);
+        self::assertEquals('other-role', $role2->name);
+
+        // Expect 1 api call.
+        self::assertCount(1, $this->httpClient->getTimeline());
+
+        // Find the request that was sent to Auth0
+        $request = $this->httpClient->getTimeline()[0]['request'];
+
+        // Verify correct endpoint was called.
+        self::assertEquals('/api/v2/users/user1/roles', $request->getUri()->getPath());
+
+        // Verify pagination options were passed with request.
+        self::assertStringContainsString('page=0', $request->getUri()->getQuery());
+        self::assertStringContainsString('include_totals=true', $request->getUri()->getQuery());
+    }
+
+    /**
+     * Verifies that getRoles function behaves as expected when result spread over different pages.
+     */
+    public function testGetRolesPagination()
+    {
+        $response1 = new Response(200, [], '{"roles":[
+            {"id":"rol_yIOCuH6JBK7T7EWS","name":"test-role","description":"Test role"}
+            ],"start":0,"limit":1,"total":2}');
+        $response2 = new Response(200, [], '{"roles":[
+            {"id":"rol_asks94wjfslik4Fs","name":"other-role","description":"Other role"}
+            ],"start":1,"limit":1,"total":2}');
+        Auth0::getSdk()->management()->getHttpClient()->mockResponses([$response1, $response2]);
+
+        // Call function under test.
+        $roles = $this->repo->getRoles('user1');
+
+        // Expect two roles returned.
+        self::assertEquals(2, $roles->count());
+
+        // Verify contents
+        $role1 = $roles->firstWhere('id', 'rol_yIOCuH6JBK7T7EWS');
+        self::assertNotNull($role1);
+        self::assertEquals('test-role', $role1->name);
+
+        $role2 = $roles->firstWhere('id', 'rol_asks94wjfslik4Fs');
+        self::assertNotNull($role2);
+        self::assertEquals('other-role', $role2->name);
+
+        // Expect 2 api calls.
+        self::assertCount(2, $this->httpClient->getTimeline());
+    }
+
+    /**
+     * Verifies that the addRoles function behaves as expected.
+     */
+    public function testAddRoles()
+    {
+        // Response based on Auth0 documentation
+        Auth0::getSdk()->management()->getHttpClient()->mockResponse(new Response(204, []));
+
+        // Call function under test
+        $this->repo->addRoles('user1', collect(['role1', 'other_role']));
+
+        // Expect 1 api call
+        self::assertCount(1, $this->httpClient->getTimeline());
+
+        // Find the request that was sent to Auth0
+        $request = $this->httpClient->getTimeline()[0]['request'];
+        $body = json_decode($request->getBody(), true);
+
+        // Verify correct endpoint was called.
+        self::assertEquals('/api/v2/users/user1/roles', $request->getUri()->getPath());
+
+        // Expect a POST request
+        self::assertEquals("POST", $request->getMethod());
+
+        // Verify request body is as expected.
+        self::assertArrayHasKey('roles', $body);
+        self::assertCount(2, $body['roles']);
+        self::assertContains('role1', $body['roles']);
+        self::assertContains('other_role', $body['roles']);
+    }
+
+    /**
+     * Verifies that the removeRoles function behaves as expected.
+     */
+    public function testRemoveRoles()
+    {
+        // Response based on Auth0 documentation
+        Auth0::getSdk()->management()->getHttpClient()->mockResponse(new Response(204, []));
+
+        // Call function under test
+        $this->repo->removeRoles('user1', collect(['role1', 'other_role']));
+
+        // Expect 1 api call
+        self::assertCount(1, $this->httpClient->getTimeline());
+
+        // Find the request that was sent to Auth0
+        $request = $this->httpClient->getTimeline()[0]['request'];
+        $body = json_decode($request->getBody(), true);
+
+        // Verify correct endpoint was called.
+        self::assertEquals('/api/v2/users/user1/roles', $request->getUri()->getPath());
+
+        // Expect a POST request
+        self::assertEquals("DELETE", $request->getMethod());
+
+        // Verify request body is as expected.
+        self::assertArrayHasKey('roles', $body);
+        self::assertCount(2, $body['roles']);
+        self::assertContains('role1', $body['roles']);
+        self::assertContains('other_role', $body['roles']);
+    }
 }

@@ -247,4 +247,39 @@ class UserFacadeTest extends TestCase
         self::assertNotEquals($users->get('sjaak')->email, $users->get('user2')->email);
     }
 
+    /**
+     * Verifies that the get, add, and remove roles functions work as expected when in fake mode.
+     */
+    public function testFakeRoles()
+    {
+        // Enable testing mode
+        Users::fake();
+
+        // Verify initially no roles for users.
+        self::assertCount(0, Users::getRoles('user1'));
+        self::assertCount(0, Users::getRoles('user2'));
+
+        // Add fake roles to same fake users.
+        Users::addRoles('user2', collect(['role1', 'role2', 'role4']));
+        Users::addRoles('user1', collect(['role3']));
+
+        // Verify roles user 1.
+        self::assertCount(1, Users::getRoles('user1'));
+        self::assertContains('role3', Users::getRoles('user1'));
+
+        // Verify roles user 2.
+        self::assertCount(3, Users::getRoles('user2'));
+        self::assertContains('role1', Users::getRoles('user2'));
+        self::assertContains('role2', Users::getRoles('user2'));
+        self::assertContains('role4', Users::getRoles('user2'));
+
+        // Remove some roles.
+        Users::removeRoles('user1', collect(['role3']));
+        Users::removeRoles('user2', collect(['role1', 'role4']));
+
+        // Verify roles after removal.
+        self::assertCount(0, Users::getRoles('user1'));
+        self::assertCount(1, Users::getRoles('user2'));
+        self::assertContains('role2', Users::getRoles('user2'));
+    }
 }
