@@ -14,6 +14,7 @@ class FakeUserRepository implements UserRepository
 
     private $userIds;
     private $userObjects;
+    private Collection $userRoles;
 
     public function __construct()
     {
@@ -35,6 +36,7 @@ class FakeUserRepository implements UserRepository
     {
         $this->userIds = collect();
         $this->userObjects = collect();
+        $this->userRoles = collect();
         $this->setUpFaker();
     }
 
@@ -157,5 +159,35 @@ class FakeUserRepository implements UserRepository
         $userModel->name = $firstName . ' ' . $lastName;
 
         return $userModel;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getRoles(string $userId): Collection
+    {
+        return $this->userRoles->get($userId, collect());
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function addRoles(string $userId, Collection $roleIds): void
+    {
+        $roles = $this->getRoles($userId);
+
+        $roles->push(...$roleIds);
+
+        $this->userRoles->put($userId, $roles->unique());
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function removeRoles(string $userId, Collection $roleIds): void
+    {
+        $roles = $this->getRoles($userId);
+
+        $this->userRoles->put($userId, $roles->diff($roleIds));
     }
 }
