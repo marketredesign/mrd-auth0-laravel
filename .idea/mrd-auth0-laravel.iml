@@ -89,7 +89,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/php-http/multipart-stream-builder" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/doctrine/lexer" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/doctrine/inflector" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/php-http/message-factory" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/zbateson/mail-mime-parser" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/php-http/discovery" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/orchestra/testbench-core" />
@@ -140,6 +139,8 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr-mock/http-factory-implementation" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr-mock/http-client-implementation" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/marketredesign/newrelic-monolog-enricher" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/league/flysystem-local" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/polyfill-php83" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

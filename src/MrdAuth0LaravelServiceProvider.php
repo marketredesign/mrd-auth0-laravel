@@ -2,11 +2,9 @@
 
 namespace Marketredesign\MrdAuth0Laravel;
 
-use Auth0\Laravel\Contract\Event\Configuration\Building;
-use Auth0\Laravel\Http\Middleware\Stateless\Authorize;
+use Auth0\Laravel\Middleware\AuthorizerMiddleware;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Routing\Router;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Marketredesign\MrdAuth0Laravel\Contracts\Auth0Repository;
 use Marketredesign\MrdAuth0Laravel\Contracts\DatasetRepository;
@@ -14,7 +12,6 @@ use Marketredesign\MrdAuth0Laravel\Contracts\UserRepository;
 use Marketredesign\MrdAuth0Laravel\Http\Middleware\AuthorizeDatasetAccess;
 use Marketredesign\MrdAuth0Laravel\Http\Middleware\CheckPermissions;
 use Marketredesign\MrdAuth0Laravel\Http\Middleware\SetRequestType;
-use Marketredesign\MrdAuth0Laravel\Listeners\SetAuth0Strategy;
 
 class MrdAuth0LaravelServiceProvider extends ServiceProvider
 {
@@ -38,18 +35,8 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
         $router->aliasMiddleware('set.type', SetRequestType::class);
 
         // Ensure the Authorize middleware from Auth0 has a higher priority.
-        $kernel->appendToMiddlewarePriority(Authorize::class);
+        $kernel->prependToMiddlewarePriority(AuthorizerMiddleware::class);
         $kernel->appendToMiddlewarePriority(AuthorizeDatasetAccess::class);
-
-        // Ensure the middleware to set the request type has highest priority.
-        $kernel->prependToMiddlewarePriority(SetRequestType::class);
-
-        // Set the request types for the web and api routes accordingly.
-        $kernel->prependMiddlewareToGroup('web', 'set.type:stateful');
-        $kernel->prependMiddlewareToGroup('api', 'set.type:stateless');
-
-        // Listen to Auth0 SDK config building event to dynamically set the SDK strategy.
-        Event::listen(Building::class, SetAuth0Strategy::class);
     }
 
     /**
