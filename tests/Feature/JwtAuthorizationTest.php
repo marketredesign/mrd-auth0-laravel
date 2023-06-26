@@ -3,6 +3,7 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
+use Auth0\SDK\Configuration\SdkConfiguration;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
@@ -19,7 +20,7 @@ class JwtAuthorizationTest extends TestCase
         parent::setUp();
 
         Config::set('auth0', [
-            'strategy' => 'api',
+            'strategy' => SdkConfiguration::STRATEGY_API,
             'domain'   => 'auth.marketredesign.com',
             'audience' => ['https://api.pricecypher.com'],
             'clientId' => '123',
@@ -40,7 +41,7 @@ class JwtAuthorizationTest extends TestCase
     private function request(bool $includeBearer, string $scope = '', ?Closure $responseHandler = null)
     {
         // Define a very simple testing endpoint, protected by the jwt middleware.
-        Route::middleware('auth0.authorize' . (empty($scope) ? '' : ":$scope"))
+        Route::middleware(['api', 'auth0.authorize' . (empty($scope) ? '' : ":$scope")])
             ->get(self::ROUTE_URI, $responseHandler ?? function () {
                 return response()->json('test_response');
             });

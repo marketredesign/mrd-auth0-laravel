@@ -6,8 +6,6 @@ namespace Marketredesign\MrdAuth0Laravel\Tests;
 use Auth0\Laravel\Auth\User\Repository;
 use Auth0\Laravel\Facade\Auth0;
 use Auth0\Laravel\ServiceProvider;
-use Auth0\SDK\Auth0 as Auth0Sdk;
-use Auth0\SDK\Configuration\SdkConfiguration;
 use Auth0\SDK\Exception\ConfigurationException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
@@ -47,13 +45,15 @@ class TestCase extends \Orchestra\Testbench\TestCase
     {
         parent::setUp();
 
+        Config::set('auth.defaults.guard', 'auth0');
+
         Config::set('auth.guards.auth0', [
-            'driver' => 'auth0',
+            'driver' => 'auth0.guard',
             'provider' => 'auth0',
         ]);
 
         Config::set('auth.providers.auth0', [
-            'driver' => 'auth0',
+            'driver' => 'auth0.provider',
             'repository' => Repository::class,
         ]);
     }
@@ -96,7 +96,6 @@ class TestCase extends \Orchestra\Testbench\TestCase
      */
     protected function resetAuth0Config(): void
     {
-        Auth0::setConfiguration(new SdkConfiguration(Config::get('auth0')));
-        Auth0::setSdk(new Auth0Sdk(Auth0::getConfiguration()));
+        Auth0::reset();
     }
 }
