@@ -5,6 +5,7 @@ namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
 use Auth0\Laravel\Facade\Auth0;
 use Auth0\Laravel\Store\LaravelSession;
+use Auth0\SDK\Configuration\SdkConfiguration;
 use Auth0\SDK\Contract\Auth0Interface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
@@ -21,7 +22,7 @@ class LoginTest extends TestCase
         parent::setUp();
 
         Config::set('auth0', [
-            'strategy' => 'webapp',
+            'strategy' => SdkConfiguration::STRATEGY_REGULAR,
             'domain'   => 'auth.marketredesign.com',
             'audience' => ['https://api.pricecypher.com'],
             'redirectUri' => 'https://redirect.com/oauth/callback',

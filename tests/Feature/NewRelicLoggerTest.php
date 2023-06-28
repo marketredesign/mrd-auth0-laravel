@@ -3,6 +3,7 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
+use Auth0\SDK\Configuration\SdkConfiguration;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Marketredesign\MrdAuth0Laravel\Logging\NewRelicLogger;
@@ -17,7 +18,7 @@ class NewRelicLoggerTest extends TestCase
         Config::set('auth.defaults.guard', 'auth0');
 
         Config::set('auth0', [
-            'strategy' => 'webapp',
+            'strategy' => SdkConfiguration::STRATEGY_REGULAR,
             'domain'   => 'auth.marketredesign.com',
             'audience' => ['https://api.pricecypher.com'],
             'clientId' => '123',
