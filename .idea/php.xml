@@ -197,6 +197,17 @@
       <path value="$PROJECT_DIR$/vendor/spomky-labs/base64url" />
       <path value="$PROJECT_DIR$/vendor/symfony/psr-http-message-bridge" />
       <path value="$PROJECT_DIR$/vendor/nyholm/psr7" />
+      <path value="$PROJECT_DIR$/vendor/guzzlehttp/uri-template" />
+      <path value="$PROJECT_DIR$/vendor/psr-discovery/log-implementations" />
+      <path value="$PROJECT_DIR$/vendor/psr-discovery/http-client-implementations" />
+      <path value="$PROJECT_DIR$/vendor/psr-discovery/http-factory-implementations" />
+      <path value="$PROJECT_DIR$/vendor/psr-discovery/event-dispatcher-implementations" />
+      <path value="$PROJECT_DIR$/vendor/psr-discovery/container-implementations" />
+      <path value="$PROJECT_DIR$/vendor/psr-discovery/cache-implementations" />
+      <path value="$PROJECT_DIR$/vendor/psr-discovery/discovery" />
+      <path value="$PROJECT_DIR$/vendor/league/flysystem-local" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php83" />
+      <path value="$PROJECT_DIR$/vendor/psr/clock" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.1" />
