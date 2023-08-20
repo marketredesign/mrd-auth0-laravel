@@ -42,7 +42,10 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
 
         $auth->extend(
             'pc-jwt',
-            fn ($app, $name, array $config) => new JwtGuard($auth->createUserProvider($config['provider']))
+            fn ($app, $name, array $config) => new JwtGuard(
+                $auth->createUserProvider($config['provider']),
+                $app['config']->get('pricecypher-oidc.audience'),
+            )
         );
         $auth->extend(
             'pc-oidc',

@@ -13,6 +13,8 @@ return [
     'client_id' => env('OIDC_CLIENT_ID'),
     'client_secret' => env('OIDC_CLIENT_SECRET'),
 
+    'audience' => env('OIDC_AUDIENCE', 'https://api.pricecypher.com'),
+
     'logout_endpoint' => env('OIDC_LOGOUT_ENDPOINT'),
 
     'scope_prefix' => env('OIDC_SCOPE_PREFIX', ''),

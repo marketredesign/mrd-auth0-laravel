@@ -18,11 +18,14 @@ class JwtGuard implements Guard
 
     private ClientInterface $openIdClient;
 
-    public function __construct(UserProvider $provider)
+    private ?string $expectedAudience;
+
+    public function __construct(UserProvider $provider, ?string $expectedAudience)
     {
         $this->setProvider($provider);
 
         $this->openIdClient = App::make(ClientInterface::class);
+        $this->expectedAudience = $expectedAudience;
     }
 
     public function user()
@@ -36,7 +39,7 @@ class JwtGuard implements Guard
         }
 
         $verifierBuilder = new AccessTokenVerifierBuilder();
-        $verifierBuilder->setJoseBuilder(new JoseBuilder());
+        $verifierBuilder->setJoseBuilder(new JoseBuilder($this->expectedAudience));
 
         $tokenVerifier = $verifierBuilder->build($this->openIdClient);
         $token = request()->bearerToken();
