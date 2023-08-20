@@ -83,8 +83,9 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
         $this->app->bind(UserRepository::class, Repository\UserRepository::class);
 
         $this->app->singleton(ClientInterface::class, function () {
-            $issuer = (new IssuerBuilder())
-                ->build(config('pricecypher-oidc.issuer') . '/.well-known/openid-configuration');
+            $issuer = (new IssuerBuilder())->build(
+                rtrim(config('pricecypher-oidc.issuer'), '/') . '/.well-known/openid-configuration'
+            );
             $clientMetadata = ClientMetadata::fromArray([
                 'client_id' => config('pricecypher-oidc.client_id'),
                 'client_secret' => config('pricecypher-oidc.client_secret'),
