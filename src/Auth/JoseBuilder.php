@@ -7,12 +7,19 @@ use Facile\JoseVerifier\AbstractTokenVerifierBuilder;
 
 class JoseBuilder extends AbstractTokenVerifierBuilder
 {
+    protected ?string $expectedAudience;
+
+    public function __construct(?string $expectedAudience)
+    {
+        $this->expectedAudience = $expectedAudience;
+    }
+
     /**
      * @inheritDoc
      */
     protected function getVerifier(string $issuer, string $clientId): AbstractTokenVerifier
     {
-        return new JwtVerifier($issuer, $clientId, $this->buildDecrypter());
+        return new JwtVerifier($issuer, $this->expectedAudience ?? $clientId, $this->buildDecrypter());
     }
 
     protected function getExpectedAlg(): ?string
