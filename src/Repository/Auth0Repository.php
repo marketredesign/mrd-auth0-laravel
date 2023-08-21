@@ -39,15 +39,22 @@ class Auth0Repository implements \Marketredesign\MrdAuth0Laravel\Contracts\Auth0
      */
     protected function retrieveDecodedM2mTokenResponse(): array
     {
-        if (config('pricecypher-oidc.issuer')) {
-            return $this->authService
-               ->grant($this->oidcClient, ['grant_type' => 'client_credentials'])
-               ->getAttributes();
+        if (!config('pricecypher-oidc.issuer')) {
+            $clientCredResponse = Auth0::getSdk()->authentication()->clientCredentials()->getBody()->getContents();
+
+            return json_decode($clientCredResponse, true);
         }
 
-        $clientCredResponse = Auth0::getSdk()->authentication()->clientCredentials()->getBody()->getContents();
+        $params = ['grant_type' => 'client_credentials'];
+        $audience = config('pricecypher-oidc.audience');
 
-        return json_decode($clientCredResponse, true);
+        if ($audience) {
+            $params['audience'] = $audience;
+        }
+
+        return $this->authService
+            ->grant($this->oidcClient, $params)
+            ->getAttributes();
     }
 
     /**
