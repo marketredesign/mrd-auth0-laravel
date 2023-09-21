@@ -72,7 +72,8 @@ class JwtGuard implements Guard
 
     public function hasScope(string $scope): bool
     {
-        $userScopes = explode(' ', $this->user->scope ?? '');
+        $scopeString = $this->user->scope ?? $this->user->scp ?? '';
+        $userScopes = explode(' ', $scopeString);
 
         return in_array($scope, $userScopes, true);
     }
