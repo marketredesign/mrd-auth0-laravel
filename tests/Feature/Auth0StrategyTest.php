@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
 use Marketredesign\MrdAuth0Laravel\Tests\TestCase;
-use ReflectionClass;
 
 class Auth0StrategyTest extends TestCase
 {
@@ -115,22 +114,19 @@ class Auth0StrategyTest extends TestCase
      */
     public function testAuth0SdkStrategy()
     {
-        // We need reflections of the Auth0 class to reset the STATIC :( configuration instance back to null.
-        $auth0Reflect = new ReflectionClass(\Auth0\Laravel\Auth0::class);
-
         // First set auth0 strategy to API in the config.
         Config::set('auth0.strategy', SdkConfiguration::STRATEGY_API);
 
-        // Ensure auth0 configuration not initialized by setting it to null.
-        $auth0Reflect->setStaticPropertyValue('configuration', null);
+        // Ensure auth0 configuration is reset.
+        Auth0::reset();
         // Login, send WEB request, and verify WEB strategy is used (even though we set API in the config initially).
         $this->actingAsAuth0User([], false);
         $this->request(['web', 'auth0.authenticate'], function () {
             return Auth0::getConfiguration()->getStrategy();
         })->assertOk()->assertSee(SdkConfiguration::STRATEGY_REGULAR);
 
-        // Ensure auth0 configuration not initialized by setting it to null.
-        $auth0Reflect->setStaticPropertyValue('configuration', null);
+        // Ensure auth0 configuration is reset.
+        Auth0::reset();
         // Authorize, send API request, and verify API strategy is used.
         $this->actingAsAuth0User();
         $this->request(['api', 'auth0.authorize'], function () {
@@ -140,16 +136,16 @@ class Auth0StrategyTest extends TestCase
         // Now set auth0 strategy to webapp in the config.
         Config::set('auth0.strategy', SdkConfiguration::STRATEGY_REGULAR);
 
-        // Ensure auth0 configuration not initialized by setting it to null.
-        $auth0Reflect->setStaticPropertyValue('configuration', null);
+        // Ensure auth0 configuration is reset.
+        Auth0::reset();
         // Authorize, send API request and verify API strategy is used (even though we set WEB in the config initially).
         $this->actingAsAuth0User();
         $this->request(['api', 'auth0.authorize'], function () {
             return Auth0::getConfiguration()->getStrategy();
         })->assertOk()->assertSee(SdkConfiguration::STRATEGY_API);
 
-        // Ensure auth0 configuration not initialized by setting it to null.
-        $auth0Reflect->setStaticPropertyValue('configuration', null);
+        // Ensure auth0 configuration is reset.
+        Auth0::reset();
         // Login, send WEB request, and verify WEB strategy is used.
         $this->actingAsAuth0User([], false);
         $this->request(['web', 'auth0.authenticate'], function () {
@@ -161,7 +157,7 @@ class Auth0StrategyTest extends TestCase
             Config::set('auth0.strategy', $strat);
 
             // Ensure auth0 configuration not initialized by setting it to null.
-            $auth0Reflect->setStaticPropertyValue('configuration', null);
+            Auth0::reset();
             // Authorize, send API request and verify OK response.
             $this->actingAsAuth0User();
             $this->request(['api', 'auth0.authorize'], function () {
@@ -169,7 +165,7 @@ class Auth0StrategyTest extends TestCase
             })->assertOk();
 
             // Ensure auth0 configuration not initialized by setting it to null.
-            $auth0Reflect->setStaticPropertyValue('configuration', null);
+            Auth0::reset();
             // Login, send WEB request, and verify WEB strategy is used.
             $this->actingAsAuth0User([], false);
             $this->request(['web', 'auth0.authenticate'], function () {
