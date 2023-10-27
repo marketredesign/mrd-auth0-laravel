@@ -12,7 +12,7 @@ class Login
     public function __invoke(
         AuthRequestInterface $authRequest,
         AuthorizationService $authService,
-        ClientInterface $oidcClient
+        ClientInterface $oidcClient,
     ) {
         $guard = Auth::guard('pc-oidc');
 

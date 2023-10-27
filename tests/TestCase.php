@@ -26,12 +26,17 @@ class TestCase extends \Orchestra\Testbench\TestCase
     /**
      * @var array Fake responses that will be used by guzzle when using options from {@link createTestingGuzzleOptions}.
      */
-    protected $mockedResponses;
+    protected array $mockedResponses;
 
     /**
      * @var array Container that will hold the guzzle history. Use this to verify the correct API requests were sent.
      */
-    protected $guzzleContainer = [];
+    protected array $guzzleContainer = [];
+
+    /**
+     * @var string TODO
+     */
+    protected string $authGuard = 'auth0';
 
     protected function getPackageProviders($app)
     {
@@ -45,7 +50,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
     {
         parent::setUp();
 
-        Config::set('auth.defaults.guard', 'auth0');
+        Config::set('auth.defaults.guard', $this->authGuard);
 
         Config::set('auth.guards.auth0', [
             'driver' => 'auth0.guard',

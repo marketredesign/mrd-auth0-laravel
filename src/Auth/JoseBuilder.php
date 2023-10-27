@@ -19,6 +19,7 @@ class JoseBuilder extends AbstractTokenVerifierBuilder
      */
     protected function getVerifier(string $issuer, string $clientId): AbstractTokenVerifier
     {
+        dd('test');
         return new JwtVerifier($issuer, $this->expectedAudience ?? $clientId, $this->buildDecrypter());
     }
 

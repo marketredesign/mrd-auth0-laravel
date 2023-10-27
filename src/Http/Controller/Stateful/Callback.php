@@ -31,8 +31,12 @@ class Callback
         }
 
         if ($tokenSet->getIdToken() === null) {
+            Log::debug("34");
+            dd($tokenSet);
             abort(401, 'Not authenticated');
         }
+
+        dd($tokenSet->getIdToken(), $tokenSet->getAccessToken());
 
         request()->session()->put('pc-oidc-session', (object) [
             'user' => $tokenSet->claims(),
@@ -41,6 +45,7 @@ class Callback
         ]);
 
         if (!$guard->check()) {
+            Log::debug("45");
             abort(401, 'Not authenticated');
         }
 

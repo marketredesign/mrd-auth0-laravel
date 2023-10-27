@@ -62,7 +62,8 @@ class OidcGuard implements Guard
         }
 
         if (!($this->user instanceof User)) {
-            abort('User model must implement Marketredesign\MrdAuth0Laravel\Model\Stateful\User');
+            $userClass = User::class;
+            abort("User model must implement $userClass");
         }
 
         return $this->user;

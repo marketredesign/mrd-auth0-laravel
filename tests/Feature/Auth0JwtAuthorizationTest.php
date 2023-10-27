@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
 use Marketredesign\MrdAuth0Laravel\Tests\TestCase;
 
-class JwtAuthorizationTest extends TestCase
+class Auth0JwtAuthorizationTest extends TestCase
 {
     private const ROUTE_URI = 'test_route';
 

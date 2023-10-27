@@ -86,9 +86,13 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
         $this->app->bind(UserRepository::class, Repository\UserRepository::class);
 
         $this->app->singleton(ClientInterface::class, function () {
-            $issuer = (new IssuerBuilder())->build(
-                rtrim(config('pricecypher-oidc.issuer'), '/') . '/.well-known/openid-configuration'
-            );
+            $issUrl = rtrim(config('pricecypher-oidc.issuer'), '/');
+
+            if (!$issUrl) {
+                return null;
+            }
+
+            $issuer = (new IssuerBuilder())->build("$issUrl/.well-known/openid-configuration");
             $clientMetadata = ClientMetadata::fromArray([
                 'client_id' => config('pricecypher-oidc.client_id'),
                 'client_secret' => config('pricecypher-oidc.client_secret'),
@@ -105,10 +109,11 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(AuthRequestInterface::class, function () {
+//            dd('scope', config('pricecpyher-oidc.id_scopes'));
             return AuthRequest::fromParams([
                 'client_id' => config('pricecypher-oidc.client_id'),
                 'redirect_uri' => route('oidc-callback'),
-                'scope' => config('pricecpyher-oidc.id_scopes'),
+                'scope' => config('pricecypher-oidc.id_scopes'),
             ]);
         });
     }
