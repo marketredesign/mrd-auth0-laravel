@@ -6,3 +6,7 @@
 /dataSources.local.xml
 # Editor-based HTTP Client requests
 /httpRequests/
+# Auto-generated files for cli tools
+/commandlinetools/
+# Cache info with local path only
+php-test-framework.xml
