@@ -40,7 +40,7 @@ final class JwtVerifier extends AbstractTokenVerifier
             $expectedIssuer = str_replace('{tenantid}', (string) ($payload['tid'] ?? ''), $expectedIssuer);
         }
 
-        $buildJwks = function($jwt) {
+        $buildJwks = function ($jwt) {
             return $this->buildJwks($jwt);
         };
 
