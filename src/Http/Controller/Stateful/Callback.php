@@ -24,7 +24,7 @@ class Callback
             $tokenSet = $authService->callback($client, $params, route('oidc-callback'));
         } catch (\Throwable $e) {
             $guard->logout();
-            Log::error("OIDC callback failed with message {$e->getMessage()}.", [
+            Log::debug("OIDC callback failed with message {$e->getMessage()}.", [
                 'exception' => $e,
             ]);
             abort(401, 'Not authenticated');

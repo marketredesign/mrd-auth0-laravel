@@ -9,10 +9,6 @@ use Marketredesign\MrdAuth0Laravel\Http\Controller\Stateful\Login;
 use Marketredesign\MrdAuth0Laravel\Http\Controller\Stateful\Logout;
 
 Route::group(['middleware' => ['web']], function () {
-    Route::get('/auth0/callback', Auth0Callback::class)->name('auth0-callback');
-    Route::get('/login', Auth0Login::class)->name('login');
-    Route::get('/logout', Auth0Logout::class)->name('logout');
-
     Route::get('/oidc/callback', Callback::class)->name('oidc-callback');
     Route::get('/oidc/login', Login::class)->name('oidc-login');
     Route::get('/oidc/logout', Logout::class)->name('oidc-logout');

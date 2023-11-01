@@ -3,41 +3,26 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
-use Auth0\Laravel\Facade\Auth0;
 use Carbon\Carbon;
 use Exception;
-use GuzzleHttp\Psr7\Response;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Config;
-use Marketredesign\MrdAuth0Laravel\Contracts\Auth0Repository;
-use Marketredesign\MrdAuth0Laravel\Repository\Fakes\FakeAuth0Repository;
+use Illuminate\Support\Facades\Http;
+use Marketredesign\MrdAuth0Laravel\Contracts\AuthRepository;
+use Marketredesign\MrdAuth0Laravel\Repository\Fakes\FakeAuthRepository;
 use Marketredesign\MrdAuth0Laravel\Tests\TestCase;
-use PsrMock\Psr18\Client;
 
-class Auth0RepositoryTest extends TestCase
+class AuthRepositoryTest extends TestCase
 {
     /** Repository under test */
-    protected Auth0Repository $repo;
-
-    private Client $httpClient;
+    protected AuthRepository $repo;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->repo = App::make(Auth0Repository::class);
-
-        // Set Auth0 config variables to some value such that the SDK can be instantiated.
-        Config::set('auth0.domain', 'domain.test');
-        Config::set('auth0.clientId', 'clientId.test');
-        Config::set('auth0.clientSecret', 'clientSecret.test');
-
-        // Let the Auth0 SDK use our mocked HTTP client.
-        $this->httpClient = new Client();
-        Config::set('auth0.httpClient', $this->httpClient);
-
-        $this->resetAuth0Config();
+        $this->repo = App::make(AuthRepository::class);
     }
 
     /**
@@ -47,8 +32,8 @@ class Auth0RepositoryTest extends TestCase
     public function testServiceBinding()
     {
         // Verify it is indeed our instance.
-        $this->assertInstanceOf(\Marketredesign\MrdAuth0Laravel\Repository\Auth0Repository::class, $this->repo);
-        $this->assertNotInstanceOf(FakeAuth0Repository::class, $this->repo);
+        $this->assertInstanceOf(\Marketredesign\MrdAuth0Laravel\Repository\AuthRepository::class, $this->repo);
+        $this->assertNotInstanceOf(FakeAuthRepository::class, $this->repo);
     }
 
     /**
@@ -75,7 +60,7 @@ class Auth0RepositoryTest extends TestCase
 
         // Mock the app to think it's running in console now.
         App::shouldReceive('runningInConsole')->andReturn(true);
-        // Call the function uner test again and verify a string is returned now.
+        // Call the function under test again and verify a string is returned now.
         self::assertIsString($this->repo->getMachineToMachineToken());
     }
 
@@ -84,8 +69,12 @@ class Auth0RepositoryTest extends TestCase
      */
     public function testGetM2mToken()
     {
-        Auth0::getSdk()->authentication()->getHttpClient()
-            ->mockResponse(new Response(200, [], '{"expires_in": 200, "access_token": "some_access_token"}'));
+        Http::fake([
+            'https://domain.test/token' => Http::response([
+                'expires_in' => 200,
+                'access_token' => 'some_access_token',
+            ]),
+        ]);
 
         // Call the function under test.
         $token = $this->repo->getMachineToMachineToken();
@@ -94,12 +83,12 @@ class Auth0RepositoryTest extends TestCase
         self::assertEquals('some_access_token', $token);
 
         // Expect only 1 API call was made.
-        self::assertCount(1, $this->httpClient->getTimeline());
+        Http::assertSentCount(1);
 
-        // Find the request that was sent to "Auth0".
-        $request = Auth0::getSdk()->authentication()->getHttpClient()->getLastRequest();
         // Verify correct url was called.
-        self::assertEquals('oauth/token', $request->getUrl());
+        Http::assertSent(function (Request $request) {
+            return $request->url() == 'https://domain.test/token';
+        });
     }
 
     /**
@@ -108,17 +97,17 @@ class Auth0RepositoryTest extends TestCase
     public function testGetM2mTokenCaching()
     {
         // Add some mocked responses, each with different access token.
-        Auth0::getSdk()->authentication()->getHttpClient()
-            ->mockResponse(new Response(200, [], '{"expires_in": 200, "access_token": "some_access_token"}'))
-            ->mockResponse(new Response(200, [], '{"expires_in": 683, "access_token": "other_access_token"}'))
-            ->mockResponse(new Response(200, [], '{"expires_in": 0, "access_token": "last_access_token"}'));
+        Http::fakeSequence('https://domain.test/token')
+            ->push(['expires_in' => 200, 'access_token' => 'some_access_token'])
+            ->push(['expires_in' => 683, 'access_token' => 'other_access_token'])
+            ->push(['expires_in' => 0, 'access_token' => 'last_access_token']);
 
         // Call function under test twice and verify access token.
         self::assertEquals('some_access_token', $this->repo->getMachineToMachineToken());
         self::assertEquals('some_access_token', $this->repo->getMachineToMachineToken());
 
         // Verify only 1 api call was made.
-        self::assertCount(1, $this->httpClient->getTimeline());
+        Http::assertSentCount(1);
 
         // Increment time such that cache TTL should not have passed yet.
         Carbon::setTestNow(Carbon::now()->addSeconds(98));
@@ -126,7 +115,7 @@ class Auth0RepositoryTest extends TestCase
         // Call function under test again and verify access token still the same.
         self::assertEquals('some_access_token', $this->repo->getMachineToMachineToken());
         // Verify still only 1 api call was made.
-        self::assertCount(1, $this->httpClient->getTimeline());
+        Http::assertSentCount(1);
 
         // Increment time such that cache TTL should have passed now. NB: it expires after half the time has passed.
         Carbon::setTestNow(Carbon::now()->addSeconds(101));
@@ -136,12 +125,13 @@ class Auth0RepositoryTest extends TestCase
         self::assertEquals('other_access_token', $this->repo->getMachineToMachineToken());
 
         // Verify now 2 API calls have been made.
-        self::assertCount(2, $this->httpClient->getTimeline());
+        Http::assertSentCount(2);
 
         // Now let's also verify an expires_in attribute that is odd.
         Carbon::setTestNow(Carbon::now()->addSeconds(340));
         self::assertEquals('other_access_token', $this->repo->getMachineToMachineToken());
         Carbon::setTestNow(Carbon::now()->addSeconds(342));
         self::assertEquals('last_access_token', $this->repo->getMachineToMachineToken());
+        Http::assertSentCount(3);
     }
 }

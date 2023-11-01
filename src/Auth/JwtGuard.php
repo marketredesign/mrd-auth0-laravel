@@ -2,30 +2,41 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Auth;
 
-use Facile\JoseVerifier\Exception\InvalidTokenException;
-use Facile\OpenIDClient\Client\ClientInterface;
-use Facile\OpenIDClient\Token\AccessTokenVerifierBuilder;
+use DomainException;
+use Facile\JoseVerifier\TokenVerifierInterface;
+use Firebase\JWT\JWTExceptionWithPayloadInterface;
 use Illuminate\Auth\GuardHelpers;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Log;
 use Marketredesign\MrdAuth0Laravel\Auth\User\Provider;
+use UnexpectedValueException;
 
 class JwtGuard implements Guard
 {
     use GuardHelpers;
 
-    private ClientInterface $openIdClient;
+    private TokenVerifierInterface $tokenVerifier;
 
     private ?string $expectedAudience;
 
-    public function __construct(UserProvider $provider, ?string $expectedAudience)
+    public function __construct(TokenVerifierInterface $verifier)
+    {
+        $this->tokenVerifier = $verifier;
+        $this->expectedAudience = null;
+    }
+
+    public function withProvider(UserProvider $provider): JwtGuard
     {
         $this->setProvider($provider);
+        return $this;
+    }
 
-        $this->openIdClient = App::make(ClientInterface::class);
-        $this->expectedAudience = $expectedAudience;
+    public function withExpectedAudience(string $audience): JwtGuard
+    {
+        $this->expectedAudience = $audience;
+        return $this;
     }
 
     public function user()
@@ -38,10 +49,6 @@ class JwtGuard implements Guard
             return null;
         }
 
-        $verifierBuilder = new AccessTokenVerifierBuilder();
-        $verifierBuilder->setJoseBuilder(new JoseBuilder($this->expectedAudience));
-
-        $tokenVerifier = $verifierBuilder->build($this->openIdClient);
         $token = request()->bearerToken();
 
         if (!is_string($token)) {
@@ -49,8 +56,9 @@ class JwtGuard implements Guard
         }
 
         try {
-            $decodedJwt = $tokenVerifier->verify($token);
-        } catch (InvalidTokenException $e) {
+            $decodedJwt = $this->tokenVerifier->verify($token);
+        } catch (DomainException|JWTExceptionWithPayloadInterface|UnexpectedValueException $e) {
+            Log::debug('JWT decoding failed, request not authorized.', $e->getTrace());
             return null;
         }
 
@@ -65,7 +73,7 @@ class JwtGuard implements Guard
         return $this->user;
     }
 
-    public function validate(array $credentials = [])
+    public function validate(array $credentials = []): bool
     {
         return false;
     }

@@ -2,23 +2,26 @@
 
 namespace Marketredesign\MrdAuth0Laravel;
 
-use Auth0\Laravel\Http\Middleware\Stateless\Authorize;
+use Facile\JoseVerifier\JWK\JwksProviderBuilder;
 use Facile\OpenIDClient\Authorization\AuthRequest;
 use Facile\OpenIDClient\Authorization\AuthRequestInterface;
 use Facile\OpenIDClient\Client\ClientBuilder;
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Client\Metadata\ClientMetadata;
 use Facile\OpenIDClient\Issuer\IssuerBuilder;
+use Facile\OpenIDClient\Issuer\Metadata\Provider\MetadataProviderBuilder;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
+use Facile\OpenIDClient\Token\AccessTokenVerifierBuilder;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
+use Marketredesign\MrdAuth0Laravel\Auth\JoseBuilder;
 use Marketredesign\MrdAuth0Laravel\Auth\JwtGuard;
 use Marketredesign\MrdAuth0Laravel\Auth\OidcGuard;
 use Marketredesign\MrdAuth0Laravel\Auth\User\Provider;
-use Marketredesign\MrdAuth0Laravel\Contracts\Auth0Repository;
+use Marketredesign\MrdAuth0Laravel\Contracts\AuthRepository;
 use Marketredesign\MrdAuth0Laravel\Contracts\DatasetRepository;
 use Marketredesign\MrdAuth0Laravel\Contracts\UserRepository;
 use Marketredesign\MrdAuth0Laravel\Http\Middleware\AuthenticateOidc;
@@ -42,14 +45,40 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
 
         $auth->extend(
             'pc-jwt',
-            fn ($app, $name, array $config) => new JwtGuard(
-                $auth->createUserProvider($config['provider']),
-                $app['config']->get('pricecypher-oidc.audience'),
-            )
+            function ($app, $name, array $config) use ($auth) {
+                $oidcClient = $app->make(ClientInterface::class);
+
+                if (!$oidcClient) {
+                    return null;
+                }
+
+                $provider = $auth->createUserProvider($config['provider']);
+                $audience = $app['config']->get('pricecypher-oidc.audience');
+
+                $verifierBuilder = new AccessTokenVerifierBuilder();
+                $verifierBuilder->setJoseBuilder(new JoseBuilder($audience));
+                $tokenVerifier = $verifierBuilder->build($oidcClient);
+
+                $guard = new JwtGuard($tokenVerifier);
+
+                return $guard->withProvider($provider)->withExpectedAudience($audience);
+            }
         );
         $auth->extend(
             'pc-oidc',
-            fn ($app, $name, array $config) => new OidcGuard($auth->createUserProvider($config['provider']))
+            function ($app, $name, array $config) use ($auth) {
+                $oidcClient = $app->make(ClientInterface::class);
+
+                if (!$oidcClient) {
+                    return null;
+                }
+
+                $provider = $auth->createUserProvider($config['provider']);
+                $audience = $app['config']->get('pricecypher-oidc.audience');
+                $guard = new OidcGuard();
+
+                return $guard->withProvider($provider)->withExpectedAudience($audience);
+            }
         );
         $auth->provider('pc-users', fn () => new Provider());
 
@@ -63,7 +92,6 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
         $router->aliasMiddleware('oidc', AuthenticateOidc::class);
 
         // Ensure the Authorize middleware from Auth0 has a higher priority.
-        $kernel->appendToMiddlewarePriority(Authorize::class);
         $kernel->appendToMiddlewarePriority(AuthorizeJwt::class);
         $kernel->appendToMiddlewarePriority(AuthorizeDatasetAccess::class);
     }
@@ -81,14 +109,25 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/../config/pricecypher-oidc.php', 'pricecypher-oidc');
 
         // Bind repository implementations to the contracts.
-        $this->app->bind(Auth0Repository::class, Repository\Auth0Repository::class);
+        $this->app->bind(AuthRepository::class, Repository\AuthRepository::class);
         $this->app->bind(DatasetRepository::class, Repository\DatasetRepository::class);
         $this->app->bind(UserRepository::class, Repository\UserRepository::class);
 
         $this->app->singleton(ClientInterface::class, function () {
-            $issuer = (new IssuerBuilder())->build(
-                rtrim(config('pricecypher-oidc.issuer'), '/') . '/.well-known/openid-configuration'
-            );
+            $issUrl = rtrim(config('pricecypher-oidc.issuer'), '/');
+
+            if (!$issUrl) {
+                return null;
+            }
+
+            // Custom builders are needed to be able to set a different HTTP client.
+            $metaProvBuilder = (new MetadataProviderBuilder())->setHttpClient(config('pricecypher-oidc.http_client'));
+            $jwksProvBuilder = (new JwksProviderBuilder())->setHttpClient(config('pricecypher-oidc.http_client'));
+            $issuer = (new IssuerBuilder())
+                ->setMetadataProviderBuilder($metaProvBuilder)
+                ->setJwksProviderBuilder($jwksProvBuilder)
+                ->build("$issUrl/.well-known/openid-configuration");
+
             $clientMetadata = ClientMetadata::fromArray([
                 'client_id' => config('pricecypher-oidc.client_id'),
                 'client_secret' => config('pricecypher-oidc.client_secret'),
@@ -97,6 +136,7 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
             return (new ClientBuilder())
                 ->setIssuer($issuer)
                 ->setClientMetadata($clientMetadata)
+                ->setHttpClient(config('pricecypher-oidc.http_client'))
                 ->build();
         });
 
@@ -108,7 +148,7 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
             return AuthRequest::fromParams([
                 'client_id' => config('pricecypher-oidc.client_id'),
                 'redirect_uri' => route('oidc-callback'),
-                'scope' => config('pricecpyher-oidc.id_scopes'),
+                'scope' => config('pricecypher-oidc.id_scopes'),
             ]);
         });
     }

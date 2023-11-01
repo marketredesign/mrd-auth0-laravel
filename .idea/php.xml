@@ -32,7 +32,6 @@
   <component name="PhpIncludePathManager">
     <include_path>
       <path value="$PROJECT_DIR$/vendor/composer" />
-      <path value="$PROJECT_DIR$/vendor/psr/cache" />
       <path value="$PROJECT_DIR$/vendor/psr/event-dispatcher" />
       <path value="$PROJECT_DIR$/vendor/psr/http-message" />
       <path value="$PROJECT_DIR$/vendor/psr/container" />
@@ -45,8 +44,6 @@
       <path value="$PROJECT_DIR$/vendor/nikic/php-parser" />
       <path value="$PROJECT_DIR$/vendor/phpmd/phpmd" />
       <path value="$PROJECT_DIR$/vendor/voku/portable-ascii" />
-      <path value="$PROJECT_DIR$/vendor/auth0/auth0-php" />
-      <path value="$PROJECT_DIR$/vendor/auth0/login" />
       <path value="$PROJECT_DIR$/vendor/brick/math" />
       <path value="$PROJECT_DIR$/vendor/league/commonmark" />
       <path value="$PROJECT_DIR$/vendor/nesbot/carbon" />
@@ -115,7 +112,6 @@
       <path value="$PROJECT_DIR$/vendor/symfony/polyfill-intl-grapheme" />
       <path value="$PROJECT_DIR$/vendor/fakerphp/faker" />
       <path value="$PROJECT_DIR$/vendor/hamcrest/hamcrest-php" />
-      <path value="$PROJECT_DIR$/vendor/php-http/multipart-stream-builder" />
       <path value="$PROJECT_DIR$/vendor/doctrine/lexer" />
       <path value="$PROJECT_DIR$/vendor/doctrine/inflector" />
       <path value="$PROJECT_DIR$/vendor/php-http/message-factory" />
@@ -162,15 +158,7 @@
       <path value="$PROJECT_DIR$/vendor/lcobucci/jwt" />
       <path value="$PROJECT_DIR$/vendor/spatie/laravel-package-tools" />
       <path value="$PROJECT_DIR$/vendor/symfony/http-client-contracts" />
-      <path value="$PROJECT_DIR$/vendor/auth0/php-jwt" />
       <path value="$PROJECT_DIR$/vendor/guzzlehttp/uri-template" />
-      <path value="$PROJECT_DIR$/vendor/psr-discovery/log-implementations" />
-      <path value="$PROJECT_DIR$/vendor/psr-discovery/http-client-implementations" />
-      <path value="$PROJECT_DIR$/vendor/psr-discovery/http-factory-implementations" />
-      <path value="$PROJECT_DIR$/vendor/psr-discovery/event-dispatcher-implementations" />
-      <path value="$PROJECT_DIR$/vendor/psr-discovery/container-implementations" />
-      <path value="$PROJECT_DIR$/vendor/psr-discovery/cache-implementations" />
-      <path value="$PROJECT_DIR$/vendor/psr-discovery/discovery" />
       <path value="$PROJECT_DIR$/vendor/phpmyadmin/sql-parser" />
       <path value="$PROJECT_DIR$/vendor/psr-mock/http-message-implementation" />
       <path value="$PROJECT_DIR$/vendor/psr-mock/http-factory-implementation" />
@@ -209,6 +197,8 @@
       <path value="$PROJECT_DIR$/vendor/orchestra/workbench" />
       <path value="$PROJECT_DIR$/vendor/psy/psysh" />
       <path value="$PROJECT_DIR$/vendor/laravel/prompts" />
+      <path value="$PROJECT_DIR$/vendor/carbonphp/carbon-doctrine-types" />
+      <path value="$PROJECT_DIR$/vendor/firebase/php-jwt" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.1" />

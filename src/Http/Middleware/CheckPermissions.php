@@ -35,7 +35,7 @@ class CheckPermissions
     {
         // Make sure the user is logged in
         if (!Auth::check()) {
-            return redirect()->route('login');
+            return redirect()->route('oidc-login');
         }
 
         // Verify the logged in user has the required permissions (scope), if one was provided.

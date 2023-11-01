@@ -4,7 +4,7 @@ namespace Marketredesign\MrdAuth0Laravel\Contracts;
 
 use Exception;
 
-interface Auth0Repository
+interface AuthRepository
 {
     /**
      * Get a machine-to-machine token for this service. The access token is retrieved from cache when less than half

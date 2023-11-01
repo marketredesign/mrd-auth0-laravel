@@ -2,14 +2,13 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Repository;
 
-use Auth0\Laravel\Facade\Auth0;
 use Exception;
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 
-class Auth0Repository implements \Marketredesign\MrdAuth0Laravel\Contracts\Auth0Repository
+class AuthRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\AuthRepository
 {
     private AuthorizationService $authService;
     private ClientInterface $oidcClient;
@@ -39,12 +38,6 @@ class Auth0Repository implements \Marketredesign\MrdAuth0Laravel\Contracts\Auth0
      */
     protected function retrieveDecodedM2mTokenResponse(): array
     {
-        if (!config('pricecypher-oidc.issuer')) {
-            $clientCredResponse = Auth0::getSdk()->authentication()->clientCredentials()->getBody()->getContents();
-
-            return json_decode($clientCredResponse, true);
-        }
-
         $params = ['grant_type' => 'client_credentials'];
         $audience = config('pricecypher-oidc.audience');
 

@@ -10,3 +10,4 @@
 /commandlinetools/
 # Cache info with local path only
 php-test-framework.xml
+/aws.xml

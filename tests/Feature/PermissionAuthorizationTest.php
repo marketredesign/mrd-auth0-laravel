@@ -23,13 +23,13 @@ class PermissionAuthorizationTest extends TestCase
         $this->permissionsClaim = config('mrd-auth0.permissions_claim');
     }
 
-    private function beUser($permissions = [])
+    private function authPermissions($permissions = [])
     {
         $jwt = [
             $this->permissionsClaim => $permissions,
         ];
 
-        return $this->actingAsAuth0User($jwt);
+        return $this->auth($jwt);
     }
 
     /**
@@ -59,7 +59,7 @@ class PermissionAuthorizationTest extends TestCase
         self::assertFalse(Auth::check());
 
         // Expect redirect to the login endpoint.
-        $this->request()->assertRedirect('login');
+        $this->request()->assertRedirectToRoute('oidc-login');
     }
 
     /**
@@ -72,7 +72,7 @@ class PermissionAuthorizationTest extends TestCase
         self::assertFalse(Auth::check());
 
         // Expect redirect to the login endpoint.
-        $this->request('read:test')->assertRedirect('login');
+        $this->request('read:test')->assertRedirectToRoute('oidc-login');
     }
 
     /**
@@ -81,7 +81,7 @@ class PermissionAuthorizationTest extends TestCase
     public function testLoggedInNoPermRequested()
     {
         // Login as some user.
-        $this->beUser();
+        $this->authPermissions();
 
         // Sanity check; make sure a user is logged in.
         self::assertTrue(Auth::check());
@@ -102,7 +102,7 @@ class PermissionAuthorizationTest extends TestCase
         Log::shouldReceive('warning')->never();
 
         // Login as some user and add incorrect permissions claim to userinfo.
-        $this->actingAsAuth0User(['permissions' => ['read:test']]);
+        $this->auth(['permissions' => ['read:test']]);
         // Sanity check; user should be logged in now.
         self::assertTrue(Auth::check());
         // Verify the user is allowed access.
@@ -114,7 +114,7 @@ class PermissionAuthorizationTest extends TestCase
         });
 
         // Login as some user and add incorrect permissions claim to userinfo.
-        $this->actingAsAuth0User(['permissions' => ['read:test']]);
+        $this->auth(['permissions' => ['read:test']]);
         // Sanity check; user should be logged in now.
         self::assertTrue(Auth::check());
         // Verify request is forbidden (permissions are not in correct place in ID token).
@@ -128,7 +128,7 @@ class PermissionAuthorizationTest extends TestCase
     public function testLoggedInPermRequestedNonePresent()
     {
         // Login as some user.
-        $this->beUser();
+        $this->authPermissions();
 
         // Sanity check; make sure a user is logged in.
         self::assertTrue(Auth::check());
@@ -144,7 +144,7 @@ class PermissionAuthorizationTest extends TestCase
     public function testLoggedInPermRequestedWrongPresent()
     {
         // Login as some user.
-        $this->beUser(['write:test', 'read:another']);
+        $this->authPermissions(['write:test', 'read:another']);
 
         // Sanity check; make sure a user is logged in.
         self::assertTrue(Auth::check());
@@ -160,7 +160,7 @@ class PermissionAuthorizationTest extends TestCase
     public function testLoggedInPermRequestedPresent()
     {
         // Login as some user.
-        $this->beUser(['write:test', 'read:test']);
+        $this->authPermissions(['write:test', 'read:test']);
 
         // Sanity check; make sure a user is logged in.
         self::assertTrue(Auth::check());
@@ -182,7 +182,7 @@ class PermissionAuthorizationTest extends TestCase
         self::assertNotEquals($this->permissionsClaim, $otherClaim);
 
         // Login as some user, and verify indeed logged in.
-        $this->beUser(['write:test', 'read:another']);
+        $this->authPermissions(['write:test', 'read:another']);
         self::assertTrue(Auth::check());
 
         // Verify that the user is refused access because of insufficient permissions, even though the permissions
@@ -191,7 +191,7 @@ class PermissionAuthorizationTest extends TestCase
 
         // Use the other claim in the tests as well now, login again, and verify that the request is allowed now.
         $this->permissionsClaim = $otherClaim;
-        $this->beUser(['write:test', 'read:another']);
+        $this->authPermissions(['write:test', 'read:another']);
         self::assertTrue(Auth::check());
 
         // Verify that the request is authorized.

@@ -3,19 +3,13 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Tests;
 
-use Auth0\Laravel\Auth\Guard;
-use Auth0\Laravel\Auth\User\Repository;
-use Auth0\Laravel\Contract\Auth\Guard as GuardContract;
-use Auth0\Laravel\Entities\Credential;
-use Auth0\Laravel\Facade\Auth0;
-use Auth0\Laravel\Model\Imposter;
-use Auth0\Laravel\ServiceProvider;
-use Auth0\SDK\Exception\ConfigurationException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
-use Illuminate\Foundation\Testing\Concerns\InteractsWithAuthentication;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
+use Marketredesign\MrdAuth0Laravel\Model\Stateful\User as StatefulUser;
+use Marketredesign\MrdAuth0Laravel\Model\Stateless\User as StatelessUser;
 use Marketredesign\MrdAuth0Laravel\MrdAuth0LaravelServiceProvider;
 
 class TestCase extends \Orchestra\Testbench\TestCase
@@ -35,10 +29,11 @@ class TestCase extends \Orchestra\Testbench\TestCase
      */
     protected $guzzleContainer = [];
 
+    protected $guard = 'pc-jwt';
+
     protected function getPackageProviders($app)
     {
         return [
-            ServiceProvider::class,
             MrdAuth0LaravelServiceProvider::class,
         ];
     }
@@ -47,28 +42,62 @@ class TestCase extends \Orchestra\Testbench\TestCase
     {
         parent::setUp();
 
-        Config::set('auth.defaults.guard', 'auth0');
+        // Let the OIDC SDK use our mocked HTTP client.
+        Config::set('pricecypher-oidc.http_client', new HttpPsrClientBridge());
+        Config::set('pricecypher-oidc.issuer', 'https://domain.test');
+        Config::set('pricecypher-oidc.client_id', 'id');
+        Config::set('pricecypher-oidc.client_secret', 'secret');
 
-        Config::set('auth.guards.auth0', [
-            'driver' => 'auth0.guard',
-            'provider' => 'auth0',
+        Http::fake([
+            'https://domain.test/.well-known/openid-configuration' => Http::response([
+                'issuer' => 'https://domain.test',
+                'authorization_endpoint' => 'https://domain.test/authorize',
+                "token_endpoint" => "https://domain.test/token",
+                'jwks_uri' => 'https://domain.test/jwks',
+            ]),
+            'https://domain.test/jwks' => Http::response([
+                "keys" => [
+                    [
+                        "kid" => "kid1",
+                        "kty" => "RSA",
+                        "alg" => "RS256",
+                        "use" => "sig",
+                        "n" => "verybign",
+                        "e" => "AQAB",
+                        "x5c" => ["certcontents"],
+                        "x5t" => "PJval",
+                        "x5t#S256" => "e9val",
+                    ],
+                ],
+            ])
         ]);
 
-        Config::set('auth.providers.auth0', [
-            'driver' => 'auth0.provider',
-            'repository' => Repository::class,
+
+        Config::set('auth.guards.pc-jwt', [
+            'driver' => 'pc-jwt',
+            'provider' => 'pc-users',
         ]);
+        Config::set('auth.guards.pc-oidc', [
+            'driver' => 'pc-oidc',
+            'provider' => 'pc-users',
+        ]);
+
+        Config::set('auth.providers.pc-users', [
+            'driver' => 'pc-users',
+        ]);
+
+        Config::set('auth.defaults.guard', $this->guard);
     }
 
     /**
-     * use this method to impersonate a specific auth0 user.
+     * Authorise / authenticate a request.
      * if you pass an attributes array, it will be merged with a set of default values
      *
      * @param array $attributes
-     *
-     * @return InteractsWithAuthentication
+     * @param bool $stateless
+     * @return TestCase
      */
-    public function actingAsAuth0User(array $attributes = [])
+    public function auth(array $attributes = [], bool $stateless = true): TestCase
     {
         $defaults = [
             'sub' => 'some-auth0-user-id',
@@ -79,22 +108,9 @@ class TestCase extends \Orchestra\Testbench\TestCase
         ];
 
         $attributes = array_merge($defaults, $attributes);
-        $instance = auth()->guard('auth0');
-        $user = new Imposter($attributes);
+        $user = $stateless ? new StatelessUser($attributes) : new StatefulUser($attributes);
 
-        if (!($instance instanceof GuardContract)) {
-            return $this->actingAs($user, 'auth0');
-        }
-
-        $credential = Credential::create(
-            user: $user,
-            accessTokenScope: $attributes['scope'] ? explode(' ', $attributes['scope']) : [],
-        );
-
-        $instance->setCredential($credential, Guard::SOURCE_IMPERSONATE);
-        $instance->setImpersonating(true);
-
-        return $this->actingAs($user, 'auth0');
+        return $this->actingAs($user, $this->guard);
     }
 
     /**
@@ -124,17 +140,5 @@ class TestCase extends \Orchestra\Testbench\TestCase
         return [
             'handler' => $handlerStack,
         ];
-    }
-
-    /**
-     * Resets the config used by the Auth0 SDK that is used by the Auth0 Facade.
-     * Should be called after updating the auth0 config.
-     *
-     * @return void
-     * @throws ConfigurationException
-     */
-    protected function resetAuth0Config(): void
-    {
-        Auth0::reset();
     }
 }

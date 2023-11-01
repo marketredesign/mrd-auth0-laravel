@@ -3,7 +3,7 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
-use Auth0\Laravel\Store\LaravelSession;
+use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Redirect;
@@ -11,45 +11,37 @@ use Marketredesign\MrdAuth0Laravel\Tests\TestCase;
 
 class LogoutTest extends TestCase
 {
-    private const ROUTE_NAME = 'logout';
+    private const ROUTE_NAME = 'oidc-logout';
+
+    protected $guard = 'pc-oidc';
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        Config::set('auth0', [
-            'strategy' => 'webapp',
-            'domain'   => 'auth.marketredesign.com',
-            'audience' => ['https://api.pricecypher.com'],
-            'redirectUri' => 'https://redirect.com/oauth/callback',
-            'sessionStorage' => new LaravelSession(),
-            'transientStorage' => new LaravelSession(),
-            'clientId' => '123',
-            'cookieSecret' => 'abc',
-        ]);
-
-        $this->resetAuth0Config();
+        Config::set('pricecypher-oidc.logout_endpoint', 'https://domain.test/oidc/logout');
+        request()->setLaravelSession(app(Session::class));
     }
 
     /**
-     * Verifies that the user is redirected to Auth0's logout page when already logged in, and logged out afterwards.
+     * Verifies that the user is redirected to Auth0's logout page when already logged in, and logged out afterward.
      */
     public function testNormalLogout()
     {
         // Login as some user.
-        $this->actingAsAuth0User();
+        $this->auth([], false);
 
         // Sanity check; make sure a user is logged in.
-        self::assertTrue(Auth::check());
+        self::assertTrue(Auth::guard($this->guard)->check());
 
         // Assert we are redirected to Auth0 logout page.
         $this->get(route(self::ROUTE_NAME))->assertRedirect()
-            ->assertRedirectContains('https://auth.marketredesign.com/v2/logout')
-            ->assertRedirectContains('client_id=123')
-            ->assertRedirectContains('returnTo=' . urlencode('http://localhost'));
+            ->assertRedirectContains('https://domain.test/oidc/logout')
+            ->assertRedirectContains('client_id=id')
+            ->assertRedirectContains('post_logout_redirect_uri=' . urlencode('http://localhost'));
 
         // Verify that the user is indeed logged out now.
-        self::assertFalse(Auth::check());
+        self::assertFalse(Auth::guard($this->guard)->check());
     }
 
     /**
@@ -57,16 +49,16 @@ class LogoutTest extends TestCase
      */
     public function testLogoutWithoutBeingLoggedIn()
     {
-        Config::set('auth0.routes.home', '/some-home-url');
+        Config::set('pricecypher-oidc.routes.home', '/some-home-url');
 
         // Sanity check; make sure no user is logged in.
-        self::assertFalse(Auth::check());
+        self::assertFalse(Auth::guard($this->guard)->check());
 
         // Assert we are redirected to the home page.
         $this->get(route(self::ROUTE_NAME))->assertRedirect('/some-home-url');
 
         // Verify that no user was magically logged in.
-        self::assertFalse(Auth::check());
+        self::assertFalse(Auth::guard($this->guard)->check());
 
         // Now set an intended URL and verify we are redirected there instead.
         Redirect::setIntendedUrl('/something');

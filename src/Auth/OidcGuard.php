@@ -2,12 +2,10 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Auth;
 
-use Facile\OpenIDClient\Client\ClientInterface;
 use Illuminate\Auth\GuardHelpers;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
 use Marketredesign\MrdAuth0Laravel\Auth\User\Provider;
 use Marketredesign\MrdAuth0Laravel\Model\Stateful\User;
@@ -16,19 +14,30 @@ class OidcGuard implements Guard
 {
     use GuardHelpers;
 
-    private ClientInterface $openIdClient;
+    private ?string $expectedAudience;
 
-    public function __construct(UserProvider $provider)
+    public function __construct()
+    {
+        $this->expectedAudience = null;
+    }
+
+    public function withProvider(UserProvider $provider): OidcGuard
     {
         $this->setProvider($provider);
+        return $this;
+    }
 
-        $this->openIdClient = App::make(ClientInterface::class);
+    public function withExpectedAudience(string $audience): OidcGuard
+    {
+        $this->expectedAudience = $audience;
+        return $this;
     }
 
     public function logout()
     {
         request()->session()->remove('pc-oidc-session');
         Session::flush();
+        $this->user = null;
 
         return $this;
     }
@@ -62,7 +71,8 @@ class OidcGuard implements Guard
         }
 
         if (!($this->user instanceof User)) {
-            abort('User model must implement Marketredesign\MrdAuth0Laravel\Model\Stateful\User');
+            $userClass = User::class;
+            abort("User model must implement $userClass.");
         }
 
         return $this->user;
