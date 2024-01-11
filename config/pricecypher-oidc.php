@@ -21,6 +21,8 @@ return [
 
     'id_scopes' => explode(' ', env('OIDC_ID_SCOPES', 'openid')),
 
+    'clock_tolerance' => env('OIDC_CLOCK_TOLERANCE', 5),
+
     'routes' => [
         'home' => env('OIDC_ROUTE_HOME', '/'),
     ],

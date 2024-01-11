@@ -11,6 +11,7 @@ use Facile\OpenIDClient\Client\Metadata\ClientMetadata;
 use Facile\OpenIDClient\Issuer\IssuerBuilder;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
+use Facile\OpenIDClient\Token\IdTokenVerifierBuilder;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Routing\Router;
@@ -101,7 +102,13 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(AuthorizationService::class, function () {
-            return (new AuthorizationServiceBuilder())->build();
+            $authServiceBuilder = new AuthorizationServiceBuilder();
+            $idVerifierBuilder = new IdTokenVerifierBuilder();
+
+            $idVerifierBuilder->setClockTolerance(config('pricecypher-oidc.clock_tolerance', 0));
+            $authServiceBuilder->setIdTokenVerifierBuilder($idVerifierBuilder);
+
+            return $authServiceBuilder->build();
         });
 
         $this->app->bind(AuthRequestInterface::class, function () {

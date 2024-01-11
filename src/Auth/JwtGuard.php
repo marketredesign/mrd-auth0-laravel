@@ -40,6 +40,7 @@ class JwtGuard implements Guard
 
         $verifierBuilder = new AccessTokenVerifierBuilder();
         $verifierBuilder->setJoseBuilder(new JoseBuilder($this->expectedAudience));
+        $verifierBuilder->setClockTolerance(config('pricecypher-oidc.clock_tolerance', 0));
 
         $tokenVerifier = $verifierBuilder->build($this->openIdClient);
         $token = request()->bearerToken();
