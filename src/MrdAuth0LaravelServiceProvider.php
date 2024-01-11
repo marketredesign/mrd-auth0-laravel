@@ -108,7 +108,7 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
             return AuthRequest::fromParams([
                 'client_id' => config('pricecypher-oidc.client_id'),
                 'redirect_uri' => route('oidc-callback'),
-                'scope' => config('pricecpyher-oidc.id_scopes'),
+                'scope' => config('pricecypher-oidc.id_scopes'),
             ]);
         });
     }
