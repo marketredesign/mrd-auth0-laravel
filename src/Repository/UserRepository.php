@@ -82,6 +82,14 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
             return null;
         }
 
+        if (config('auth.defaults.guard') !== 'auth0') {
+            return (object) [
+                'sub' => $id,
+                'user_id' => $id,
+                'email' => $id,
+            ];
+        }
+
         $cacheKey = 'auth0-users-get-' . $id;
 
         return Cache::remember($cacheKey, $this->cacheTTL, function () use ($id) {
@@ -104,6 +112,10 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
             return null;
         }
 
+        if (config('auth.defaults.guard') !== 'auth0') {
+            abort(400, 'Deleting users is only supported when using Auth0 identity provider.');
+        }
+
         $response = $this->mgmtApi->users()->delete($id);
 
         if (!HttpResponse::wasSuccessful($response, 204)) {
@@ -116,6 +128,10 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
      */
     public function createUser(String $email, String $firstName, String $lastName): object
     {
+        if (config('auth.defaults.guard') !== 'auth0') {
+            abort(400, 'Creating users is only supported when using Auth0 identity provider.');
+        }
+
         $response = $this->mgmtApi->users()->create(config('mrd-auth0.connection'), [
             'email' => $email,
             'given_name' => $firstName,
@@ -141,6 +157,10 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
      */
     private function getAll(string $queryField, Collection $queryValues, array $fields = null): Collection
     {
+        if (config('auth.defaults.guard') !== 'auth0') {
+            abort(400, 'Querying users is only supported when using Auth0 identity provider.');
+        }
+
         // Make sure the queryField is always contained in the response, such that we can key the result on that.
         if ($fields !== null && !Arr::has($fields, $queryField)) {
             $fields[] = $queryField;
@@ -180,6 +200,16 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
      */
     public function getByIds(Collection $ids, array $fields = null): Collection
     {
+        if (config('auth.defaults.guard') !== 'auth0') {
+            return $ids->map(function ($id) {
+                 return (object) [
+                    'sub' => $id,
+                    'user_id' => $id,
+                    'email' => $id,
+                 ];
+            });
+        }
+
         return $this->getAll('user_id', $ids, $fields);
     }
 
@@ -236,6 +266,10 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
      */
     public function getAllUsers(): Collection
     {
+        if (config('auth.defaults.guard') !== 'auth0') {
+            abort(400, 'Querying users is only supported when using Auth0 identity provider.');
+        }
+
         return Cache::remember('auth0-all-users', $this->cacheTTL, function () {
             $users = $this->getFromMgmtPaginated('users', fn($params) => $this->mgmtApi->users()->getAll($params));
 

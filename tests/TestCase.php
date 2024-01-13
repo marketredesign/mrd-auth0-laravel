@@ -26,14 +26,19 @@ class TestCase extends \Orchestra\Testbench\TestCase
     /**
      * @var array Fake responses that will be used by guzzle when using options from {@link createTestingGuzzleOptions}.
      */
-    protected $mockedResponses;
+    protected array $mockedResponses;
 
     /**
      * @var array Container that will hold the guzzle history. Use this to verify the correct API requests were sent.
      */
-    protected $guzzleContainer = [];
+    protected array $guzzleContainer = [];
 
-    protected function getPackageProviders($app)
+    /**
+     * @var string Specifies the guard that is configured as the default guard (`auth.defaults.guard`) during setUp.
+     */
+    protected string $authGuard = 'auth0';
+
+    protected function getPackageProviders($app): array
     {
         return [
             ServiceProvider::class,
@@ -45,16 +50,30 @@ class TestCase extends \Orchestra\Testbench\TestCase
     {
         parent::setUp();
 
-        Config::set('auth.defaults.guard', 'auth0');
+        Config::set('auth.defaults.guard', $this->authGuard);
 
         Config::set('auth.guards.auth0', [
             'driver' => 'auth0.guard',
             'provider' => 'auth0',
         ]);
 
+        Config::set('auth.guards.pc-jwt', [
+            'driver' => 'pc-jwt',
+            'provider' => 'pc-users',
+        ]);
+
+        Config::set('auth.guards.pc-oidc', [
+            'driver' => 'pc-oidc',
+            'provider' => 'pc-users',
+        ]);
+
         Config::set('auth.providers.auth0', [
             'driver' => 'auth0.provider',
             'repository' => Repository::class,
+        ]);
+
+        Config::set('auth.providers.pc-users', [
+            'driver' => 'pc-users',
         ]);
     }
 
@@ -63,7 +82,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
      * that was made.
      * @return array Guzzle options array
      */
-    protected function createTestingGuzzleOptions()
+    protected function createTestingGuzzleOptions(): array
     {
         $responseQueue = [];
 

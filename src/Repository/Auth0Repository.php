@@ -4,11 +4,26 @@ namespace Marketredesign\MrdAuth0Laravel\Repository;
 
 use Auth0\Laravel\Facade\Auth0;
 use Exception;
+use Facile\OpenIDClient\Client\ClientInterface;
+use Facile\OpenIDClient\Service\AuthorizationService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 
 class Auth0Repository implements \Marketredesign\MrdAuth0Laravel\Contracts\Auth0Repository
 {
+    private AuthorizationService $authService;
+    private ?ClientInterface $oidcClient;
+
+    /**
+     * @param AuthorizationService $authService
+     * @param ?ClientInterface $oidcClient
+     */
+    public function __construct(AuthorizationService $authService, ?ClientInterface $oidcClient)
+    {
+        $this->authService = $authService;
+        $this->oidcClient = $oidcClient;
+    }
+
     /**
      * @return string The cache key that stores the machine-to-machine token.
      */
@@ -24,9 +39,22 @@ class Auth0Repository implements \Marketredesign\MrdAuth0Laravel\Contracts\Auth0
      */
     protected function retrieveDecodedM2mTokenResponse(): array
     {
-        $clientCredResponse = Auth0::getSdk()->authentication()->clientCredentials()->getBody()->getContents();
+        if ($this->oidcClient === null) {
+            $clientCredResponse = Auth0::getSdk()->authentication()->clientCredentials()->getBody()->getContents();
 
-        return json_decode($clientCredResponse, true);
+            return json_decode($clientCredResponse, true);
+        }
+
+        $params = ['grant_type' => 'client_credentials'];
+        $audience = config('pricecypher-oidc.audience');
+
+        if ($audience) {
+            $params['audience'] = $audience;
+        }
+
+        return $this->authService
+            ->grant($this->oidcClient, $params)
+            ->getAttributes();
     }
 
     /**

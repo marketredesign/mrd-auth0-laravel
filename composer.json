@@ -20,10 +20,14 @@
         "ext-json": "*",
         "auth0/auth0-php": "^8.3",
         "auth0/login": "~7.7.0",
+        "facile-it/php-openid-client": "^0.3.1",
+        "firebase/php-jwt": "^6.10",
         "guzzlehttp/guzzle": "^6.0|^7.0",
         "illuminate/contracts": "^6.0|^7.0|^8.0|^9.0",
         "illuminate/support": "^6.0|^7.0|^8.0|^9.0",
-        "newrelic/monolog-enricher": "^2.0"
+        "newrelic/monolog-enricher": "^2.0",
+        "nyholm/psr7": "^1.5",
+        "symfony/psr-http-message-bridge": "^2.1"
     },
     "require-dev": {
         "nunomaduro/larastan": "^1.0.3",
