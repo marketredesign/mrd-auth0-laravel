@@ -73,8 +73,7 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
             } else {
                 // This kind of exception in not expected and probably indicates some connection problem. In any case,
                 // we cannot recover from it. Hence, log the error and abort with an internal server error.
-                Log::error('Encountered an unexpected GuzzleException:');
-                Log::error($e);
+                Log::error('Encountered an unexpected GuzzleException:', $e->getTrace());
                 abort(500);
             }
         }
@@ -105,7 +104,7 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
             return $this->retrieveDatasetsFromApi($managedOnly);
         }
 
-        $userId = Auth::id() ?? Auth::guard('jwt')->id() ?? Auth::guard('pc-openid')->id();
+        $userId = Auth::id() ?? Auth::guard('pc-jwt')?->id() ?? Auth::guard('pc-oidc')?->id() ?? null;
 
         if ($userId == null) {
             // We cannot read from cache since our normal method of retrieving the user ID apparently did not work.

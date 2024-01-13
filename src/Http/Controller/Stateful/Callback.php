@@ -24,15 +24,13 @@ class Callback
             $tokenSet = $authService->callback($client, $params, route('oidc-callback'));
         } catch (\Throwable $e) {
             $guard->logout();
-            Log::error("OIDC callback failed with message {$e->getMessage()}.", [
+            Log::debug("OIDC callback failed with message {$e->getMessage()}.", [
                 'exception' => $e,
             ]);
             abort(401, 'Not authenticated');
         }
 
         if ($tokenSet->getIdToken() === null) {
-            Log::debug("34");
-            dd($tokenSet);
             abort(401, 'Not authenticated');
         }
 
@@ -45,7 +43,6 @@ class Callback
         ]);
 
         if (!$guard->check()) {
-            Log::debug("45");
             abort(401, 'Not authenticated');
         }
 

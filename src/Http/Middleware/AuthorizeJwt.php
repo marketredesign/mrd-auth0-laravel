@@ -27,7 +27,7 @@ class AuthorizeJwt
      */
     public function handle(Request $request, Closure $next, string $scope = ''): mixed
     {
-        $guard = Auth::guard('jwt');
+        $guard = Auth::guard('pc-jwt');
         $user = $guard->user();
 
         if (!($user instanceof User)) {

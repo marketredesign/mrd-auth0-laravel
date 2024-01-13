@@ -49,8 +49,8 @@ class NewRelicLogger
         if (!App::runningInConsole()) {
             $record['user'] = [
                 'authenticated' => Auth::check(),
-                'authorized' => Auth::guard('jwt')->check(),
-                'user_id' => Auth::id() ?? Auth::guard('jwt')->id(),
+                'authorized' => Auth::guard('pc-jwt')->check(),
+                'user_id' => Auth::id() ?? Auth::guard('pc-jwt')->id(),
             ];
         }
 

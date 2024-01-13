@@ -34,11 +34,11 @@ class TestCase extends \Orchestra\Testbench\TestCase
     protected array $guzzleContainer = [];
 
     /**
-     * @var string TODO
+     * @var string Specifies the guard that is configured as the default guard (`auth.defaults.guard`) during setUp.
      */
     protected string $authGuard = 'auth0';
 
-    protected function getPackageProviders($app)
+    protected function getPackageProviders($app): array
     {
         return [
             ServiceProvider::class,
@@ -57,9 +57,23 @@ class TestCase extends \Orchestra\Testbench\TestCase
             'provider' => 'auth0',
         ]);
 
+        Config::set('auth.guards.pc-jwt', [
+            'driver' => 'pc-jwt',
+            'provider' => 'pc-users',
+        ]);
+
+        Config::set('auth.guards.pc-oidc', [
+            'driver' => 'pc-oidc',
+            'provider' => 'pc-users',
+        ]);
+
         Config::set('auth.providers.auth0', [
             'driver' => 'auth0.provider',
             'repository' => Repository::class,
+        ]);
+
+        Config::set('auth.providers.pc-users', [
+            'driver' => 'pc-users',
         ]);
     }
 
@@ -68,7 +82,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
      * that was made.
      * @return array Guzzle options array
      */
-    protected function createTestingGuzzleOptions()
+    protected function createTestingGuzzleOptions(): array
     {
         $responseQueue = [];
 

@@ -59,8 +59,7 @@ class AuthorizeDatasetAccess
         try {
             return Datasets::getUserDatasetIds();
         } catch (RequestException $e) {
-            Log::error('Unable to request authorized datasets from user tool:');
-            Log::error($e);
+            Log::error('Unable to request authorized datasets from user tool:', $e->getTrace());
             abort(401, 'Unable to authorize dataset access.');
         }
     }

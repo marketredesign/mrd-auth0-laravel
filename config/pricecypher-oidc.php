@@ -46,7 +46,7 @@ return [
 
     'scope_prefix' => env('OIDC_SCOPE_PREFIX', ''),
 
-    'id_scopes' => implode(' ', env('OIDC_ID_SCOPES', ['openid'])),
+    'id_scopes' => env('OIDC_ID_SCOPES', 'openid'),
 
     'routes' => [
         'home' => env('OIDC_ROUTE_HOME', '/'),
