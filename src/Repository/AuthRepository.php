@@ -32,7 +32,7 @@ class AuthRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\AuthRe
     }
 
     /**
-     * Retrieve the machine-to-machine token (from underlying SDK).
+     * Retrieve the machine-to-machine token (from OIDC Provider, generically).
      *
      * @return array Decoded response, containing 'expires_in' and 'access_token' attributes.
      */

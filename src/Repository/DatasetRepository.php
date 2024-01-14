@@ -95,16 +95,17 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
      * Get user datasets from cache, when enabled and present, or by retrieving from the API otherwise.
      *
      * @param bool $managedOnly Only get datasets that the user is a manager of.
-     * @param bool $cached Use {@code false} to disable retrieving from and storing in cache. Defaults to {@code true}.
+     * @param bool $cached Use {@code false} to disable retrieving from and storing in cache.
+     * @param ?string $guard Name of the auth guard used to get the current user ID. Use {@code null} for default one.
      * @return array
      */
-    private function getRawDatasets(bool $managedOnly, bool $cached): array
+    private function getRawDatasets(bool $managedOnly, bool $cached, ?string $guard): array
     {
         if (!$cached) {
             return $this->retrieveDatasetsFromApi($managedOnly);
         }
 
-        $userId = Auth::id() ?? Auth::guard('pc-jwt')->id();
+        $userId = Auth::guard($guard)->id();
 
         if ($userId == null) {
             // We cannot read from cache since our normal method of retrieving the user ID apparently did not work.
@@ -120,16 +121,22 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
     /**
      * @inheritDoc
      */
-    public function getUserDatasetIds(bool $managedOnly = false, bool $cached = true): Collection
-    {
-        return collect($this->getRawDatasets($managedOnly, $cached))->pluck('id');
+    public function getUserDatasetIds(
+        bool $managedOnly = false,
+        bool $cached = true,
+        ?string $guard = null,
+    ): Collection {
+        return collect($this->getRawDatasets($managedOnly, $cached, $guard))->pluck('id');
     }
 
     /**
      * @inheritDoc
      */
-    public function getUserDatasets(bool $managedOnly = false, bool $cached = true): ResourceCollection
-    {
-        return DatasetResource::collection($this->getRawDatasets($managedOnly, $cached));
+    public function getUserDatasets(
+        bool $managedOnly = false,
+        bool $cached = true,
+        ?string $guard = null,
+    ): ResourceCollection {
+        return DatasetResource::collection($this->getRawDatasets($managedOnly, $cached, $guard));
     }
 }
