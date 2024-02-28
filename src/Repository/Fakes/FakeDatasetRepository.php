@@ -91,7 +91,7 @@ class FakeDatasetRepository implements DatasetRepository
         $fakeModules = $this->faker->words($this->faker->randomDigit(), false);
 
         // Add a dataset with these fields, prioritizing provided data
-        $dsObject = (object)[
+        $dsObject = [
             'id' => $dataset->get('id'),
             'name' => $dataset->get('name', $this->faker->firstName),
             'dss_url' => $dataset->get('dss_url', $this->faker->url),
@@ -99,7 +99,7 @@ class FakeDatasetRepository implements DatasetRepository
             'updated_at' => $dataset->get('updated_at', $this->faker->dateTime),
             'modules' => $dataset->get('modules', $fakeModules),
         ];
-        $this->datasets->put($dsObject->id, $dsObject);
+        $this->datasets->put($dsObject['id'], $dsObject);
     }
 
     /**

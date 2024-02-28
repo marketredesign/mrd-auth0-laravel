@@ -16,6 +16,9 @@ use Facile\OpenIDClient\Token\AccessTokenVerifierBuilder;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\ServiceProvider;
 use Marketredesign\MrdAuth0Laravel\Auth\JoseBuilder;
 use Marketredesign\MrdAuth0Laravel\Auth\JwtGuard;
@@ -24,6 +27,7 @@ use Marketredesign\MrdAuth0Laravel\Auth\User\Provider;
 use Marketredesign\MrdAuth0Laravel\Contracts\AuthRepository;
 use Marketredesign\MrdAuth0Laravel\Contracts\DatasetRepository;
 use Marketredesign\MrdAuth0Laravel\Contracts\UserRepository;
+use Marketredesign\MrdAuth0Laravel\Facades\PricecypherAuth;
 use Marketredesign\MrdAuth0Laravel\Http\Middleware\AuthenticateOidc;
 use Marketredesign\MrdAuth0Laravel\Http\Middleware\AuthorizeDatasetAccess;
 use Marketredesign\MrdAuth0Laravel\Http\Middleware\AuthorizeJwt;
@@ -31,18 +35,8 @@ use Marketredesign\MrdAuth0Laravel\Http\Middleware\CheckPermissions;
 
 class MrdAuth0LaravelServiceProvider extends ServiceProvider
 {
-    /**
-     * Bootstrap the application services.
-     */
-    public function boot(AuthManager $auth)
+    private function extendAuthJwt(AuthManager $auth): void
     {
-        if ($this->app->runningInConsole()) {
-            $this->publishes([
-                __DIR__ . '/../config/mrd-auth0.php' => config_path('mrd-auth0.php'),
-                __DIR__ . '/../config/pricecypher-oidc.php' => config_path('pricecypher-oidc.php'),
-            ], 'mrd-auth0-config');
-        }
-
         $auth->extend(
             'pc-jwt',
             function ($app, $name, array $config) use ($auth) {
@@ -64,6 +58,10 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
                 return $guard->withProvider($provider)->withExpectedAudience($audience);
             }
         );
+    }
+
+    private function extendAuthOidc(AuthManager $auth): void
+    {
         $auth->extend(
             'pc-oidc',
             function ($app, $name, array $config) use ($auth) {
@@ -80,7 +78,41 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
                 return $guard->withProvider($provider)->withExpectedAudience($audience);
             }
         );
-        $auth->provider('pc-users', fn () => new Provider());
+    }
+
+    private function httpMacros(): void
+    {
+        $getAccessToken = function () {
+            if (App::runningInConsole()) {
+                return PricecypherAuth::getMachineToMachineToken();
+            }
+
+            return Request::bearerToken();
+        };
+
+        Http::macro('userTool', function () use ($getAccessToken) {
+            return Http::baseUrl(config('pricecypher.services.user_tool'))
+                ->withToken($getAccessToken())
+                ->acceptJson();
+        });
+    }
+
+    /**
+     * Bootstrap the application services.
+     */
+    public function boot(AuthManager $auth)
+    {
+        if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__ . '/../config/mrd-auth0.php' => config_path('mrd-auth0.php'),
+                __DIR__ . '/../config/pricecypher.php' => config_path('pricecypher.php'),
+                __DIR__ . '/../config/pricecypher-oidc.php' => config_path('pricecypher-oidc.php'),
+            ], 'mrd-auth0-config');
+        }
+
+        $this->extendAuthJwt($auth);
+        $this->extendAuthOidc($auth);
+        $auth->provider('pc-users', fn() => new Provider());
 
         $router = $this->app->make(Router::class);
         $kernel = $this->app->make(Kernel::class);
@@ -94,6 +126,8 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
         // Ensure the Authorize middleware from Auth0 has a higher priority.
         $kernel->appendToMiddlewarePriority(AuthorizeJwt::class);
         $kernel->appendToMiddlewarePriority(AuthorizeDatasetAccess::class);
+
+        $this->httpMacros();
     }
 
     /**
@@ -106,6 +140,7 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
 
         // Load our configs.
         $this->mergeConfigFrom(__DIR__ . '/../config/mrd-auth0.php', 'mrd-auth0');
+        $this->mergeConfigFrom(__DIR__ . '/../config/pricecypher.php', 'pricecypher');
         $this->mergeConfigFrom(__DIR__ . '/../config/pricecypher-oidc.php', 'pricecypher-oidc');
 
         // Bind repository implementations to the contracts.

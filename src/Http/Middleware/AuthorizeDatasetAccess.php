@@ -5,7 +5,7 @@ namespace Marketredesign\MrdAuth0Laravel\Http\Middleware;
 use App;
 use Closure;
 use Exception;
-use GuzzleHttp\Exception\RequestException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;

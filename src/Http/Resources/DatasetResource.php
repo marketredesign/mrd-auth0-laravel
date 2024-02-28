@@ -17,12 +17,12 @@ class DatasetResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'dss_url' => $this->dss_url,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-            'modules' => $this->modules,
+            'id' => $this['id'],
+            'name' => $this['name'],
+            'dss_url' => $this['dss_url'],
+            'created_at' => $this['created_at'],
+            'updated_at' => $this['updated_at'],
+            'modules' => $this['modules'],
         ];
     }
 }

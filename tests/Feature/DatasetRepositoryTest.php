@@ -4,16 +4,23 @@
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
 use Carbon\Carbon;
-use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Marketredesign\MrdAuth0Laravel\Contracts\DatasetRepository;
+use Marketredesign\MrdAuth0Laravel\Facades\PricecypherAuth;
 use Marketredesign\MrdAuth0Laravel\Tests\TestCase;
 
 class DatasetRepositoryTest extends TestCase
 {
+    use WithFaker;
+
+    protected const BASE_USERS = 'https://datasets.test';
+
     /**
      * @var DatasetRepository
      */
@@ -24,18 +31,33 @@ class DatasetRepositoryTest extends TestCase
         parent::setUp();
 
         $this->repo = App::make(DatasetRepository::class);
+
+        Http::preventStrayRequests();
+        PricecypherAuth::fake();
     }
 
     /**
      * Define environment setup.
      *
-     * @param  Application  $app
+     * @param Application $app
      * @return void
      */
     protected function getEnvironmentSetUp($app)
     {
         // Set the Laravel Auth0 config values which are used to some values.
-        $app['config']->set('mrd-auth0.guzzle_options', $this->createTestingGuzzleOptions());
+        $app['config']->set('pricecypher.services.user_tool', self::BASE_USERS);
+    }
+
+    protected function ds(int $id, array $modules = []): array
+    {
+        return [
+            'id' => $id,
+            'modules' => $modules,
+            'name' => $this->faker()->name,
+            'dss_url' => $this->faker()->url,
+            'created_at' => Carbon::create($this->faker()->dateTime)->toISOString(),
+            'updated_at' => Carbon::create($this->faker()->dateTime)->toISOString(),
+        ];
     }
 
     /**
@@ -44,7 +66,7 @@ class DatasetRepositoryTest extends TestCase
      * @param array $expDataset
      * @param array|null $actDataset
      */
-    protected function assertDataset(array $expDataset, ?array $actDataset)
+    protected function assertDataset(array $expDataset, ?array $actDataset): void
     {
         self::assertNotNull($actDataset);
 
@@ -56,6 +78,17 @@ class DatasetRepositoryTest extends TestCase
 
         self::assertTrue(Carbon::parse($expDataset['created_at'])->equalTo($actCreatedAt));
         self::assertTrue(Carbon::parse($expDataset['updated_at'])->equalTo($actUpdatedAt));
+    }
+
+    protected function assertRequestsCount(int $expectedCount, ?callable $extraRequestFilter = null): void
+    {
+        $filterPredicate = fn(Request $req) => Str::startsWith($req->url(), self::BASE_USERS);
+
+        if ($extraRequestFilter) {
+            $filterPredicate = fn(Request $req) => $filterPredicate($req) && $extraRequestFilter($req);
+        }
+
+        self::assertCount($expectedCount, Http::recorded($filterPredicate));
     }
 
     /**
@@ -74,23 +107,15 @@ class DatasetRepositoryTest extends TestCase
     public function testUserToolBaseConfigurable()
     {
         // Return empty response 3 times.
-        $response = new Response(200, [], '{"datasets": []}');
-        $this->mockedResponses = [$response, $response, $response];
-
-        foreach (['https://users.com', 'https://users.pricecypher.com', 'http://tests.pc.test/api'] as $i => $baseUrl) {
-            Config::set('mrd-auth0.user_tool_url', $baseUrl);
+        foreach (['https://users.com', 'https://users.pricecypher.com', 'http://tests.pc.test/api'] as $baseUrl) {
+            Config::set('pricecypher.services.user_tool', $baseUrl);
+            Http::fake(["$baseUrl/api/datasets?*" => Http::response(['datasets' => []])]);
 
             // Call function under test.
             $this->repo->getUserDatasetIds();
 
             // Expect number of api calls to increment each time by one.
-            self::assertCount(1 + $i, $this->guzzleContainer);
-
-            // Find the request that was sent to the user tool.
-            $request = $this->guzzleContainer[$i]['request'];
-
-            // Verify correct uri was called.
-            self::assertStringStartsWith($baseUrl, (string) $request->getUri());
+            self::assertCount(1, Http::recorded(fn(Request $req) => Str::startsWith($req->url(), $baseUrl)));
         }
     }
 
@@ -100,7 +125,7 @@ class DatasetRepositoryTest extends TestCase
     public function testGetIdsNoDatasets()
     {
         // Return empty response
-        $this->mockedResponses = [new Response(200, [], '{"datasets": []}')];
+        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => []])]);
 
         // Call function under test.
         $datasetIds = $this->repo->getUserDatasetIds();
@@ -109,15 +134,13 @@ class DatasetRepositoryTest extends TestCase
         self::assertNotNull($datasetIds);
         self::assertTrue($datasetIds->isEmpty());
 
-        // Expect 1 api call.
-        self::assertCount(1, $this->guzzleContainer);
-
-        // Find the request that was sent to the user tool.
-        $request = $this->guzzleContainer[0]['request'];
-
-        // Verify correct endpoint was called.
-        self::assertEquals('/api/datasets', $request->getUri()->getPath());
+        // Expect 1 api call, verifying whether the correct endpoint was called.
+        $this->assertRequestsCount(
+            1,
+            fn(Request $req) => Str::startsWith($req->url(), self::BASE_USERS . '/api/datasets?'),
+        );
     }
+
 
     /**
      * Verifies that an empty collection of datasets is returned when the user has access to no datasets.
@@ -125,7 +148,7 @@ class DatasetRepositoryTest extends TestCase
     public function testGetDatasetsNoDatasets()
     {
         // Return empty response
-        $this->mockedResponses = [new Response(200, [], '{"datasets": []}')];
+        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => []])]);
 
         // Call function under test.
         $datasets = $this->repo->getUserDatasets();
@@ -141,12 +164,9 @@ class DatasetRepositoryTest extends TestCase
     public function testGetIds()
     {
         // Return mocked response as given by user tool.
-        $this->mockedResponses = [new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset",
-        "dss_url":"http://c.com","created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z",
-        "modules":[]},{"id":6,"name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
-        "updated_at":"2021-03-06T00:23:00.000060Z","modules":["module_A"]},{"id":1,"name":"Spotify",
-        "dss_url": "https://spotify.com","created_at":"2020-11-10T17:09:16.000000Z",
-        "updated_at":"2020-12-10T18:09:22.000000Z","modules":[]}]}')];
+        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => [
+            $this->ds(7), $this->ds(6, ['module_A']), $this->ds(1)
+        ]])]);
 
         // Call function under test.
         $datasetIds = $this->repo->getUserDatasetIds();
@@ -164,13 +184,11 @@ class DatasetRepositoryTest extends TestCase
      */
     public function testGetDatasets()
     {
+        $ds1 = $this->ds(1, ['module_B', 'module_C']);
+        $ds6 = $this->ds(6, ['module_A', 'module_B']);
+        $ds7 = $this->ds(7);
         // Return mocked response as given by user tool.
-        $this->mockedResponses = [new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset",
-        "dss_url":"http://c.com","created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z",
-        "modules":[]},{"id":6,"name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
-        "updated_at":"2021-03-06T00:23:00.000060Z","modules":["module_A","module_B"]},{"id":1,"name":"Spotify",
-        "dss_url": "https://spotify.com","created_at":"2020-11-10T17:09:16.000000Z",
-        "updated_at":"2020-12-10T18:09:22.000000Z","modules":["module_B","module_C"]}]}')];
+        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => [$ds7, $ds6, $ds1]])]);
 
         // Call function under test.
         $resourceCollection = $this->repo->getUserDatasets();
@@ -182,32 +200,14 @@ class DatasetRepositoryTest extends TestCase
         self::assertEquals(3, $datasets->count());
 
         // Find datasets by ID in the response.
-        $dataset1 = $datasets->firstWhere('id', 1);
-        $dataset6 = $datasets->firstWhere('id', 6);
-        $dataset7 = $datasets->firstWhere('id', 7);
+        $actDs1 = $datasets->firstWhere('id', 1);
+        $actDs6 = $datasets->firstWhere('id', 6);
+        $actDs7 = $datasets->firstWhere('id', 7);
 
         // Verify that datasets are as expected.
-        $this->assertDataset([
-            'name' => 'Spotify',
-            'dss_url' => 'https://spotify.com',
-            'created_at' => '2020-11-10T17:09:16.000000Z',
-            'updated_at' => '2020-12-10T18:09:22.000000Z',
-            'modules' => [],
-        ], $dataset1);
-        $this->assertDataset([
-            'name' => 'Sjaak & Co',
-            'dss_url' => null,
-            'created_at' => '2021-03-04T00:42:10.000000Z',
-            'updated_at' => '2021-03-06T00:23:00.000060Z',
-            'modules' => ['module_A', 'module_B'],
-        ], $dataset6);
-        $this->assertDataset([
-            'name' => 'Cool dataset',
-            'dss_url' => 'http://c.com',
-            'created_at' => '2021-03-15T15:02:59.000000Z',
-            'updated_at' => '2021-03-15T15:02:59.000000Z',
-            'modules' => ['module_B', 'module_C'],
-        ], $dataset7);
+        $this->assertDataset($ds1, $actDs1);
+        $this->assertDataset($ds6, $actDs6);
+        $this->assertDataset($ds7, $actDs7);
     }
 
     /**
@@ -216,22 +216,18 @@ class DatasetRepositoryTest extends TestCase
     public function testBearerTokenInRequest()
     {
         // Return empty response 3 times.
-        $response = new Response(200, [], '{"datasets": []}');
-        $this->mockedResponses = [$response, $response, $response];
+        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => []])]);
 
-        foreach (['token', 'eyaskjfasas', 'myVerycooltokensTrinGthatisActuallYNojwT'] as $i => $token) {
+        foreach (['token', 'eyaskjfasas', 'myVerycooltokensTrinGthatisActuallYNojwT'] as $token) {
             // We set the header as part of the request that is currently "being handled the framework".
-            request()->headers->set('Authorization', "Bearer $token");
+            PricecypherAuth::fakeSetM2mAccessToken($token);
 
             // Call function under test.
             $this->repo->getUserDatasets();
 
             // Find the request that is made to the user tool. NB: this is a different request than above.
-            $request = $this->guzzleContainer[$i]['request'];
-
-            self::assertArrayHasKey('Authorization', $request->getHeaders());
-            self::assertCount(1, $request->getHeader('Authorization'));
-            self::assertEquals("Bearer $token", $request->getHeader('Authorization')[0]);
+            Http::assertSent(fn(Request $req) => Str::startsWith($req->url(), self::BASE_USERS)
+                && $req->hasHeader('Authorization', "Bearer $token"));
         }
     }
 
@@ -241,21 +237,20 @@ class DatasetRepositoryTest extends TestCase
     public function testManagedOnlyParameter()
     {
         // Return empty response 4 times.
-        $response = new Response(200, [], '{"datasets": []}');
-        $this->mockedResponses = [$response, $response, $response, $response];
+        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => []])]);
 
-        foreach ([false, true] as $i => $bool) {
+        foreach ([false, true] as $bool) {
+            $boolBit = $bool ? 1 : 0;
+            $checkQueryParam = fn(Request $req) => Str::contains($req->url(), "managed_only=$boolBit");
+
+            $this->assertRequestsCount(0, $checkQueryParam);
+
             // Call functions under test.
             $this->repo->getUserDatasetIds($bool);
+            $this->assertRequestsCount(1, $checkQueryParam);
+
             $this->repo->getUserDatasets($bool);
-
-            $boolBit = $bool ? 1 : 0;
-            // Find the requests that are made to the user tool.
-            $requestIds = $this->guzzleContainer[2 * $i]['request'];
-            $requestObjects = $this->guzzleContainer[2 * $i + 1]['request'];
-
-            self::assertEquals("managed_only=$boolBit", $requestIds->getUri()->getQuery());
-            self::assertEquals("managed_only=$boolBit", $requestObjects->getUri()->getQuery());
+            $this->assertRequestsCount(2, $checkQueryParam);
         }
     }
 
@@ -267,40 +262,36 @@ class DatasetRepositoryTest extends TestCase
     public function testMultipleUsersNoUserId()
     {
         // Sanity check; no user ID in request.
-        self::assertNull(Auth::id());
+        self::assertNull(\Illuminate\Support\Facades\Auth::id());
 
+        $ds1 = $this->ds(1, ['module_B', 'module_C']);
+        $ds6 = $this->ds(6, ['module_A', 'module_B']);
+        $ds7 = $this->ds(7);
         // Create 2 different fake responses, for 2 different users.
-        $response1 = new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset","dss_url":null,
-        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z","modules":[]},{"id":6,
-        "name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
-        "updated_at":"2021-03-04T00:42:10.000000Z","modules":[]},{"id":1,"name":"Spotify","dss_url":null,
-        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z","modules":[]}]}');
-        $response2 = new Response(200, [], '{"datasets":[{"id":6,"name":"Sjaak & Co","dss_url":null,
-        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z","modules":[]},{"id":1,
-        "name":"Spotify","dss_url":null,"created_at":"2020-11-10T17:09:16.000000Z",
-        "updated_at":"2020-11-10T17:09:16.000000Z","modules":[]}]}');
-        $this->mockedResponses = [$response1, $response1, $response2, $response2, $response1, $response1];
+        $response1 = Http::response(['datasets' => [$ds7, $ds6, $ds1]]);
+        $response2 = Http::response(['datasets' => [$ds6, $ds1]]);
+        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::sequence([$response1, $response1, $response2, $response2, $response1, $response1])]);
 
-        self::assertEquals([1,6,7], $this->repo->getUserDatasetIds()->sort()->values()->all());
+        self::assertEquals([1, 6, 7], $this->repo->getUserDatasetIds()->sort()->values()->all());
         self::assertEquals(
-            [1,6,7],
+            [1, 6, 7],
             collect($this->repo->getUserDatasets()->resolve())->pluck('id')->sort()->values()->all()
         );
 
-        self::assertEquals([1,6], $this->repo->getUserDatasetIds()->sort()->values()->all());
+        self::assertEquals([1, 6], $this->repo->getUserDatasetIds()->sort()->values()->all());
         self::assertEquals(
-            [1,6],
+            [1, 6],
             collect($this->repo->getUserDatasets()->resolve())->pluck('id')->sort()->values()->all()
         );
 
-        self::assertEquals([1,6,7], $this->repo->getUserDatasetIds()->sort()->values()->all());
+        self::assertEquals([1, 6, 7], $this->repo->getUserDatasetIds()->sort()->values()->all());
         self::assertEquals(
-            [1,6,7],
+            [1, 6, 7],
             collect($this->repo->getUserDatasets()->resolve())->pluck('id')->sort()->values()->all()
         );
 
         // Check that the underlying API has indeed been called 6 times, i.e. no caching was performed.
-        self::assertCount(6, $this->guzzleContainer);
+        $this->assertRequestsCount(6);
     }
 
     /**
@@ -309,40 +300,36 @@ class DatasetRepositoryTest extends TestCase
     public function testMultipleUsersWithUserId()
     {
         // Create 2 different fake responses, for 2 different users.
-        $response1 = new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset","dss_url":null,
-        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z","modules":[]},{"id":6,
-        "name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
-        "updated_at":"2021-03-04T00:42:10.000000Z","modules":[]},{"id":1,"name":"Spotify","dss_url":null,
-        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z","modules":[]}]}');
-        $response2 = new Response(200, [], '{"datasets":[{"id":6,"name":"Sjaak & Co","dss_url":null,
-        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z","modules":[]},{"id":1,
-        "name":"Spotify","dss_url":null,"created_at":"2020-11-10T17:09:16.000000Z",
-        "updated_at":"2020-11-10T17:09:16.000000Z","modules":[]}]}');
-        $this->mockedResponses = [$response1, $response2];
+        $ds1 = $this->ds(1, ['module_B', 'module_C']);
+        $ds6 = $this->ds(6, ['module_A', 'module_B']);
+        $ds7 = $this->ds(7);
+        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::sequence()
+            ->push(['datasets' => [$ds7, $ds6, $ds1]])
+            ->push(['datasets' => [$ds6, $ds1]])]);
 
         $this->auth(['sub' => 'user1']);
-        self::assertEquals([1,6,7], $this->repo->getUserDatasetIds()->sort()->values()->all());
+        self::assertEquals([1, 6, 7], $this->repo->getUserDatasetIds()->sort()->values()->all());
         self::assertEquals(
-            [1,6,7],
+            [1, 6, 7],
             collect($this->repo->getUserDatasets()->resolve())->pluck('id')->sort()->values()->all()
         );
 
         $this->auth(['sub' => 'user2']);
-        self::assertEquals([1,6], $this->repo->getUserDatasetIds()->sort()->values()->all());
+        self::assertEquals([1, 6], $this->repo->getUserDatasetIds()->sort()->values()->all());
         self::assertEquals(
-            [1,6],
+            [1, 6],
             collect($this->repo->getUserDatasets()->resolve())->pluck('id')->sort()->values()->all()
         );
 
         $this->auth(['sub' => 'user1']);
-        self::assertEquals([1,6,7], $this->repo->getUserDatasetIds()->sort()->values()->all());
+        self::assertEquals([1, 6, 7], $this->repo->getUserDatasetIds()->sort()->values()->all());
         self::assertEquals(
-            [1,6,7],
+            [1, 6, 7],
             collect($this->repo->getUserDatasets()->resolve())->pluck('id')->sort()->values()->all()
         );
 
         // Check that the underlying API has been called twice, i.e. the two different responses were cached properly.
-        self::assertCount(2, $this->guzzleContainer);
+        $this->assertRequestsCount(2);
     }
 
     /**
@@ -350,33 +337,28 @@ class DatasetRepositoryTest extends TestCase
      */
     public function testCachingManagedOnly()
     {
-        $respEmpty = new Response(200, [], '{"datasets": []}');
-        $response1 = new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset","dss_url":null,
-        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z","modules":[]},{"id":6,
-        "name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
-        "updated_at":"2021-03-04T00:42:10.000000Z","modules":[]},{"id":1,"name":"Spotify","dss_url":null,
-        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z","modules":[]}]}');
-        $response2 = new Response(200, [], '{"datasets":[{"id":6,"name":"Sjaak & Co","dss_url":null,
-        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z","modules":[]},{"id":1,
-        "name":"Spotify","dss_url":null,"created_at":"2020-11-10T17:09:16.000000Z",
-        "updated_at":"2020-11-10T17:09:16.000000Z","modules":[]}]}');
-        $response3 = new Response(200, [], '{"datasets":[{"id":1,"name":"Spotify","dss_url":null,
-        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z","modules":[]}]}');
-        $this->mockedResponses = [$response1, $respEmpty, $response2, $response3];
+        $ds1 = $this->ds(1, ['module_B', 'module_C']);
+        $ds6 = $this->ds(6, ['module_A', 'module_B']);
+        $ds7 = $this->ds(7);
+        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::sequence()
+            ->push(['datasets' => [$ds7, $ds6, $ds1]])
+            ->push(['datasets' => []])
+            ->push(['datasets' => [$ds6, $ds1]])
+            ->push(['datasets' => [$ds1]])]);
 
         $this->auth(['sub' => 'user1']);
-        self::assertEquals([1,6,7], $this->repo->getUserDatasetIds()->sort()->values()->all());
+        self::assertEquals([1, 6, 7], $this->repo->getUserDatasetIds()->sort()->values()->all());
         self::assertEquals(
-            [1,6,7],
+            [1, 6, 7],
             collect($this->repo->getUserDatasets()->resolve())->pluck('id')->sort()->values()->all()
         );
         self::assertEmpty($this->repo->getUserDatasetIds(true));
         self::assertEmpty($this->repo->getUserDatasets(true));
 
         $this->auth(['sub' => 'user2']);
-        self::assertEquals([1,6], $this->repo->getUserDatasetIds()->sort()->values()->all());
+        self::assertEquals([1, 6], $this->repo->getUserDatasetIds()->sort()->values()->all());
         self::assertEquals(
-            [1,6],
+            [1, 6],
             collect($this->repo->getUserDatasets()->resolve())->pluck('id')->sort()->values()->all()
         );
         self::assertEquals([1], $this->repo->getUserDatasetIds(true)->sort()->values()->all());
@@ -386,16 +368,16 @@ class DatasetRepositoryTest extends TestCase
         );
 
         $this->auth(['sub' => 'user1']);
-        self::assertEquals([1,6,7], $this->repo->getUserDatasetIds()->sort()->values()->all());
+        self::assertEquals([1, 6, 7], $this->repo->getUserDatasetIds()->sort()->values()->all());
         self::assertEquals(
-            [1,6,7],
+            [1, 6, 7],
             collect($this->repo->getUserDatasets()->resolve())->pluck('id')->sort()->values()->all()
         );
         self::assertEmpty($this->repo->getUserDatasetIds(true));
         self::assertEmpty($this->repo->getUserDatasets(true));
 
         // Check that the underlying API has been called 4 times, i.e. the different responses were cached properly.
-        self::assertCount(4, $this->guzzleContainer);
+        $this->assertRequestsCount(4);
     }
 
     /**
@@ -403,34 +385,29 @@ class DatasetRepositoryTest extends TestCase
      */
     public function testDisableCaching()
     {
-        $respEmpty = new Response(200, [], '{"datasets": []}');
-        $response1 = new Response(200, [], '{"datasets":[{"id":7,"name":"Cool dataset","dss_url":null,
-        "created_at":"2021-03-15T15:02:59.000000Z","updated_at":"2021-03-15T15:02:59.000000Z","modules":[]},{"id":6,
-        "name":"Sjaak & Co","dss_url":null,"created_at":"2021-03-04T00:42:10.000000Z",
-        "updated_at":"2021-03-04T00:42:10.000000Z","modules":[]},{"id":1,"name":"Spotify","dss_url":null,
-        "created_at":"2020-11-10T17:09:16.000000Z","updated_at":"2020-11-10T17:09:16.000000Z","modules":[]}]}');
-        $response2 = new Response(200, [], '{"datasets":[{"id":6,"name":"Sjaak & Co","dss_url":null,
-        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z","modules":[]},{"id":1,
-        "name":"Spotify","dss_url":null,"created_at":"2020-11-10T17:09:16.000000Z",
-        "updated_at":"2020-11-10T17:09:16.000000Z","modules":[]}]}');
-        $response3 = new Response(200, [], '{"datasets":[{"id":1,"name":"Spotify","dss_url":null,
-        "created_at":"2021-03-04T00:42:10.000000Z","updated_at":"2021-03-04T00:42:10.000000Z","modules":[]}]}');
-        $this->mockedResponses = [$response1, $response1, $respEmpty, $respEmpty, $response2, $response2, $response3,
-            $response3, $response1, $response1, $respEmpty, $respEmpty];
+        $ds1 = $this->ds(1, ['module_B', 'module_C']);
+        $ds6 = $this->ds(6, ['module_A', 'module_B']);
+        $ds7 = $this->ds(7);
+        $response1 = Http::response(['datasets' => [$ds7, $ds6, $ds1]]);
+        $response2 = Http::response(['datasets' => [$ds6, $ds1]]);
+        $response3 = Http::response(['datasets' => [$ds1]]);
+        $respEmpty = Http::response(['datasets' => []]);
+        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::sequence([$response1, $response1, $respEmpty, $respEmpty, $response2, $response2, $response3,
+            $response3, $response1, $response1, $respEmpty, $respEmpty])]);
 
         $this->auth(['sub' => 'user1']);
-        self::assertEquals([1,6,7], $this->repo->getUserDatasetIds(false, false)->sort()->values()->all());
+        self::assertEquals([1, 6, 7], $this->repo->getUserDatasetIds(false, false)->sort()->values()->all());
         self::assertEquals(
-            [1,6,7],
+            [1, 6, 7],
             collect($this->repo->getUserDatasets(false, false)->resolve())->pluck('id')->sort()->values()->all()
         );
         self::assertEmpty($this->repo->getUserDatasetIds(true, false));
         self::assertEmpty($this->repo->getUserDatasets(true, false));
 
         $this->auth(['sub' => 'user2']);
-        self::assertEquals([1,6], $this->repo->getUserDatasetIds(false, false)->sort()->values()->all());
+        self::assertEquals([1, 6], $this->repo->getUserDatasetIds(false, false)->sort()->values()->all());
         self::assertEquals(
-            [1,6],
+            [1, 6],
             collect($this->repo->getUserDatasets(false, false)->resolve())->pluck('id')->sort()->values()->all()
         );
         self::assertEquals([1], $this->repo->getUserDatasetIds(true, false)->sort()->values()->all());
@@ -440,16 +417,16 @@ class DatasetRepositoryTest extends TestCase
         );
 
         $this->auth(['sub' => 'user1']);
-        self::assertEquals([1,6,7], $this->repo->getUserDatasetIds(false, false)->sort()->values()->all());
+        self::assertEquals([1, 6, 7], $this->repo->getUserDatasetIds(false, false)->sort()->values()->all());
         self::assertEquals(
-            [1,6,7],
+            [1, 6, 7],
             collect($this->repo->getUserDatasets(false, false)->resolve())->pluck('id')->sort()->values()->all()
         );
         self::assertEmpty($this->repo->getUserDatasetIds(true, false));
         self::assertEmpty($this->repo->getUserDatasets(true, false));
 
         // Check that the underlying API has been called 12 times, i.e. nothing was cached.
-        self::assertCount(12, $this->guzzleContainer);
+        $this->assertRequestsCount(12);
     }
 
     /**
@@ -461,11 +438,10 @@ class DatasetRepositoryTest extends TestCase
         $this->auth(['sub' => 'user1']);
 
         // Return empty response twice.
-        $response = new Response(200, [], '{"datasets": []}');
-        $this->mockedResponses = [$response, $response];
+        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => []])]);
 
         // Set cache TTL to 10 seconds in the config and make sure repo is re-instantiated.
-        Config::set('mrd-auth0.cache_ttl', 10);
+        Config::set('pricecypher.cache_ttl', 10);
         $this->repo = App::make(DatasetRepository::class);
 
         // Call both functions twice.
@@ -475,7 +451,7 @@ class DatasetRepositoryTest extends TestCase
         $this->repo->getUserDatasetIds();
 
         // Verify only 1 api call was made.
-        self::assertCount(1, $this->guzzleContainer);
+        $this->assertRequestsCount(1);
 
         // Increment time such that cache TTL should have passed.
         Carbon::setTestNow(Carbon::now()->addSeconds(11));
@@ -487,7 +463,7 @@ class DatasetRepositoryTest extends TestCase
         $this->repo->getUserDatasetIds();
 
         // Verify now a total of api calls has been made.
-        self::assertCount(2, $this->guzzleContainer);
+        $this->assertRequestsCount(2);
 
         // Increment time such that cache TTL should not have passed.
         Carbon::setTestNow(Carbon::now()->addSeconds(9));
@@ -499,6 +475,6 @@ class DatasetRepositoryTest extends TestCase
         $this->repo->getUserDatasetIds();
 
         // Verify still a total of 2 API calls has been made.
-        self::assertCount(2, $this->guzzleContainer);
+        $this->assertRequestsCount(2);
     }
 }
