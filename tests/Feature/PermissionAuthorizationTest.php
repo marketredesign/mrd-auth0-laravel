@@ -3,7 +3,6 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
-use Auth0\Login\Auth0User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -20,7 +19,7 @@ class PermissionAuthorizationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->permissionsClaim = config('mrd-auth0.permissions_claim');
+        $this->permissionsClaim = config('pricecypher-oidc.permissions_claim');
     }
 
     private function authPermissions($permissions = [])
@@ -176,7 +175,7 @@ class PermissionAuthorizationTest extends TestCase
     {
         // Set some other permissions claim in the config.
         $otherClaim = 'some_other_permissions_claim';
-        Config::set('mrd-auth0.permissions_claim', $otherClaim);
+        Config::set('pricecypher-oidc.permissions_claim', $otherClaim);
 
         // Verify it is indeed than the one used in the rest of the tests.
         self::assertNotEquals($this->permissionsClaim, $otherClaim);

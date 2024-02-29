@@ -18,7 +18,7 @@ class CheckPermissions
 
     public function __construct()
     {
-        $this->permissionsClaim = config('mrd-auth0.permissions_claim');
+        $this->permissionsClaim = config('pricecypher-oidc.permissions_claim');
     }
 
     /**
@@ -38,7 +38,7 @@ class CheckPermissions
             return redirect()->route('oidc-login');
         }
 
-        // Verify the logged in user has the required permissions (scope), if one was provided.
+        // Verify the logged-in user has the required permissions (scope), if one was provided.
         if ($permissionRequired !== null && !$this->userHasPermission($permissionRequired)) {
             abort(403, 'Insufficient permissions');
         }
@@ -47,13 +47,13 @@ class CheckPermissions
     }
 
     /**
-     * Check if the logged in user has a specific permission (scope).
+     * Check if the logged-in user has a specific permission (scope).
      *
      * @param string $permissionRequired - Permission (scope) to check for.
      *
-     * @return bool true iff the logged in user has the required permission (scope).
+     * @return bool true iff the logged-in user has the required permission (scope).
      */
-    protected function userHasPermission(string $permissionRequired)
+    protected function userHasPermission(string $permissionRequired): bool
     {
         // Find permissions claim in the userinfo (ID token).
         $permissions = Auth::user()->{$this->permissionsClaim};
@@ -61,8 +61,8 @@ class CheckPermissions
         // The permissions claim is always expected in the ID token, so give warning if it's not present.
         if (!isset($permissions)) {
             Log::warning('Encountered user info (ID token) without permissions claim. This probably indicates
-                a misconfiguration somewhere in this application (like the mrd-auth0.permissions_claim config value) or 
-                within Auth0.');
+                a misconfiguration somewhere in this application (like the pricecypher-oidc.permissions_claim config 
+                value) or within the identity provider.');
             return false;
         }
 

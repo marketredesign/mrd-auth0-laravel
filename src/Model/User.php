@@ -23,31 +23,49 @@ class User implements Authenticatable
         $this->attributes[$key] = $value;
     }
 
-    public function getAuthIdentifierName()
+    /**
+     * @inheritDocs
+     */
+    public function getAuthIdentifierName(): string
     {
         return 'sub';
     }
 
-    public function getAuthIdentifier()
+    /**
+     * @inheritDocs
+     */
+    public function getAuthIdentifier(): mixed
     {
         return $this->attributes['sub'] ?? $this->attributes['user_id'] ?? $this->attributes['email'] ?? null;
     }
 
-    public function getAuthPassword()
+    /**
+     * @inheritDocs
+     */
+    public function getAuthPassword(): string
     {
         return '';
     }
 
-    public function getRememberToken()
+    /**
+     * @inheritDocs
+     */
+    public function getRememberToken(): string
     {
         return '';
     }
 
-    public function setRememberToken($value)
+    /**
+     * @inheritDocs
+     */
+    public function setRememberToken($value): void
     {
     }
 
-    public function getRememberTokenName()
+    /**
+     * @inheritDocs
+     */
+    public function getRememberTokenName(): string
     {
         return '';
     }

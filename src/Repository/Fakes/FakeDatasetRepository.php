@@ -13,20 +13,14 @@ class FakeDatasetRepository implements DatasetRepository
 {
     use WithFaker;
 
-    /**
-     * @var Collection Fake dataset IDs that the user has access to.
-     */
-    private $datasetIds;
+    /** @var Collection Fake dataset IDs that the user has access to. */
+    private Collection $datasetIds;
 
-    /**
-     * @var Collection Fake dataset IDs that the user is manager of.
-     */
-    private $managedDatasetIds;
+    /** @var Collection Fake dataset IDs that the user is manager of. */
+    private Collection $managedDatasetIds;
 
-    /**
-     * @var Collection Fake dataset objects, keyed by dataset ID.
-     */
-    private $datasets;
+    /** @var Collection Fake dataset objects, keyed by dataset ID. */
+    private Collection $datasets;
 
     public function __construct()
     {
@@ -63,20 +57,20 @@ class FakeDatasetRepository implements DatasetRepository
      * @param Collection $datasets Datasets the user has access to. Either a collection of dataset IDs to add,
      * or a collection of collections each containing at least an 'id' and optionally extra fields.
      * For any non-provided fields (or all non-id fields when sending a collection of IDs), a random value will be used.
-     * @param bool $isManager Whether or not the user is manager of the given datasets.
+     * @param bool $isManager {@code true} iff the user is manager of the given datasets.
      */
     public function fakeAddDatasets(Collection $datasets, bool $isManager = false): void
     {
         // Convert plain dataset IDs to dataset collections with an ID
-        $datasets = $datasets->map(fn ($ds) => is_numeric($ds) ? collect(['id' => $ds]) : $ds);
+        $datasets = $datasets->map(fn($ds) => is_numeric($ds) ? collect(['id' => $ds]) : $ds);
 
         // Create the datasets
-        $datasets->each(fn ($ds) => $this->createDataset($ds));
+        $datasets->each(fn($ds) => $this->createDataset($ds));
 
         // Add the IDs to the allowed IDs, including managed IDs if applicable
-        $this->datasetIds = $this->datasetIds->concat($datasets->pluck('id'))->unique();
+        $this->datasetIds = $this->datasetIds->concat($datasets->pluck('id')->all())->unique();
         if ($isManager) {
-            $this->managedDatasetIds = $this->managedDatasetIds->concat($datasets->pluck('id'))->unique();
+            $this->managedDatasetIds = $this->managedDatasetIds->concat($datasets->pluck('id')->all())->unique();
         }
     }
 
@@ -88,7 +82,7 @@ class FakeDatasetRepository implements DatasetRepository
     private function createDataset(Collection $dataset): void
     {
         // Construct some (or 0) fake modules
-        $fakeModules = $this->faker->words($this->faker->randomDigit(), false);
+        $fakeModules = $this->faker->words($this->faker->randomDigit());
 
         // Add a dataset with these fields, prioritizing provided data
         $dsObject = [

@@ -1,8 +1,5 @@
 <?php
 
-use Auth0\Laravel\Http\Controller\Stateful\Callback as Auth0Callback;
-use Auth0\Laravel\Http\Controller\Stateful\Login as Auth0Login;
-use Auth0\Laravel\Http\Controller\Stateful\Logout as Auth0Logout;
 use Illuminate\Support\Facades\Route;
 use Marketredesign\MrdAuth0Laravel\Http\Controller\Stateful\Callback;
 use Marketredesign\MrdAuth0Laravel\Http\Controller\Stateful\Login;

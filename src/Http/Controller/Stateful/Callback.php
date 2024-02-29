@@ -7,6 +7,7 @@ use Facile\OpenIDClient\Service\AuthorizationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Psr\Http\Message\ServerRequestInterface;
+use Throwable;
 
 class Callback
 {
@@ -22,7 +23,7 @@ class Callback
 
         try {
             $tokenSet = $authService->callback($client, $params, route('oidc-callback'));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $guard->logout();
             Log::debug("OIDC callback failed with message {$e->getMessage()}.", [
                 'exception' => $e,

@@ -13,7 +13,7 @@ class LoginTest extends TestCase
 {
     private const ROUTE_NAME = 'oidc-login';
 
-    protected $guard = 'pc-oidc';
+    protected string $guard = 'pc-oidc';
 
     protected function setUp(): void
     {
@@ -29,7 +29,7 @@ class LoginTest extends TestCase
      */
     public function testAlreadyLoggedIn()
     {
-        $this->auth([], false);
+        $this->auth();
         // Sanity check; make sure a user is logged in.
         self::assertTrue(Auth::check());
 
@@ -38,7 +38,7 @@ class LoginTest extends TestCase
 
         // Now set an intended URL in the user session and verify we are redirected there instead.
         Redirect::setIntendedUrl('/something');
-        $this->auth([], false);
+        $this->auth();
         // Sanity check; make sure a user is logged in.
         self::assertTrue(Auth::check());
         $this->get(route(self::ROUTE_NAME))->assertRedirect('/something');

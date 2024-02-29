@@ -44,7 +44,7 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
     public function __construct(Auth0 $auth0)
     {
         $this->mgmtApi = $auth0->getSdk()->management();
-        $this->cacheTTL = config('mrd-auth0.cache_ttl', 300);
+        $this->cacheTTL = config('pricecypher.cache_ttl', 300);
         $this->chunkSize = config('mrd-auth0.chunk_size', 50);
     }
 

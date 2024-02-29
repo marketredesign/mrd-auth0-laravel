@@ -71,8 +71,7 @@ class OidcGuard implements Guard
         }
 
         if (!($this->user instanceof User)) {
-            $userClass = User::class;
-            abort("User model must implement $userClass.");
+            abort('User model must implement "' . User::class . '"');
         }
 
         return $this->user;

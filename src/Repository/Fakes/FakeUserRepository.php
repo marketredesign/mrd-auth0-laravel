@@ -12,8 +12,8 @@ class FakeUserRepository implements UserRepository
 {
     use WithFaker;
 
-    private $userIds;
-    private $userObjects;
+    private Collection $userIds;
+    private Collection $userObjects;
     private Collection $userRoles;
 
     public function __construct()
@@ -101,7 +101,7 @@ class FakeUserRepository implements UserRepository
     /**
      * @inheritDoc
      */
-    public function delete($id)
+    public function delete(string $id): void
     {
         $this->userIds = $this->userIds->filter(function ($userID) use ($id) {
             return $userID != $id;

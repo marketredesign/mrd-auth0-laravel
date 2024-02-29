@@ -11,7 +11,7 @@ use Marketredesign\MrdAuth0Laravel\MrdAuth0LaravelServiceProvider;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {
-    protected $guard = 'pc-jwt';
+    protected string $guard = 'pc-jwt';
 
     protected function getPackageProviders($app)
     {
@@ -54,7 +54,6 @@ class TestCase extends \Orchestra\Testbench\TestCase
             ])
         ]);
 
-
         Config::set('auth.guards.pc-jwt', [
             'driver' => 'pc-jwt',
             'provider' => 'pc-users',
@@ -76,10 +75,9 @@ class TestCase extends \Orchestra\Testbench\TestCase
      * if you pass an attributes array, it will be merged with a set of default values
      *
      * @param array $attributes
-     * @param bool $stateless
      * @return TestCase
      */
-    public function auth(array $attributes = [], bool $stateless = true): TestCase
+    public function auth(array $attributes = []): TestCase
     {
         $defaults = [
             'sub' => 'some-auth0-user-id',
@@ -90,7 +88,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
         ];
 
         $attributes = array_merge($defaults, $attributes);
-        $user = $stateless ? new StatelessUser($attributes) : new StatefulUser($attributes);
+        $user = $this->guard === 'pc-oidc' ? new StatefulUser($attributes) : new StatelessUser($attributes);
 
         return $this->actingAs($user, $this->guard);
     }

@@ -84,6 +84,15 @@ return [
 
     /*
     |-------------------------------------------------------------------------------------------------------------------
+    | Permissions claim property name
+    |-------------------------------------------------------------------------------------------------------------------
+    | Property name of the custom permissions claim that is included in the ID tokens.
+    |
+    */
+    'permissions_claim' => 'https://pricecypher.com/permissions',
+
+    /*
+    |-------------------------------------------------------------------------------------------------------------------
     | Application routes used by some OIDC flows.
     |-------------------------------------------------------------------------------------------------------------------
     | This config key is only intended to be used for routes within the web app being configured here. So for instance,

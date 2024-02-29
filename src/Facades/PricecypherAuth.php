@@ -15,7 +15,7 @@ use Marketredesign\MrdAuth0Laravel\Repository\Fakes\FakeAuthRepository;
  * @see AuthRepository
  * @see FakeAuthRepository
  */
-class Auth extends Facade
+class PricecypherAuth extends Facade
 {
     public static function fake()
     {

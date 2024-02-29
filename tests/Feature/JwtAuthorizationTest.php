@@ -3,7 +3,6 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
-use Auth0\SDK\Configuration\SdkConfiguration;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;

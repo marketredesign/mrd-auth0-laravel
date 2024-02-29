@@ -12,19 +12,19 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
     /**
      * @var int Time to live for cache entries stored by this repository, in seconds.
      */
-    protected $cacheTTL;
+    protected int $cacheTTL;
 
     /**
      * @var int User chunk size.
      */
-    protected $chunkSize;
+    protected int $chunkSize;
 
     /**
      * UserRepository constructor.
      */
     public function __construct()
     {
-        $this->cacheTTL = config('mrd-auth0.cache_ttl', 300);
+        $this->cacheTTL = config('pricecypher.cache_ttl', 300);
         $this->chunkSize = config('mrd-auth0.chunk_size', 50);
     }
 
@@ -54,10 +54,10 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
     /**
      * @inheritDoc
      */
-    public function delete($id)
+    public function delete($id): void
     {
         if ($id == null) {
-            return null;
+            return;
         }
 
         throw new NotImplementedException('Identity provider not (yet) supported.');

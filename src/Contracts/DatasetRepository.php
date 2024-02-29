@@ -3,7 +3,7 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Contracts;
 
-use GuzzleHttp\Exception\RequestException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Support\Collection;
 

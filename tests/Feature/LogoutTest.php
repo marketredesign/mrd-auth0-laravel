@@ -13,7 +13,7 @@ class LogoutTest extends TestCase
 {
     private const ROUTE_NAME = 'oidc-logout';
 
-    protected $guard = 'pc-oidc';
+    protected string $guard = 'pc-oidc';
 
     protected function setUp(): void
     {
@@ -29,7 +29,7 @@ class LogoutTest extends TestCase
     public function testNormalLogout()
     {
         // Login as some user.
-        $this->auth([], false);
+        $this->auth();
 
         // Sanity check; make sure a user is logged in.
         self::assertTrue(Auth::guard($this->guard)->check());

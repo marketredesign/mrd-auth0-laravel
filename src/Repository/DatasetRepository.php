@@ -3,7 +3,7 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Repository;
 
-use GuzzleHttp\Exception\RequestException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -46,6 +46,7 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
      * @param bool $cached Use {@code false} to disable retrieving from and storing in cache.
      * @param ?string $guard Name of the auth guard used to get the current user ID. Use {@code null} for default one.
      * @return Collection
+     * @throws RequestException
      */
     private function getRawDatasets(bool $managedOnly, bool $cached, ?string $guard): Collection
     {
