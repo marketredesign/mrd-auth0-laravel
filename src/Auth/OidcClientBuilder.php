@@ -10,12 +10,13 @@ use Facile\OpenIDClient\Client\Metadata\ClientMetadataInterface;
 use Facile\OpenIDClient\Issuer\IssuerBuilder;
 use Facile\OpenIDClient\Issuer\Metadata\Provider\MetadataProviderBuilder;
 use Illuminate\Support\Collection;
+use Psr\Http\Client\ClientInterface as HttpClientInterface;
 
 class OidcClientBuilder extends ClientBuilder
 {
     protected Collection $config;
 
-    protected \Psr\Http\Client\ClientInterface $httpClient;
+    protected ?HttpClientInterface $httpClient;
 
     public function __construct()
     {

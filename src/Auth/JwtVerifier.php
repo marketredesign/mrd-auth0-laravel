@@ -33,7 +33,8 @@ final class JwtVerifier extends AbstractTokenVerifier
         $claims = (array)JWT::decode($jwt, $jwks);
         $claimChecker = new ClaimCheckerManager($this->getClaimCheckers());
 
-        $claimChecker->check($claims, ['iss', 'sub', 'aud', 'exp', 'iat']);
+        // TODO 'aud' claim mandatory?
+        $claimChecker->check($claims, ['iss', 'sub', 'exp', 'iat']);
 
         return $claims;
     }
