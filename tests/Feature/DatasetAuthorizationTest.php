@@ -5,9 +5,7 @@ namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
 use Closure;
 use Illuminate\Foundation\Application;
-use Illuminate\Foundation\FileBasedMaintenanceMode;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
@@ -47,10 +45,7 @@ class DatasetAuthorizationTest extends TestCase
 
         $this->withMiddleware(['jwt']);
 
-        // TODO test running in console both 'false' and 'true' (at some place).
-        App::shouldReceive('maintenanceMode')->andReturn(new FileBasedMaintenanceMode());
-        App::shouldReceive('runningInConsole')->andReturn(false);
-
+        // TODO test both M2M, as well as bearer token from request, when sending request to other PC services.
         Http::preventStrayRequests();
         PricecypherAuth::fake();
     }

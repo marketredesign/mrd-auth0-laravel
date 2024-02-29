@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "59e46bd33a893cd2fcafc6f2dad9b4c6",
+    "content-hash": "c5dfa44388a70615ef3d41e58933d586",
     "packages": [
         {
             "name": "brick/math",
@@ -6722,23 +6722,39 @@
         },
         {
             "name": "web-token/jwt-encryption",
-            "version": "3.3.0",
+            "version": "3.2.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/web-token/jwt-encryption.git",
-                "reference": "3e4b1c4080a77a6e97b62b33562805c1fc552b5e"
+                "reference": "ad3e00a26347e5bc55e13f7ff6d588a5ed726609"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/web-token/jwt-encryption/zipball/3e4b1c4080a77a6e97b62b33562805c1fc552b5e",
-                "reference": "3e4b1c4080a77a6e97b62b33562805c1fc552b5e",
+                "url": "https://api.github.com/repos/web-token/jwt-encryption/zipball/ad3e00a26347e5bc55e13f7ff6d588a5ed726609",
+                "reference": "ad3e00a26347e5bc55e13f7ff6d588a5ed726609",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.1",
-                "web-token/jwt-library": "^3.3"
+                "web-token/jwt-core": "^3.2"
+            },
+            "suggest": {
+                "web-token/jwt-encryption-algorithm-aescbc": "AES CBC Based Content Encryption Algorithms",
+                "web-token/jwt-encryption-algorithm-aesgcm": "AES GCM Based Content Encryption Algorithms",
+                "web-token/jwt-encryption-algorithm-aesgcmkw": "AES GCM Key Wrapping Based Key Encryption Algorithms",
+                "web-token/jwt-encryption-algorithm-aeskw": "AES Key Wrapping Based Key Encryption Algorithms",
+                "web-token/jwt-encryption-algorithm-dir": "Direct Key Encryption Algorithms",
+                "web-token/jwt-encryption-algorithm-ecdh-es": "ECDH-ES Based Key Encryption Algorithms",
+                "web-token/jwt-encryption-algorithm-experimental": "Experimental Key and Signature Algorithms",
+                "web-token/jwt-encryption-algorithm-pbes2": "PBES2 Based Key Encryption Algorithms",
+                "web-token/jwt-encryption-algorithm-rsa": "RSA Based Key Encryption Algorithms"
             },
             "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Jose\\Component\\Encryption\\": ""
+                }
+            },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
@@ -6750,10 +6766,10 @@
                 },
                 {
                     "name": "All contributors",
-                    "homepage": "https://github.com/web-token/jwt-framework/contributors"
+                    "homepage": "https://github.com/web-token/jwt-encryption/contributors"
                 }
             ],
-            "description": "[DEPRECATED] Please use web-token/jwt-library instead.",
+            "description": "Encryption component of the JWT Framework.",
             "homepage": "https://github.com/web-token",
             "keywords": [
                 "JOSE",
@@ -6774,7 +6790,7 @@
                 "symfony"
             ],
             "support": {
-                "source": "https://github.com/web-token/jwt-encryption/tree/3.3.0"
+                "source": "https://github.com/web-token/jwt-encryption/tree/3.2.10"
             },
             "funding": [
                 {
@@ -6783,7 +6799,7 @@
                 }
             ],
             "abandoned": "web-token/jwt-library",
-            "time": "2024-02-22T07:19:34+00:00"
+            "time": "2024-01-04T15:42:08+00:00"
         },
         {
             "name": "web-token/jwt-key-mgmt",
@@ -10729,6 +10745,82 @@
             "time": "2024-01-25T10:15:50+00:00"
         },
         {
+            "name": "spomky-labs/aes-key-wrap",
+            "version": "v7.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Spomky-Labs/aes-key-wrap.git",
+                "reference": "fbeb834b1f83aa8fbdfbd4c12124f71d4c1606ae"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Spomky-Labs/aes-key-wrap/zipball/fbeb834b1f83aa8fbdfbd4c12124f71d4c1606ae",
+                "reference": "fbeb834b1f83aa8fbdfbd4c12124f71d4c1606ae",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "ext-openssl": "*",
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "infection/infection": "^0.25.4",
+                "phpstan/extension-installer": "^1.1",
+                "phpstan/phpstan": "^1.0",
+                "phpstan/phpstan-beberlei-assert": "^1.0",
+                "phpstan/phpstan-deprecation-rules": "^1.0",
+                "phpstan/phpstan-phpunit": "^1.0",
+                "phpstan/phpstan-strict-rules": "^1.0",
+                "phpunit/phpunit": "^9.0",
+                "rector/rector": "^0.12.5",
+                "symplify/easy-coding-standard": "^10.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "AESKW\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Florent Morselli",
+                    "homepage": "https://github.com/Spomky-Labs/aes-key-wrap/contributors"
+                }
+            ],
+            "description": "AES Key Wrap for PHP.",
+            "homepage": "https://github.com/Spomky-Labs/aes-key-wrap",
+            "keywords": [
+                "A128KW",
+                "A192KW",
+                "A256KW",
+                "RFC3394",
+                "RFC5649",
+                "aes",
+                "key",
+                "padding",
+                "wrap"
+            ],
+            "support": {
+                "issues": "https://github.com/Spomky-Labs/aes-key-wrap/issues",
+                "source": "https://github.com/Spomky-Labs/aes-key-wrap/tree/v7.0.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/Spomky",
+                    "type": "github"
+                },
+                {
+                    "url": "https://www.patreon.com/FlorentMorselli",
+                    "type": "patreon"
+                }
+            ],
+            "time": "2021-12-08T20:36:59+00:00"
+        },
+        {
             "name": "squizlabs/php_codesniffer",
             "version": "3.9.0",
             "source": {
@@ -11365,6 +11457,78 @@
                 }
             ],
             "time": "2023-11-20T00:12:19+00:00"
+        },
+        {
+            "name": "web-token/jwt-encryption-algorithm-aeskw",
+            "version": "3.2.10",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/web-token/jwt-encryption-algorithm-aeskw.git",
+                "reference": "8a17fedea9d290a5b745f67ed517073d5666fb5e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/web-token/jwt-encryption-algorithm-aeskw/zipball/8a17fedea9d290a5b745f67ed517073d5666fb5e",
+                "reference": "8a17fedea9d290a5b745f67ed517073d5666fb5e",
+                "shasum": ""
+            },
+            "require": {
+                "ext-openssl": "*",
+                "php": ">=8.1",
+                "spomky-labs/aes-key-wrap": "^7.0",
+                "web-token/jwt-encryption": "^3.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Jose\\Component\\Encryption\\Algorithm\\KeyEncryption\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Florent Morselli",
+                    "homepage": "https://github.com/Spomky"
+                },
+                {
+                    "name": "All contributors",
+                    "homepage": "https://github.com/web-token/jwt-framework/contributors"
+                }
+            ],
+            "description": "AES Key Wrapping Based Key Encryption Algorithms the JWT Framework.",
+            "homepage": "https://github.com/web-token",
+            "keywords": [
+                "JOSE",
+                "JWE",
+                "JWK",
+                "JWKSet",
+                "JWS",
+                "Jot",
+                "RFC7515",
+                "RFC7516",
+                "RFC7517",
+                "RFC7518",
+                "RFC7519",
+                "RFC7520",
+                "bundle",
+                "jwa",
+                "jwt",
+                "symfony"
+            ],
+            "support": {
+                "source": "https://github.com/web-token/jwt-encryption-algorithm-aeskw/tree/3.2.10"
+            },
+            "funding": [
+                {
+                    "url": "https://www.patreon.com/FlorentMorselli",
+                    "type": "patreon"
+                }
+            ],
+            "abandoned": "web-token/jwt-library",
+            "time": "2024-01-04T15:42:08+00:00"
         },
         {
             "name": "zbateson/mail-mime-parser",

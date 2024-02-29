@@ -18,7 +18,7 @@ class JwtGuard extends GuardAbstract
 {
     private TokenVerifierInterface $tokenVerifier;
 
-    protected function init(AuthManager $auth, ?ClientInterface $oidcClient)
+    public function init(AuthManager $auth, ?ClientInterface $oidcClient)
     {
         parent::init($auth, $oidcClient);
 

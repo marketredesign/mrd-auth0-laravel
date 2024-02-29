@@ -17,10 +17,10 @@ abstract class GuardAbstract implements Guard
 
     public function __construct(public string $name, protected ?array $config = null)
     {
-        App::call($this, 'init');
+        App::call([$this, 'init']);
     }
 
-    protected function init(AuthManager $auth, ?ClientInterface $oidcClient)
+    public function init(AuthManager $auth, ?ClientInterface $oidcClient)
     {
         if (!$oidcClient) {
             return null;
