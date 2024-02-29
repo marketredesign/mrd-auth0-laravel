@@ -1,39 +1,16 @@
 <?php
 
-namespace Marketredesign\MrdAuth0Laravel\Auth;
+namespace Marketredesign\MrdAuth0Laravel\Auth\Guards;
 
-use Illuminate\Auth\GuardHelpers;
-use Illuminate\Contracts\Auth\Guard;
-use Illuminate\Contracts\Auth\UserProvider;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Marketredesign\MrdAuth0Laravel\Auth\User\Provider;
 use Marketredesign\MrdAuth0Laravel\Model\Stateful\User;
 
-class OidcGuard implements Guard
+class OidcGuard extends GuardAbstract
 {
-    use GuardHelpers;
-
-    private ?string $expectedAudience;
-
-    public function __construct()
-    {
-        $this->expectedAudience = null;
-    }
-
-    public function withProvider(UserProvider $provider): OidcGuard
-    {
-        $this->setProvider($provider);
-        return $this;
-    }
-
-    public function withExpectedAudience(string $audience): OidcGuard
-    {
-        $this->expectedAudience = $audience;
-        return $this;
-    }
-
-    public function logout()
+    public function logout(): OidcGuard
     {
         request()->session()->remove('pc-oidc-session');
         Session::flush();
@@ -42,7 +19,7 @@ class OidcGuard implements Guard
         return $this;
     }
 
-    public function user()
+    public function user(): ?Authenticatable
     {
         if ($this->user !== null) {
             return $this->user;
@@ -77,7 +54,7 @@ class OidcGuard implements Guard
         return $this->user;
     }
 
-    public function validate(array $credentials = [])
+    public function validate(array $credentials = []): bool
     {
         return false;
     }

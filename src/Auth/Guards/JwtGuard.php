@@ -1,42 +1,30 @@
 <?php
 
-namespace Marketredesign\MrdAuth0Laravel\Auth;
+namespace Marketredesign\MrdAuth0Laravel\Auth\Guards;
 
 use DomainException;
 use Facile\JoseVerifier\TokenVerifierInterface;
+use Facile\OpenIDClient\Client\ClientInterface;
+use Facile\OpenIDClient\Token\AccessTokenVerifierBuilder;
 use Firebase\JWT\JWTExceptionWithPayloadInterface;
-use Illuminate\Auth\GuardHelpers;
-use Illuminate\Contracts\Auth\Guard;
-use Illuminate\Contracts\Auth\UserProvider;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Marketredesign\MrdAuth0Laravel\Auth\JoseBuilder;
 use Marketredesign\MrdAuth0Laravel\Auth\User\Provider;
 use UnexpectedValueException;
 
-class JwtGuard implements Guard
+class JwtGuard extends GuardAbstract
 {
-    use GuardHelpers;
-
     private TokenVerifierInterface $tokenVerifier;
 
-    private ?string $expectedAudience;
-
-    public function __construct(TokenVerifierInterface $verifier)
+    protected function init(AuthManager $auth, ?ClientInterface $oidcClient)
     {
-        $this->tokenVerifier = $verifier;
-        $this->expectedAudience = null;
-    }
+        parent::init($auth, $oidcClient);
 
-    public function withProvider(UserProvider $provider): JwtGuard
-    {
-        $this->setProvider($provider);
-        return $this;
-    }
-
-    public function withExpectedAudience(string $audience): JwtGuard
-    {
-        $this->expectedAudience = $audience;
-        return $this;
+        $verifierBuilder = new AccessTokenVerifierBuilder();
+        $verifierBuilder->setJoseBuilder(new JoseBuilder($this->expectedAudience));
+        $this->tokenVerifier = $verifierBuilder->build($oidcClient);
     }
 
     public function user()
