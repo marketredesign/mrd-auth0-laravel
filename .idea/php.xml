@@ -199,6 +199,32 @@
       <path value="$PROJECT_DIR$/vendor/laravel/prompts" />
       <path value="$PROJECT_DIR$/vendor/carbonphp/carbon-doctrine-types" />
       <path value="$PROJECT_DIR$/vendor/firebase/php-jwt" />
+      <path value="$PROJECT_DIR$/vendor/psr/cache" />
+      <path value="$PROJECT_DIR$/vendor/seld/phar-utils" />
+      <path value="$PROJECT_DIR$/vendor/seld/jsonlint" />
+      <path value="$PROJECT_DIR$/vendor/seld/signal-handler" />
+      <path value="$PROJECT_DIR$/vendor/auth0/auth0-php" />
+      <path value="$PROJECT_DIR$/vendor/auth0/login" />
+      <path value="$PROJECT_DIR$/vendor/react/promise" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php73" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php81" />
+      <path value="$PROJECT_DIR$/vendor/newrelic/monolog-enricher" />
+      <path value="$PROJECT_DIR$/vendor/php-http/multipart-stream-builder" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/instantiator" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/resource-operations" />
+      <path value="$PROJECT_DIR$/vendor/justinrainbow/json-schema" />
+      <path value="$PROJECT_DIR$/vendor/auth0/php-jwt" />
+      <path value="$PROJECT_DIR$/vendor/psr-discovery/log-implementations" />
+      <path value="$PROJECT_DIR$/vendor/psr-discovery/http-client-implementations" />
+      <path value="$PROJECT_DIR$/vendor/psr-discovery/http-factory-implementations" />
+      <path value="$PROJECT_DIR$/vendor/psr-discovery/event-dispatcher-implementations" />
+      <path value="$PROJECT_DIR$/vendor/psr-discovery/container-implementations" />
+      <path value="$PROJECT_DIR$/vendor/psr-discovery/cache-implementations" />
+      <path value="$PROJECT_DIR$/vendor/psr-discovery/discovery" />
+      <path value="$PROJECT_DIR$/vendor/symfony/http-client" />
+      <path value="$PROJECT_DIR$/vendor/web-token/jwt-library" />
+      <path value="$PROJECT_DIR$/vendor/paragonie/sodium_compat" />
+      <path value="$PROJECT_DIR$/vendor/rector/rector" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.1" />

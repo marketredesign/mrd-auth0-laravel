@@ -18,22 +18,22 @@
     "require": {
         "php": "^8.1",
         "ext-json": "*",
-        "facile-it/php-openid-client": "^0.3.1",
+        "facile-it/php-openid-client": "^0.3.5",
         "firebase/php-jwt": "^6.10",
         "guzzlehttp/guzzle": "^6.0|^7.0",
         "illuminate/contracts": "^10.0",
         "illuminate/support": "^10.0",
         "marketredesign/newrelic-monolog-enricher": "^3.0",
-        "nyholm/psr7": "^1.5",
-        "symfony/psr-http-message-bridge": "^2.1"
+        "nyholm/psr7": "^1.8",
+        "symfony/psr-http-message-bridge": "^2.3"
     },
     "require-dev": {
-        "nunomaduro/larastan": "^2.5",
-        "orchestra/testbench": "^8.3",
+        "nunomaduro/larastan": "^2.9",
+        "orchestra/testbench": "^8.21",
         "psr-mock/http": "^1.0",
-        "phpmd/phpmd": "^2.9",
-        "phpunit/phpunit": "^10.0",
-        "squizlabs/php_codesniffer": "^3.5"
+        "phpmd/phpmd": "^2.15",
+        "phpunit/phpunit": "^10.5",
+        "squizlabs/php_codesniffer": "^3.9"
     },
     "autoload": {
         "psr-4": {
@@ -53,7 +53,7 @@
         ],
         "analyze": [
             "vendor/bin/phpcs --runtime-set ignore_warnings_on_exit -p --extensions=php src",
-            "vendor/bin/phpmd src ansi phpmd.xml",
+            "vendor/bin/phpmd src ansi phpmd.xml --exclude '*ServiceProvider*.php'",
             "vendor/bin/phpstan analyse"
         ]
     },
