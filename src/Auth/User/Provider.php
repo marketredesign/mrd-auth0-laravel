@@ -57,4 +57,9 @@ class Provider implements UserProvider
 
         return $repository;
     }
+
+    public function rehashPasswordIfRequired(Authenticatable $user, array $credentials, bool $force = false)
+    {
+        return null;
+    }
 }
