@@ -42,6 +42,14 @@ class User implements Authenticatable
     /**
      * @inheritDocs
      */
+    public function getAuthPasswordName()
+    {
+        return 'password';
+    }
+
+    /**
+     * @inheritDocs
+     */
     public function getAuthPassword(): string
     {
         return '';
