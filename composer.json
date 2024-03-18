@@ -16,16 +16,16 @@
         }
     ],
     "require": {
-        "php": "^8.1",
+        "php": "^8.2",
         "ext-json": "*",
         "facile-it/php-openid-client": "^0.3.5",
         "firebase/php-jwt": "^6.10",
         "guzzlehttp/guzzle": "^6.0|^7.0",
-        "illuminate/contracts": "^10.0",
-        "illuminate/support": "^10.0",
+        "illuminate/contracts": "^10.0|^11.0",
+        "illuminate/support": "^10.0|^11.0",
         "marketredesign/newrelic-monolog-enricher": "^3.0",
         "nyholm/psr7": "^1.8",
-        "symfony/psr-http-message-bridge": "^2.3"
+        "symfony/psr-http-message-bridge": "^v7.0.3"
     },
     "require-dev": {
         "nunomaduro/larastan": "^2.9",
@@ -62,7 +62,7 @@
     "config": {
         "sort-packages": true,
         "platform": {
-            "php": "8.1"
+            "php": "8.2"
         },
         "allow-plugins": {
             "php-http/discovery": true
