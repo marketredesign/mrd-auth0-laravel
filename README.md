@@ -128,4 +128,4 @@ See also the list of [contributors](https://github.com/marketredesign/mrd-auth0-
 
 ## License
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+The MIT License (MIT). Please see [License File](LICENSE) for more information.

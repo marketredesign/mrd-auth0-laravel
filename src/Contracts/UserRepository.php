@@ -55,9 +55,9 @@ interface UserRepository
     /**
      * Delete the user with given userID from the Auth0 database
      *
-     * @param mixed $id
+     * @param string $id
      */
-    public function delete($id);
+    public function delete(string $id): void;
 
     /**
      * Get all assigned roles of the given user.

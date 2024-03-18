@@ -3,9 +3,9 @@
 namespace Marketredesign\MrdAuth0Laravel\Repository\Fakes;
 
 use Illuminate\Support\Facades\Cache;
-use Marketredesign\MrdAuth0Laravel\Repository\Auth0Repository;
+use Marketredesign\MrdAuth0Laravel\Repository\AuthRepository;
 
-class FakeAuth0Repository extends Auth0Repository
+class FakeAuthRepository extends AuthRepository
 {
     private int $m2mExpiresIn = 86400;
     private string $m2mAccessToken = 'mocked_access_token';

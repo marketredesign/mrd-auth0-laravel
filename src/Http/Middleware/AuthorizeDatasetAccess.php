@@ -5,7 +5,7 @@ namespace Marketredesign\MrdAuth0Laravel\Http\Middleware;
 use App;
 use Closure;
 use Exception;
-use GuzzleHttp\Exception\RequestException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -59,8 +59,7 @@ class AuthorizeDatasetAccess
         try {
             return Datasets::getUserDatasetIds();
         } catch (RequestException $e) {
-            Log::error('Unable to request authorized datasets from user tool:');
-            Log::error($e);
+            Log::error('Unable to request authorized datasets from user tool:', $e->getTrace());
             abort(401, 'Unable to authorize dataset access.');
         }
     }

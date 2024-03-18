@@ -1,12 +1,12 @@
 <?php
 
-use Auth0\Laravel\Http\Controller\Stateful\Callback;
-use Auth0\Laravel\Http\Controller\Stateful\Login;
-use Auth0\Laravel\Http\Controller\Stateful\Logout;
 use Illuminate\Support\Facades\Route;
+use Marketredesign\MrdAuth0Laravel\Http\Controller\Stateful\Callback;
+use Marketredesign\MrdAuth0Laravel\Http\Controller\Stateful\Login;
+use Marketredesign\MrdAuth0Laravel\Http\Controller\Stateful\Logout;
 
 Route::group(['middleware' => ['web']], function () {
-    Route::get('/auth0/callback', Callback::class)->name('auth0-callback');
-    Route::get('/login', Login::class)->name('login');
-    Route::get('/logout', Logout::class)->name('logout');
+    Route::get('/oidc/callback', Callback::class)->name('oidc-callback');
+    Route::get('/oidc/login', Login::class)->name('oidc-login');
+    Route::get('/oidc/logout', Logout::class)->name('oidc-logout');
 });

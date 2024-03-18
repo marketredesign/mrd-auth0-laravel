@@ -25,7 +25,7 @@ further changes in the application outside the scope of this package.
 3. Review new configuration instructions in the 
 [README](https://github.com/auth0/laravel-auth0/blob/main/README.md#configuration-the-sdk).
 
-#### Use new `auth0.authenticate` middleware (regualar web apps)
+#### Use new `auth0.authenticate` middleware (regular web apps)
 The new middleware can be used for regular web apps to verify that users are authenticated (using sessions) and redirect
 them to the login page where necessary.
 
@@ -48,7 +48,7 @@ user information using the `Users` facade in this package (or the `UserRepositor
 
 #### Update AUTH0_DOMAIN in the `.env`
 Applications that make use of the Auth0 Management SDK (e.g. to retrieve user information) should store the tenant
-sub-domain from Auth0 in the `AUTH0_DOMAIN` variable, instead of the custom domain. An additional environment variable, 
+subdomain from Auth0 in the `AUTH0_DOMAIN` variable, instead of the custom domain. An additional environment variable,
 `AUTH0_CUSTOM_DOMAIN`, can be used to configure the custom Auth0 domain 
 (which was previously used in the `AUTH0_DOMAIN` variable instead).
 

@@ -34,7 +34,8 @@ If necessary, add logs of the error.
 
 **Code To Reproduce Issue**
 
-Please remember that with sample code it's easier to reproduce the bug and it's much faster to fix it. If you have a specific piece of code which gives errors, add it here using:
+Please remember that with sample code it's easier to reproduce the bug, and it's much faster to fix it. If you have a
+specific piece of code which gives errors, add it here using:
 
 ```
 Your code here.
