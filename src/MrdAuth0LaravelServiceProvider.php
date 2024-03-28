@@ -2,11 +2,13 @@
 
 namespace Marketredesign\MrdAuth0Laravel;
 
+use Facile\JoseVerifier\TokenVerifierInterface;
 use Facile\OpenIDClient\Authorization\AuthRequest;
 use Facile\OpenIDClient\Authorization\AuthRequestInterface;
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
+use Facile\OpenIDClient\Token\AccessTokenVerifierBuilder;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Routing\Router;
@@ -16,6 +18,7 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\ServiceProvider;
 use Marketredesign\MrdAuth0Laravel\Auth\Guards\JwtGuard;
 use Marketredesign\MrdAuth0Laravel\Auth\Guards\OidcGuard;
+use Marketredesign\MrdAuth0Laravel\Auth\JoseBuilder;
 use Marketredesign\MrdAuth0Laravel\Auth\OidcClientBuilder;
 use Marketredesign\MrdAuth0Laravel\Auth\User\Provider;
 use Marketredesign\MrdAuth0Laravel\Contracts\AuthRepository;
@@ -103,6 +106,15 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
             AuthorizationService::class,
             static fn() => (new AuthorizationServiceBuilder())->build(),
         );
+
+        $this->app->singleton(TokenVerifierInterface::class, function () {
+            $verifierBuilder = new AccessTokenVerifierBuilder();
+            $joseBuilder = new JoseBuilder(config('pricecypher-oidc.audience'));
+
+            $verifierBuilder->setJoseBuilder($joseBuilder);
+
+            return $verifierBuilder->build(resolve(ClientInterface::class));
+        });
 
         $this->app->bind(AuthRequestInterface::class, static fn() => AuthRequest::fromParams([
             'client_id' => config('pricecypher-oidc.client_id'),

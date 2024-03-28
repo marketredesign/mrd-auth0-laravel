@@ -11,6 +11,8 @@ use Marketredesign\MrdAuth0Laravel\MrdAuth0LaravelServiceProvider;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {
+    use OidcTestingValues;
+
     protected string $guard = 'pc-jwt';
 
     protected function getPackageProviders($app)
@@ -24,35 +26,20 @@ class TestCase extends \Orchestra\Testbench\TestCase
     {
         parent::setUp();
 
+        $this->oidcTestingInit();
+
         // Let the OIDC SDK use our mocked HTTP client.
         Config::set('pricecypher-oidc.http_client', new HttpPsrClientBridge());
-        Config::set('pricecypher-oidc.issuer', 'https://domain.test');
+        Config::set('pricecypher-oidc.issuer', $this->oidcIssuer);
         Config::set('pricecypher-oidc.client_id', 'id');
         Config::set('pricecypher-oidc.client_secret', 'secret');
 
+        $openidConfig = $this->openidConfig();
         Http::fake([
-            'https://domain.test/.well-known/openid-configuration' => Http::response([
-                'issuer' => 'https://domain.test',
-                'authorization_endpoint' => 'https://domain.test/authorize',
-                "token_endpoint" => "https://domain.test/token",
-                'jwks_uri' => 'https://domain.test/jwks',
-            ]),
-            'https://domain.test/jwks' => Http::response([
-                "keys" => [
-                    [
-                        "kid" => "kid1",
-                        "kty" => "RSA",
-                        "alg" => "RS256",
-                        "use" => "sig",
-                        "n" => "verybign",
-                        "e" => "AQAB",
-                        "x5c" => ["certcontents"],
-                        "x5t" => "PJval",
-                        "x5t#S256" => "e9val",
-                    ],
-                ],
-            ])
+            $this->oidcIssuerUrl('/.well-known/openid-configuration') => Http::response($openidConfig),
+            $openidConfig['jwks_uri'] => Http::response($this->openidJwksConfig()),
         ]);
+
 
         Config::set('auth.guards.pc-jwt', [
             'driver' => 'pc-jwt',

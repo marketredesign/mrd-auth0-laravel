@@ -2,6 +2,7 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Auth;
 
+use Carbon\FactoryImmutable as CarbonClock;
 use Facile\JoseVerifier\AbstractTokenVerifier;
 use Facile\JoseVerifier\Checker\AuthTimeChecker;
 use Facile\JoseVerifier\Checker\AzpChecker;
@@ -23,7 +24,7 @@ final class JwtVerifier extends AbstractTokenVerifier
 
     public function __construct(string $issuer, string $audience, ?TokenDecrypterInterface $decrypter = null)
     {
-        parent::__construct($issuer, 'not used', $decrypter);
+        parent::__construct($issuer, 'not used', $decrypter, new CarbonClock());
         $this->audience = $audience;
     }
 
@@ -61,7 +62,7 @@ final class JwtVerifier extends AbstractTokenVerifier
         }
 
         if (null !== $this->maxAge) {
-            $checkers[] = new AuthTimeChecker($this->maxAge, $this->clockTolerance);
+            $checkers[] = new AuthTimeChecker($this->maxAge, $this->clockTolerance, $this->clock);
         }
 
         return $checkers;

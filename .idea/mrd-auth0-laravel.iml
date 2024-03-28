@@ -152,7 +152,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/http-client" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/http-client-contracts" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/polyfill-php83" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/psr-http-message-bridge" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-checker" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-core" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-encryption" />
@@ -161,6 +160,21 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-library" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-signature" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-signature-algorithm-rsa" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-encryption-algorithm-aescbc" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-encryption-algorithm-aesgcm" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-encryption-algorithm-aesgcmkw" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-encryption-algorithm-dir" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-encryption-algorithm-ecdh-es" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-encryption-algorithm-experimental" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-encryption-algorithm-pbes2" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-encryption-algorithm-rsa" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-signature-algorithm-ecdsa" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-signature-algorithm-eddsa" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-signature-algorithm-experimental" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-signature-algorithm-hmac" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-signature-algorithm-none" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-util-ecc" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/psr-http-message-bridge" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
