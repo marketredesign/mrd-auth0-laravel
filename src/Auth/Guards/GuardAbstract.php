@@ -2,12 +2,12 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Auth\Guards;
 
-use Facile\OpenIDClient\Client\ClientInterface;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Auth\GuardHelpers;
 use Illuminate\Contracts\Auth\Guard;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Config;
+use Illuminate\Contracts\Auth\UserProvider;
+use Illuminate\Support\Str;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 
 abstract class GuardAbstract implements Guard
 {
@@ -17,18 +17,29 @@ abstract class GuardAbstract implements Guard
 
     public function __construct(public string $name, protected ?array $config = null)
     {
-        App::call([$this, 'init']);
+        $this->expectedAudience = $config['audience'] ?? null;
     }
 
-    public function init(AuthManager $auth, ?ClientInterface $oidcClient)
+    public function getProvider()
     {
-        if (!$oidcClient) {
-            return null;
+        if ($this->provider instanceof UserProvider) {
+            return $this->provider;
         }
 
-        $this->provider = $auth->createUserProvider($this->config['provider']);
-        $this->expectedAudience = Config::get('pricecypher-oidc.audience');
+        $providerName = Str::of($this->config['provider'] ?? '')->trim();
 
-        return $this;
+        if ($providerName->isEmpty()) {
+            throw new InvalidConfigurationException('No or empty provider name configured for auth guard.');
+        }
+
+        $provider = resolve(AuthManager::class)->createUserProvider($providerName);
+
+        if ($provider instanceof UserProvider) {
+            $this->provider = $provider;
+
+            return $provider;
+        }
+
+        throw new InvalidConfigurationException('Configured user provider for auth guard is not available.');
     }
 }
