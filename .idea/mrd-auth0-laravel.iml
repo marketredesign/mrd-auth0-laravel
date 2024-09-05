@@ -126,7 +126,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr-mock/http-message-implementation" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr-mock/http-factory-implementation" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr-mock/http-client-implementation" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/marketredesign/newrelic-monolog-enricher" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/prompts" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/carbonphp/carbon-doctrine-types" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/facile-it/php-jose-verifier" />
@@ -175,6 +174,10 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-signature-algorithm-none" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-util-ecc" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/psr-http-message-bridge" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/filp/whoops" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/nunomaduro/collision" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/php-di/invoker" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/php-di/php-di" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
