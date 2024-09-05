@@ -4,10 +4,17 @@
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
 use Closure;
+use Facile\JoseVerifier\TokenVerifierInterface;
+use Illuminate\Auth\AuthManager;
+use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
+use InvalidArgumentException;
+use Marketredesign\MrdAuth0Laravel\Model\Stateless\User;
 use Marketredesign\MrdAuth0Laravel\Tests\TestCase;
+use Mockery\MockInterface;
 
 class JwtAuthorizationTest extends TestCase
 {
@@ -120,8 +127,11 @@ class JwtAuthorizationTest extends TestCase
             'sub' => 'someuser',
         ];
 
-        $this->auth($jwt)
-            ->request(true, '', function (Request $request) {
+        $this->partialMock(TokenVerifierInterface::class, function (MockInterface $mock) use ($jwt) {
+            $mock->shouldReceive('verify')->withArgs(['token'])->andReturn($jwt);
+        });
+
+        $this->request(true, '', function (Request $request) {
                 // Apply the user resolver on the request and return its response.
                 return [
                     'sub' => $request->user()->sub
@@ -129,5 +139,49 @@ class JwtAuthorizationTest extends TestCase
             })
             ->assertOk()
             ->assertSimilarJson($jwt);
+    }
+
+    public function testCustomUserResolver()
+    {
+        $jwt = [
+            'sub' => 'someuser',
+        ];
+
+        $this->partialMock(TokenVerifierInterface::class, function (MockInterface $mock) use ($jwt) {
+            $mock->shouldReceive('verify')->withArgs(['token'])->andReturn($jwt);
+        });
+
+        $provider = $this->partialMock(UserProvider::class, function (MockInterface $mock) use ($jwt) {
+            $mock->shouldReceive('retrieveById')->withArgs([$jwt['sub']])->andReturn(new User([
+                'sub' => 'someuser',
+                'name' => 'Kees',
+            ]));
+        });
+
+        resolve(AuthManager::class)->provider('pc-users', fn () => $provider);
+
+        $response = $this->request(true, '', function (Request $request) {
+                // Apply the user resolver on the request and return its response.
+                return [
+                    'sub' => $request->user()->sub,
+                    'name' => $request->user()->name,
+                ];
+            });
+
+        $response
+            ->assertOk()
+            ->assertSimilarJson([
+                'sub' => 'someuser',
+                'name' => 'Kees',
+            ]);
+    }
+
+    public function testNoIssuer()
+    {
+        Config::set('pricecypher-oidc.issuer', null);
+
+        $this->request(true, 'test_scope')
+            ->assertServerError()
+            ->assertSee('Issuer must be provided');
     }
 }

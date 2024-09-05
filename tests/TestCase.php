@@ -8,10 +8,11 @@ use Illuminate\Support\Facades\Http;
 use Marketredesign\MrdAuth0Laravel\Model\Stateful\User as StatefulUser;
 use Marketredesign\MrdAuth0Laravel\Model\Stateless\User as StatelessUser;
 use Marketredesign\MrdAuth0Laravel\MrdAuth0LaravelServiceProvider;
+use Marketredesign\MrdAuth0Laravel\Traits\ActingAsPricecypherUser;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {
-    use OidcTestingValues;
+    use OidcTestingValues, ActingAsPricecypherUser;
 
     protected string $guard = 'pc-jwt';
 
@@ -60,23 +61,11 @@ class TestCase extends \Orchestra\Testbench\TestCase
     /**
      * Authorise / authenticate a request.
      * if you pass an attributes array, it will be merged with a set of default values
-     *
-     * @param array $attributes
-     * @return TestCase
+     * TODO
      */
-    public function auth(array $attributes = []): TestCase
+    public function auth(array $attributes = [], bool $stateless = null): TestCase
     {
-        $defaults = [
-            'sub' => 'some-auth0-user-id',
-            'azp' => 'some-auth0-appplication-client-id',
-            'iat' => time(),
-            'exp' => time() + 60 * 60,
-            'scope' => '',
-        ];
-
-        $attributes = array_merge($defaults, $attributes);
-        $user = $this->guard === 'pc-oidc' ? new StatefulUser($attributes) : new StatelessUser($attributes);
-
-        return $this->actingAs($user, $this->guard);
+        $isStateless = $stateless ?? ($this->guard !== 'pc-oidc');
+        return $this->actingAsPricecypherUser($attributes, $isStateless);
     }
 }
