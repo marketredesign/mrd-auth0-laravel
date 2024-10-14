@@ -2,7 +2,7 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Traits;
 
-use Marketredesign\MrdAuth0Laravel\Model\Stateful\User as StatefulUser;
+use Marketredesign\MrdAuth0Laravel\Exceptions\NotImplementedException;
 use Marketredesign\MrdAuth0Laravel\Model\Stateless\User as StatelessUser;
 
 trait ActingAsPricecypherUser
@@ -22,7 +22,7 @@ trait ActingAsPricecypherUser
         if ($stateless) {
             $user = new StatelessUser($attributes);
         } else {
-            $user = new StatefulUser($attributes);
+            throw new NotImplementedException('OIDC not implemented');
         }
 
         return $this->actingAs($user, $guard);
