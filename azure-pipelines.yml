@@ -8,10 +8,10 @@ trigger:
 
 strategy:
   matrix:
-    php81:
-      php_version: 8.1
     php82:
       php_version: 8.2
+    php83:
+      php_version: 8.3
 
 pool:
   vmImage: ubuntu-latest

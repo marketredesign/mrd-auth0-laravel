@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Marketredesign\MrdAuth0Laravel\Repository\Fakes;
 
 use Illuminate\Foundation\Testing\WithFaker;
@@ -12,8 +11,10 @@ class FakeUserRepository implements UserRepository
 {
     use WithFaker;
 
-    private $userIds;
-    private $userObjects;
+    private Collection $userIds;
+
+    private Collection $userObjects;
+
     private Collection $userRoles;
 
     public function __construct()
@@ -43,7 +44,7 @@ class FakeUserRepository implements UserRepository
     /**
      * Add collection of user IDs for which a random user object will be returned when the repository is queried.
      *
-     * @param Collection $ids User IDs to create user objects for.
+     * @param  Collection  $ids  User IDs to create user objects for.
      */
     public function fakeAddUsers(Collection $ids): void
     {
@@ -53,7 +54,7 @@ class FakeUserRepository implements UserRepository
     /**
      * Gets a random user object for the given ID, which will be created if it does not already exist.
      *
-     * @param $id mixed User ID to get the object for.
+     * @param  $id  mixed User ID to get the object for.
      * @return mixed|object
      */
     private function getRandomUserObjectForId($id)
@@ -65,20 +66,20 @@ class FakeUserRepository implements UserRepository
         $firstName = $this->faker->firstName;
         $lastName = $this->faker->lastName;
 
-        $user = (object)[
-            "created_at" => $this->faker->dateTime,
-            "email"=> $this->faker->unique()->email,
-            "email_verified" => $this->faker->boolean,
-            "family_name" => $lastName,
-            "given_name" => $firstName,
-            "id" => $this->faker->randomNumber(),
-            "locale" => $this->faker->locale,
-            "name" => $firstName . ' ' . $lastName,
-            "nickname" => $this->faker->name,
-            "user_id" => $id,
-            "last_ip" => $this->faker->ipv4,
-            "last_login" => $this->faker->dateTime,
-            "logins_count" => $this->faker->randomNumber(),
+        $user = (object) [
+            'created_at' => $this->faker->dateTime,
+            'email' => $this->faker->unique()->email,
+            'email_verified' => $this->faker->boolean,
+            'family_name' => $lastName,
+            'given_name' => $firstName,
+            'id' => $this->faker->randomNumber(),
+            'locale' => $this->faker->locale,
+            'name' => $firstName.' '.$lastName,
+            'nickname' => $this->faker->name,
+            'user_id' => $id,
+            'last_ip' => $this->faker->ipv4,
+            'last_login' => $this->faker->dateTime,
+            'logins_count' => $this->faker->randomNumber(),
         ];
 
         $this->userObjects->put($id, $user);
@@ -87,11 +88,11 @@ class FakeUserRepository implements UserRepository
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function get($id): ?object
     {
-        if (!$this->userIds->contains($id)) {
+        if (! $this->userIds->contains($id)) {
             return null;
         }
 
@@ -99,9 +100,9 @@ class FakeUserRepository implements UserRepository
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function delete($id)
+    public function delete(string $id): void
     {
         $this->userIds = $this->userIds->filter(function ($userID) use ($id) {
             return $userID != $id;
@@ -111,12 +112,12 @@ class FakeUserRepository implements UserRepository
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function getByIds(Collection $ids, array $fields = null): Collection
+    public function getByIds(Collection $ids, ?array $fields = null): Collection
     {
         return $ids->mapWithKeys(function ($id) {
-            if (!$this->userIds->contains($id)) {
+            if (! $this->userIds->contains($id)) {
                 return [];
             }
 
@@ -125,7 +126,7 @@ class FakeUserRepository implements UserRepository
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getAllUsers(): Collection
     {
@@ -135,19 +136,19 @@ class FakeUserRepository implements UserRepository
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function getByEmails(Collection $emails, array $fields = null): Collection
+    public function getByEmails(Collection $emails, ?array $fields = null): Collection
     {
-        return $this->userObjects->filter(function (Object $user) use ($emails) {
+        return $this->userObjects->filter(function (object $user) use ($emails) {
             return $emails->contains($user->email);
         });
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function createUser(String $email, String $firstName, String $lastName): object
+    public function createUser(string $email, string $firstName, string $lastName): object
     {
         $userId = Str::random(20);
         $this->fakeAddUsers(collect($userId));
@@ -156,13 +157,13 @@ class FakeUserRepository implements UserRepository
         $userModel->email = $email;
         $userModel->family_name = $lastName;
         $userModel->given_name = $firstName;
-        $userModel->name = $firstName . ' ' . $lastName;
+        $userModel->name = $firstName.' '.$lastName;
 
         return $userModel;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getRoles(string $userId): Collection
     {
@@ -170,7 +171,7 @@ class FakeUserRepository implements UserRepository
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function addRoles(string $userId, Collection $roleIds): void
     {
@@ -182,7 +183,7 @@ class FakeUserRepository implements UserRepository
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function removeRoles(string $userId, Collection $roleIds): void
     {

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Marketredesign\MrdAuth0Laravel\Repository\Fakes;
 
 use Illuminate\Foundation\Testing\WithFaker;
@@ -13,20 +12,14 @@ class FakeDatasetRepository implements DatasetRepository
 {
     use WithFaker;
 
-    /**
-     * @var Collection Fake dataset IDs that the user has access to.
-     */
-    private $datasetIds;
+    /** @var Collection Fake dataset IDs that the user has access to. */
+    private Collection $datasetIds;
 
-    /**
-     * @var Collection Fake dataset IDs that the user is manager of.
-     */
-    private $managedDatasetIds;
+    /** @var Collection Fake dataset IDs that the user is manager of. */
+    private Collection $managedDatasetIds;
 
-    /**
-     * @var Collection Fake dataset objects, keyed by dataset ID.
-     */
-    private $datasets;
+    /** @var Collection Fake dataset objects, keyed by dataset ID. */
+    private Collection $datasets;
 
     public function __construct()
     {
@@ -34,7 +27,7 @@ class FakeDatasetRepository implements DatasetRepository
     }
 
     /**
-     * @param bool $managedOnly Only count datasets that the user is manager of.
+     * @param  bool  $managedOnly  Only count datasets that the user is manager of.
      * @return int Count number of datasets in the fake dataset repository.
      */
     public function fakeCount(bool $managedOnly = false): int
@@ -60,10 +53,10 @@ class FakeDatasetRepository implements DatasetRepository
     /**
      * Add datasets.
      *
-     * @param Collection $datasets Datasets the user has access to. Either a collection of dataset IDs to add,
-     * or a collection of collections each containing at least an 'id' and optionally extra fields.
-     * For any non-provided fields (or all non-id fields when sending a collection of IDs), a random value will be used.
-     * @param bool $isManager Whether or not the user is manager of the given datasets.
+     * @param  Collection  $datasets  Datasets the user has access to. Either a collection of dataset IDs to add,
+     *                                or a collection of collections each containing at least an 'id' and optionally extra fields.
+     *                                For any non-provided fields (or all non-id fields when sending a collection of IDs), a random value will be used.
+     * @param  bool  $isManager  {@code true} iff the user is manager of the given datasets.
      */
     public function fakeAddDatasets(Collection $datasets, bool $isManager = false): void
     {
@@ -74,24 +67,24 @@ class FakeDatasetRepository implements DatasetRepository
         $datasets->each(fn ($ds) => $this->createDataset($ds));
 
         // Add the IDs to the allowed IDs, including managed IDs if applicable
-        $this->datasetIds = $this->datasetIds->concat($datasets->pluck('id'))->unique();
+        $this->datasetIds = $this->datasetIds->concat($datasets->pluck('id')->all())->unique();
         if ($isManager) {
-            $this->managedDatasetIds = $this->managedDatasetIds->concat($datasets->pluck('id'))->unique();
+            $this->managedDatasetIds = $this->managedDatasetIds->concat($datasets->pluck('id')->all())->unique();
         }
     }
 
     /**
      * Create and store a dataset. Any fields that are not provided are generated randomly.
      *
-     * @param $dataset Collection Dataset to add, including at least the 'id' field.
+     * @param  $dataset  Collection Dataset to add, including at least the 'id' field.
      */
     private function createDataset(Collection $dataset): void
     {
         // Construct some (or 0) fake modules
-        $fakeModules = $this->faker->words($this->faker->randomDigit(), false);
+        $fakeModules = $this->faker->words($this->faker->randomDigit());
 
         // Add a dataset with these fields, prioritizing provided data
-        $dsObject = (object)[
+        $dsObject = [
             'id' => $dataset->get('id'),
             'name' => $dataset->get('name', $this->faker->firstName),
             'dss_url' => $dataset->get('dss_url', $this->faker->url),
@@ -99,14 +92,17 @@ class FakeDatasetRepository implements DatasetRepository
             'updated_at' => $dataset->get('updated_at', $this->faker->dateTime),
             'modules' => $dataset->get('modules', $fakeModules),
         ];
-        $this->datasets->put($dsObject->id, $dsObject);
+        $this->datasets->put($dsObject['id'], $dsObject);
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function getUserDatasetIds(bool $managedOnly = false, bool $cached = true): Collection
-    {
+    public function getUserDatasetIds(
+        bool $managedOnly = false,
+        bool $cached = true,
+        ?string $guard = null,
+    ): Collection {
         if ($managedOnly) {
             return $this->managedDatasetIds;
         } else {
@@ -115,10 +111,13 @@ class FakeDatasetRepository implements DatasetRepository
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function getUserDatasets(bool $managedOnly = false, bool $cached = true): ResourceCollection
-    {
+    public function getUserDatasets(
+        bool $managedOnly = false,
+        bool $cached = true,
+        ?string $guard = null,
+    ): ResourceCollection {
         $datasets = $this->getUserDatasetIds($managedOnly)->map(function ($datasetId) {
             return $this->datasets->get($datasetId);
         });

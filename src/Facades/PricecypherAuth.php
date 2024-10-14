@@ -1,25 +1,24 @@
 <?php
 
-
 namespace Marketredesign\MrdAuth0Laravel\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Marketredesign\MrdAuth0Laravel\Contracts\Auth0Repository;
-use Marketredesign\MrdAuth0Laravel\Repository\Fakes\FakeAuth0Repository;
+use Marketredesign\MrdAuth0Laravel\Contracts\AuthRepository;
+use Marketredesign\MrdAuth0Laravel\Repository\Fakes\FakeAuthRepository;
 
 /**
  * @method static string getMachineToMachineToken()
  * @method static void fakeSetM2mExpiresIn(int $expiresIn)
  * @method static void fakeSetM2mAccessToken(string $accessToken)
  *
- * @see Auth0Repository
- * @see FakeAuth0Repository
+ * @see AuthRepository
+ * @see FakeAuthRepository
  */
-class Auth0 extends Facade
+class PricecypherAuth extends Facade
 {
     public static function fake()
     {
-        self::$app->singleton(Auth0Repository::class, FakeAuth0Repository::class);
+        self::$app->singleton(AuthRepository::class, FakeAuthRepository::class);
     }
 
     /**
@@ -27,6 +26,6 @@ class Auth0 extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        return Auth0Repository::class;
+        return AuthRepository::class;
     }
 }

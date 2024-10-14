@@ -1,25 +1,24 @@
 <?php
 
-
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
 use Illuminate\Support\Facades\Cache;
-use Marketredesign\MrdAuth0Laravel\Contracts\Auth0Repository;
-use Marketredesign\MrdAuth0Laravel\Facades\Auth0;
+use Marketredesign\MrdAuth0Laravel\Contracts\AuthRepository;
+use Marketredesign\MrdAuth0Laravel\Facades\PricecypherAuth;
 use Marketredesign\MrdAuth0Laravel\Tests\TestCase;
 
-class Auth0FacadeTest extends TestCase
+class AuthFacadeTest extends TestCase
 {
     /**
      * Verifies that the getMachineToMachineToken method is executed by our Auth0Repository implementation.
      */
     public function testGetMachineToMachineToken()
     {
-        $this->mock(Auth0Repository::class, function ($mock) {
+        $this->mock(AuthRepository::class, function ($mock) {
             $mock->shouldReceive('getMachineToMachineToken')->once()->withNoArgs();
         });
 
-        Auth0::getMachineToMachineToken();
+        PricecypherAuth::getMachineToMachineToken();
     }
 
     /**
@@ -28,10 +27,10 @@ class Auth0FacadeTest extends TestCase
     public function testFake()
     {
         // Enable testing mode.
-        Auth0::fake();
+        PricecypherAuth::fake();
 
         // Verify a machine token can be retrieved in testing mode without overwriting any of the defaults.
-        self::assertIsString(Auth0::getMachineToMachineToken());
+        self::assertIsString(PricecypherAuth::getMachineToMachineToken());
     }
 
     /**
@@ -40,10 +39,10 @@ class Auth0FacadeTest extends TestCase
     public function testFakeSetExpiresIn()
     {
         // Enable testing mode
-        Auth0::fake();
+        PricecypherAuth::fake();
 
         // Call function under test.
-        Auth0::fakeSetM2mExpiresIn(500);
+        PricecypherAuth::fakeSetM2mExpiresIn(500);
 
         // Mock cache remember and verify called with TTL 500/2 = 250.
         Cache::shouldReceive('remember')->withArgs(function ($key, $ttl) {
@@ -51,7 +50,7 @@ class Auth0FacadeTest extends TestCase
         })->once()->andReturn('unused');
 
         // Retrieve m2m function such that we can verify the cache call.
-        Auth0::getMachineToMachineToken();
+        PricecypherAuth::getMachineToMachineToken();
     }
 
     /**
@@ -60,12 +59,12 @@ class Auth0FacadeTest extends TestCase
     public function testFakeSetAccessToken()
     {
         // Enable testing mode
-        Auth0::fake();
+        PricecypherAuth::fake();
 
         // Call function under test.
-        Auth0::fakeSetM2mAccessToken('access_token_for_fake_set_access_token');
+        PricecypherAuth::fakeSetM2mAccessToken('access_token_for_fake_set_access_token');
 
         // Verify token was indeed set.
-        self::assertEquals('access_token_for_fake_set_access_token', Auth0::getMachineToMachineToken());
+        self::assertEquals('access_token_for_fake_set_access_token', PricecypherAuth::getMachineToMachineToken());
     }
 }

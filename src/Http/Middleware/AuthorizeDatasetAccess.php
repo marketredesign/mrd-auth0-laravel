@@ -2,10 +2,9 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Http\Middleware;
 
-use App;
 use Closure;
 use Exception;
-use GuzzleHttp\Exception\RequestException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -25,10 +24,10 @@ class AuthorizeDatasetAccess
     /**
      * Authorize access to the dataset ID contained in the request.
      *
-     * @param Request $request Illuminate HTTP Request object.
-     * @param Closure $next Function to call when middleware is complete.
-     *
+     * @param  Request  $request  Illuminate HTTP Request object.
+     * @param  Closure  $next  Function to call when middleware is complete.
      * @return mixed
+     *
      * @throws Exception
      */
     public function handle(Request $request, Closure $next)
@@ -42,7 +41,7 @@ class AuthorizeDatasetAccess
 
         $authorizedDatasetIds = $this->retrieveAuthorizedDatasets();
 
-        if (!$authorizedDatasetIds->contains($requestedDatasetId)) {
+        if (! $authorizedDatasetIds->contains($requestedDatasetId)) {
             abort(403, 'Unauthorized dataset');
         }
 
@@ -51,16 +50,13 @@ class AuthorizeDatasetAccess
 
     /**
      * Retrieve the authorized dataset IDs of the user. The underlying repository takes care of caching.
-     *
-     * @return Collection
      */
     protected function retrieveAuthorizedDatasets(): Collection
     {
         try {
             return Datasets::getUserDatasetIds();
         } catch (RequestException $e) {
-            Log::error('Unable to request authorized datasets from user tool:');
-            Log::error($e);
+            Log::error('Unable to request authorized datasets from user tool:', $e->getTrace());
             abort(401, 'Unable to authorize dataset access.');
         }
     }
@@ -68,7 +64,6 @@ class AuthorizeDatasetAccess
     /**
      * (Try to) find a dataset ID within the given request. If multiple distinct ones are found, the request is aborted.
      *
-     * @param Request $request
      * @return null|string Dataset ID, if exactly one unique one was found. Null if no dataset IDs could be found.
      */
     protected function getRequestedDatasetId(Request $request): ?string
