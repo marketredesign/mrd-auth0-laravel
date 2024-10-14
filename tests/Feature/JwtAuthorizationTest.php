@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
-use InvalidArgumentException;
 use Marketredesign\MrdAuth0Laravel\Model\Stateless\User;
 use Marketredesign\MrdAuth0Laravel\Tests\TestCase;
 use Mockery\MockInterface;
@@ -23,7 +22,7 @@ class JwtAuthorizationTest extends TestCase
     /**
      * Perform a GET request to the test endpoint, optionally including a Bearer token in the Authorization header.
      *
-     * @param bool $includeBearer Whether or not to include a bearer token in the request.
+     * @param bool $includeBearer Whether to include a bearer token in the request.
      * @param string $scope Optionally, a required scope for the JWT middleware. Defaults to no scope.
      * @param Closure|null $responseHandler Response handler for endpoint. When null, a JSON containing `test` will be
      * returned.

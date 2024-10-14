@@ -14,7 +14,7 @@ trait OidcTestingValues
     protected OpenSSLAsymmetricKey $oidcPrivKey;
     protected string $oidcKid;
 
-    protected function oidcTestingInit()
+    protected function oidcTestingInit(): void
     {
         $this->oidcIssuer = 'https://domain.test';
         $this->oidcPrivKey = openssl_pkey_new(['digest_alg' => 'sha256', 'private_key_type' => OPENSSL_KEYTYPE_RSA]);

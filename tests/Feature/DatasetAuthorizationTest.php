@@ -35,9 +35,9 @@ class DatasetAuthorizationTest extends TestCase
     ];
 
     /**
-     * @var bool Whether or not JWT authorization is enabled for the test route.
+     * @var bool Whether JWT authorization is enabled for the test route.
      */
-    private $enableJWT = false;
+    private bool $enableJWT = false;
 
     protected function setUp(): void
     {

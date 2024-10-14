@@ -5,8 +5,6 @@ namespace Marketredesign\MrdAuth0Laravel\Tests;
 
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
-use Marketredesign\MrdAuth0Laravel\Model\Stateful\User as StatefulUser;
-use Marketredesign\MrdAuth0Laravel\Model\Stateless\User as StatelessUser;
 use Marketredesign\MrdAuth0Laravel\MrdAuth0LaravelServiceProvider;
 use Marketredesign\MrdAuth0Laravel\Traits\ActingAsPricecypherUser;
 
@@ -16,7 +14,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
 
     protected string $guard = 'pc-jwt';
 
-    protected function getPackageProviders($app)
+    protected function getPackageProviders($app): array
     {
         return [
             MrdAuth0LaravelServiceProvider::class,
