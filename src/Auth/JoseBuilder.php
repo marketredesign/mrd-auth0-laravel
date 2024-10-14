@@ -15,7 +15,7 @@ class JoseBuilder extends AbstractTokenVerifierBuilder
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     protected function getVerifier(string $issuer, string $clientId): AbstractTokenVerifier
     {

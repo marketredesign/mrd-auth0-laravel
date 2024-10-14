@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
 use Carbon\Carbon;
@@ -39,7 +38,7 @@ class DatasetRepositoryTest extends TestCase
     /**
      * Define environment setup.
      *
-     * @param Application $app
+     * @param  Application  $app
      * @return void
      */
     protected function getEnvironmentSetUp($app)
@@ -62,9 +61,6 @@ class DatasetRepositoryTest extends TestCase
 
     /**
      * Asserts that the given dataset is as expected.
-     *
-     * @param array $expDataset
-     * @param array|null $actDataset
      */
     protected function assertDataset(array $expDataset, ?array $actDataset): void
     {
@@ -82,10 +78,10 @@ class DatasetRepositoryTest extends TestCase
 
     protected function assertRequestsCount(int $expectedCount, ?callable $extraRequestFilter = null): void
     {
-        $filterPredicate = fn(Request $req) => Str::startsWith($req->url(), self::BASE_USERS);
+        $filterPredicate = fn (Request $req) => Str::startsWith($req->url(), self::BASE_USERS);
 
         if ($extraRequestFilter) {
-            $filterPredicate = fn(Request $req) => $filterPredicate($req) && $extraRequestFilter($req);
+            $filterPredicate = fn (Request $req) => $filterPredicate($req) && $extraRequestFilter($req);
         }
 
         self::assertCount($expectedCount, Http::recorded($filterPredicate));
@@ -115,7 +111,7 @@ class DatasetRepositoryTest extends TestCase
             $this->repo->getUserDatasetIds();
 
             // Expect number of api calls to increment each time by one.
-            self::assertCount(1, Http::recorded(fn(Request $req) => Str::startsWith($req->url(), $baseUrl)));
+            self::assertCount(1, Http::recorded(fn (Request $req) => Str::startsWith($req->url(), $baseUrl)));
         }
     }
 
@@ -125,7 +121,7 @@ class DatasetRepositoryTest extends TestCase
     public function testGetIdsNoDatasets()
     {
         // Return empty response
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => []])]);
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => []])]);
 
         // Call function under test.
         $datasetIds = $this->repo->getUserDatasetIds();
@@ -137,10 +133,9 @@ class DatasetRepositoryTest extends TestCase
         // Expect 1 api call, verifying whether the correct endpoint was called.
         $this->assertRequestsCount(
             1,
-            fn(Request $req) => Str::startsWith($req->url(), self::BASE_USERS . '/api/datasets?'),
+            fn (Request $req) => Str::startsWith($req->url(), self::BASE_USERS.'/api/datasets?'),
         );
     }
-
 
     /**
      * Verifies that an empty collection of datasets is returned when the user has access to no datasets.
@@ -148,7 +143,7 @@ class DatasetRepositoryTest extends TestCase
     public function testGetDatasetsNoDatasets()
     {
         // Return empty response
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => []])]);
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => []])]);
 
         // Call function under test.
         $datasets = $this->repo->getUserDatasets();
@@ -164,8 +159,8 @@ class DatasetRepositoryTest extends TestCase
     public function testGetIds()
     {
         // Return mocked response as given by user tool.
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => [
-            $this->ds(7), $this->ds(6, ['module_A']), $this->ds(1)
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => [
+            $this->ds(7), $this->ds(6, ['module_A']), $this->ds(1),
         ]])]);
 
         // Call function under test.
@@ -188,7 +183,7 @@ class DatasetRepositoryTest extends TestCase
         $ds6 = $this->ds(6, ['module_A', 'module_B']);
         $ds7 = $this->ds(7);
         // Return mocked response as given by user tool.
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => [$ds7, $ds6, $ds1]])]);
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => [$ds7, $ds6, $ds1]])]);
 
         // Call function under test.
         $resourceCollection = $this->repo->getUserDatasets();
@@ -216,7 +211,7 @@ class DatasetRepositoryTest extends TestCase
     public function testBearerTokenInRequest()
     {
         // Return empty response 3 times.
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => []])]);
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => []])]);
 
         foreach (['token', 'eyaskjfasas', 'myVerycooltokensTrinGthatisActuallYNojwT'] as $token) {
             // We set the header as part of the request that is currently "being handled the framework".
@@ -226,7 +221,7 @@ class DatasetRepositoryTest extends TestCase
             $this->repo->getUserDatasets();
 
             // Find the request that is made to the user tool. NB: this is a different request than above.
-            Http::assertSent(fn(Request $req) => Str::startsWith($req->url(), self::BASE_USERS)
+            Http::assertSent(fn (Request $req) => Str::startsWith($req->url(), self::BASE_USERS)
                 && $req->hasHeader('Authorization', "Bearer $token"));
         }
     }
@@ -237,11 +232,11 @@ class DatasetRepositoryTest extends TestCase
     public function testManagedOnlyParameter()
     {
         // Return empty response 4 times.
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => []])]);
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => []])]);
 
         foreach ([false, true] as $bool) {
             $boolBit = $bool ? 1 : 0;
-            $checkQueryParam = fn(Request $req) => Str::contains($req->url(), "managed_only=$boolBit");
+            $checkQueryParam = fn (Request $req) => Str::contains($req->url(), "managed_only=$boolBit");
 
             $this->assertRequestsCount(0, $checkQueryParam);
 
@@ -270,7 +265,7 @@ class DatasetRepositoryTest extends TestCase
         // Create 2 different fake responses, for 2 different users.
         $response1 = Http::response(['datasets' => [$ds7, $ds6, $ds1]]);
         $response2 = Http::response(['datasets' => [$ds6, $ds1]]);
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::sequence([$response1, $response1, $response2, $response2, $response1, $response1])]);
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::sequence([$response1, $response1, $response2, $response2, $response1, $response1])]);
 
         self::assertEquals([1, 6, 7], $this->repo->getUserDatasetIds()->sort()->values()->all());
         self::assertEquals(
@@ -303,7 +298,7 @@ class DatasetRepositoryTest extends TestCase
         $ds1 = $this->ds(1, ['module_B', 'module_C']);
         $ds6 = $this->ds(6, ['module_A', 'module_B']);
         $ds7 = $this->ds(7);
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::sequence()
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::sequence()
             ->push(['datasets' => [$ds7, $ds6, $ds1]])
             ->push(['datasets' => [$ds6, $ds1]])]);
 
@@ -340,7 +335,7 @@ class DatasetRepositoryTest extends TestCase
         $ds1 = $this->ds(1, ['module_B', 'module_C']);
         $ds6 = $this->ds(6, ['module_A', 'module_B']);
         $ds7 = $this->ds(7);
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::sequence()
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::sequence()
             ->push(['datasets' => [$ds7, $ds6, $ds1]])
             ->push(['datasets' => []])
             ->push(['datasets' => [$ds6, $ds1]])
@@ -392,7 +387,7 @@ class DatasetRepositoryTest extends TestCase
         $response2 = Http::response(['datasets' => [$ds6, $ds1]]);
         $response3 = Http::response(['datasets' => [$ds1]]);
         $respEmpty = Http::response(['datasets' => []]);
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::sequence([$response1, $response1, $respEmpty, $respEmpty, $response2, $response2, $response3,
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::sequence([$response1, $response1, $respEmpty, $respEmpty, $response2, $response2, $response3,
             $response3, $response1, $response1, $respEmpty, $respEmpty])]);
 
         $this->auth(['sub' => 'user1']);
@@ -438,7 +433,7 @@ class DatasetRepositoryTest extends TestCase
         $this->auth(['sub' => 'user1']);
 
         // Return empty response twice.
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => []])]);
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => []])]);
 
         // Set cache TTL to 10 seconds in the config and make sure repo is re-instantiated.
         Config::set('pricecypher.cache_ttl', 10);

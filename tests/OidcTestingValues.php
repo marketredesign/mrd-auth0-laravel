@@ -5,6 +5,7 @@ namespace Marketredesign\MrdAuth0Laravel\Tests;
 use Firebase\JWT\JWT;
 use Illuminate\Support\Str;
 use OpenSSLAsymmetricKey;
+
 use function Facile\OpenIDClient\base64url_encode;
 
 trait OidcTestingValues
@@ -12,6 +13,7 @@ trait OidcTestingValues
     protected string $oidcIssuer;
 
     protected OpenSSLAsymmetricKey $oidcPrivKey;
+
     protected string $oidcKid;
 
     protected function oidcTestingInit(): void
@@ -21,9 +23,9 @@ trait OidcTestingValues
         $this->oidcKid = 'kid_test';
     }
 
-    protected function jwk(string $kid = null, OpenSSLAsymmetricKey $privKey = null): array
+    protected function jwk(?string $kid = null, ?OpenSSLAsymmetricKey $privKey = null): array
     {
-        if (!$kid || !$privKey) {
+        if (! $kid || ! $privKey) {
             $kid = $this->oidcKid;
             $privKey = $this->oidcPrivKey;
         }
@@ -39,10 +41,10 @@ trait OidcTestingValues
         ];
     }
 
-
-    protected function openidConfig(string $issuer = null): array
+    protected function openidConfig(?string $issuer = null): array
     {
         $issuer = $issuer ?? $this->oidcIssuer;
+
         return [
             'issuer' => $issuer,
             'authorization_endpoint' => "$issuer/authorize",
@@ -51,12 +53,12 @@ trait OidcTestingValues
         ];
     }
 
-    protected function openidJwksConfig(string $kid = null, OpenSSLAsymmetricKey $privKey = null): array
+    protected function openidJwksConfig(?string $kid = null, ?OpenSSLAsymmetricKey $privKey = null): array
     {
         return ['keys' => [$this->jwk($kid, $privKey)]];
     }
 
-    protected function oidcIssuerUrl(string $path = '/', string $issuer = null): string
+    protected function oidcIssuerUrl(string $path = '/', ?string $issuer = null): string
     {
         $issuer = rtrim($issuer ?? $this->oidcIssuer, '/');
         $path = ltrim($path, '/');

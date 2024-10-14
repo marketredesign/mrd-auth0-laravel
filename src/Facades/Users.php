@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Marketredesign\MrdAuth0Laravel\Facades;
 
 use Illuminate\Support\Collection;

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
 use Closure;
@@ -50,7 +49,6 @@ class DatasetAuthorizationTest extends TestCase
         PricecypherAuth::fake();
     }
 
-
     /**
      * Define environment setup.
      *
@@ -66,13 +64,12 @@ class DatasetAuthorizationTest extends TestCase
     /**
      * Perform a GET request to the test endpoint, optionally including a route parameter
      *
-     * @param string $requestMethod HTTP method to use for the route.
-     * @param string|null $routeParamKey Name of the route parameter to include in the test endpoint.
-     * @param string|null $routeParamVal Value of the route parameter to call the test endpoint with.
-     * @param array $requestData Data to send in the request, e.g. query params or request body.
-     * @param Closure|null $respHandler Response handler for endpoint. When null, a JSON containing `test_response`
-     * will be returned.
-     * @return TestResponse
+     * @param  string  $requestMethod  HTTP method to use for the route.
+     * @param  string|null  $routeParamKey  Name of the route parameter to include in the test endpoint.
+     * @param  string|null  $routeParamVal  Value of the route parameter to call the test endpoint with.
+     * @param  array  $requestData  Data to send in the request, e.g. query params or request body.
+     * @param  Closure|null  $respHandler  Response handler for endpoint. When null, a JSON containing `test_response`
+     *                                     will be returned.
      */
     private function request(
         string $requestMethod = 'GET',
@@ -84,8 +81,8 @@ class DatasetAuthorizationTest extends TestCase
         $route = self::ROUTE_URI;
         $middleware = [self::MIDDLEWARE_ALIAS];
 
-        if (!empty($routeParamKey)) {
-            $route .= '/{' . $routeParamKey . '}';
+        if (! empty($routeParamKey)) {
+            $route .= '/{'.$routeParamKey.'}';
         }
 
         if ($this->enableJWT) {
@@ -122,7 +119,7 @@ class DatasetAuthorizationTest extends TestCase
     public function testRouteDatasetNoAuthorized()
     {
         // Return empty response (from mocked user tool dataset endpoint) once per supported dataset key.
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => []])]);
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => []])]);
 
         // Create and send request to test endpoint for each supported dataset key as route parameter.
         foreach (self::SUPPORTED_DATASET_KEYS as $routeParamKey) {
@@ -139,7 +136,7 @@ class DatasetAuthorizationTest extends TestCase
     public function testQueryParamDatasetNoAuthorized()
     {
         // Return empty response (from mocked user tool dataset endpoint) once per supported dataset key.
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => []])]);
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => []])]);
 
         // Create and send request to test endpoint for each supported dataset key as route parameter.
         foreach (self::SUPPORTED_DATASET_KEYS as $queryParamKey) {
@@ -159,7 +156,7 @@ class DatasetAuthorizationTest extends TestCase
     public function testPostDatasetNoAuthorized()
     {
         // Return empty response (from mocked user tool dataset endpoint) once per supported dataset key.
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => []])]);
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => []])]);
 
         // Create and send request to test endpoint for each supported dataset key as route parameter.
         foreach (self::SUPPORTED_DATASET_KEYS as $queryParamKey) {
@@ -179,7 +176,7 @@ class DatasetAuthorizationTest extends TestCase
     public function testRouteDatasetUnauthorized()
     {
         // Return mocked response as given by user tool once per supported dataset key.
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => [
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => [
             ['id' => 7, 'name' => 'Cool dataset', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             ['id' => 6, 'name' => 'Sjaak & Co', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             ['id' => 1, 'name' => 'Spotify', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
@@ -201,7 +198,7 @@ class DatasetAuthorizationTest extends TestCase
     public function testQueryParamDatasetUnauthorized()
     {
         // Return mocked response as given by user tool once per supported dataset key.
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => [
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => [
             ['id' => 7, 'name' => 'Cool dataset', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             ['id' => 6, 'name' => 'Sjaak & Co', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             ['id' => 1, 'name' => 'Spotify', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
@@ -225,12 +222,11 @@ class DatasetAuthorizationTest extends TestCase
     public function testPostDatasetUnauthorized()
     {
         // Return mocked response as given by user tool once per supported dataset key.
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => [
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => [
             ['id' => 7, 'name' => 'Cool dataset', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             ['id' => 6, 'name' => 'Sjaak & Co', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             ['id' => 1, 'name' => 'Spotify', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
         ]])]);
-
 
         // Create and send request to test endpoint for each supported dataset key as route parameter.
         foreach (self::SUPPORTED_DATASET_KEYS as $queryParamKey) {
@@ -250,7 +246,7 @@ class DatasetAuthorizationTest extends TestCase
     public function testRouteDatasetAuthorized()
     {
         // Return mocked response as given by user tool once per supported dataset key.
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => [
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => [
             ['id' => 7, 'name' => 'Cool dataset', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             ['id' => 6, 'name' => 'Sjaak & Co', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             ['id' => 1, 'name' => 'Spotify', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
@@ -272,7 +268,7 @@ class DatasetAuthorizationTest extends TestCase
     public function testQueryParamDatasetAuthorized()
     {
         // Return mocked response as given by user tool once per supported dataset key.
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => [
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => [
             ['id' => 7, 'name' => 'Cool dataset', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             ['id' => 6, 'name' => 'Sjaak & Co', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             ['id' => 1, 'name' => 'Spotify', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
@@ -296,7 +292,7 @@ class DatasetAuthorizationTest extends TestCase
     public function testPostDatasetAuthorized()
     {
         // Return mocked response as given by user tool once per supported dataset key.
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => [
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => [
             ['id' => 7, 'name' => 'Cool dataset', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             ['id' => 6, 'name' => 'Sjaak & Co', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             ['id' => 1, 'name' => 'Spotify', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
@@ -364,7 +360,7 @@ class DatasetAuthorizationTest extends TestCase
     public function testUserToolRequestException()
     {
         // Returned mocked request exception once per supported dataset key.
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response('Some fake error', 400)]);
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response('Some fake error', 400)]);
 
         // Create and send request to test endpoint for each supported dataset key as route parameter.
         foreach (self::SUPPORTED_DATASET_KEYS as $routeParamKey) {
@@ -383,7 +379,7 @@ class DatasetAuthorizationTest extends TestCase
     public function testUserToolTransferException()
     {
         // Returned mocked transfer exception once per supported dataset key.
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response('Some fake error', 500)]);
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response('Some fake error', 500)]);
 
         // Create and send request to test endpoint for each supported dataset key as route parameter.
         foreach (self::SUPPORTED_DATASET_KEYS as $routeParamKey) {
@@ -414,13 +410,13 @@ class DatasetAuthorizationTest extends TestCase
 
         $seq = Http::sequence();
 
-        collect(self::SUPPORTED_DATASET_KEYS)->each(fn() => $seq
+        collect(self::SUPPORTED_DATASET_KEYS)->each(fn () => $seq
             ->pushResponse($response1)
             ->pushResponse($response2)
             ->pushResponse($response1)
             ->pushResponse($response2));
 
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => $seq]);
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => $seq]);
 
         // Create and send request to test endpoint for each supported dataset key as route parameter.
         foreach (self::SUPPORTED_DATASET_KEYS as $routeParamKey) {
@@ -444,7 +440,7 @@ class DatasetAuthorizationTest extends TestCase
 
         // Verify that an API call was made per request.
         self::assertCount(4 * count(self::SUPPORTED_DATASET_KEYS), Http::recorded(
-            fn(\Illuminate\Http\Client\Request $request) => Str::startsWith($request->url(), self::BASE_USERS)),
+            fn (\Illuminate\Http\Client\Request $request) => Str::startsWith($request->url(), self::BASE_USERS)),
         );
     }
 
@@ -467,7 +463,7 @@ class DatasetAuthorizationTest extends TestCase
             ['id' => 1, 'name' => 'Spotify', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
         ]]);
 
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::sequence([$response1, $response2])]);
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::sequence([$response1, $response2])]);
 
         // Create and send request to test endpoint for each supported dataset key as route parameter.
         foreach (self::SUPPORTED_DATASET_KEYS as $routeParamKey) {
@@ -495,9 +491,9 @@ class DatasetAuthorizationTest extends TestCase
 
         // Verify that only 2 API calls were made.
         self::assertCount(2, Http::recorded(
-            fn(\Illuminate\Http\Client\Request $request) => Str::startsWith($request->url(), self::BASE_USERS)),
+            fn (\Illuminate\Http\Client\Request $request) => Str::startsWith($request->url(), self::BASE_USERS)),
         );
-//        self::assertCount(2, $this->guzzleContainer);
+        //        self::assertCount(2, $this->guzzleContainer);
     }
 
     /**
@@ -509,7 +505,7 @@ class DatasetAuthorizationTest extends TestCase
         $this->enableJWT = true;
 
         // Return empty response twice.
-        Http::fake([self::BASE_USERS . '/api/datasets?*' => Http::response(['datasets' => []])]);
+        Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => []])]);
 
         // Set cache TTL to 10 seconds in the config.
         Config::set('pricecypher.cache_ttl', 10);
@@ -530,7 +526,7 @@ class DatasetAuthorizationTest extends TestCase
 
         // Verify only 1 api call was made.
         self::assertCount(1, Http::recorded(
-            fn(\Illuminate\Http\Client\Request $request) => Str::startsWith($request->url(), self::BASE_USERS)),
+            fn (\Illuminate\Http\Client\Request $request) => Str::startsWith($request->url(), self::BASE_USERS)),
         );
 
         // Increment time such that cache TTL should have passed.
@@ -547,7 +543,7 @@ class DatasetAuthorizationTest extends TestCase
 
         // Verify now a total of two api calls was made.
         self::assertCount(2, Http::recorded(
-            fn(\Illuminate\Http\Client\Request $request) => Str::startsWith($request->url(), self::BASE_USERS)),
+            fn (\Illuminate\Http\Client\Request $request) => Str::startsWith($request->url(), self::BASE_USERS)),
         );
     }
 }

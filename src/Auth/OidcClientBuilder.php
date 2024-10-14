@@ -26,7 +26,7 @@ class OidcClientBuilder extends ClientBuilder
 
     protected function getIssuerUrl(): ?string
     {
-        if (!$this->config->get('issuer')) {
+        if (! $this->config->get('issuer')) {
             return null;
         }
 
@@ -49,13 +49,13 @@ class OidcClientBuilder extends ClientBuilder
     protected function buildIssuer(): void
     {
         $issuerUrl = $this->getIssuerUrl();
-        $issuerBuilder = new IssuerBuilder();
+        $issuerBuilder = new IssuerBuilder;
         // Custom builders are needed to be able to set a different HTTP client.
         // TODO cache?
-        $metaProvBuilder = (new MetadataProviderBuilder())->setHttpClient($this->getHttpClient());
-        $jwksProvBuilder = (new JwksProviderBuilder())->setHttpClient($this->getHttpClient());
+        $metaProvBuilder = (new MetadataProviderBuilder)->setHttpClient($this->getHttpClient());
+        $jwksProvBuilder = (new JwksProviderBuilder)->setHttpClient($this->getHttpClient());
 
-        if (!$issuerUrl) {
+        if (! $issuerUrl) {
             return;
         }
 

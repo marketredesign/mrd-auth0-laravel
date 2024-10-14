@@ -11,12 +11,9 @@ use Illuminate\Support\Facades\Cache;
 class AuthRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\AuthRepository
 {
     private AuthorizationService $authService;
+
     private ClientInterface $oidcClient;
 
-    /**
-     * @param AuthorizationService $authService
-     * @param ClientInterface $oidcClient
-     */
     public function __construct(AuthorizationService $authService, ClientInterface $oidcClient)
     {
         $this->authService = $authService;
@@ -51,12 +48,12 @@ class AuthRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\AuthRe
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getMachineToMachineToken(): string
     {
         // Ensure function was called while running in console (e.g. an async job).
-        if (!App::runningInConsole()) {
+        if (! App::runningInConsole()) {
             throw new Exception('Machine to machine tokens are only supposed to be used in CLI runs.');
         }
 
@@ -68,10 +65,12 @@ class AuthRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\AuthRe
             $this->getM2mTokenCacheKey(),
             function () use (&$m2mResp) {
                 $m2mResp ??= $this->retrieveDecodedM2mTokenResponse();
+
                 return (int) ($m2mResp['expires_in'] / 2);
             },
             function () use (&$m2mResp) {
                 $m2mResp ??= $this->retrieveDecodedM2mTokenResponse();
+
                 return $m2mResp['access_token'];
             }
         );

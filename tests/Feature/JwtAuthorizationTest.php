@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
 use Closure;
@@ -22,16 +21,16 @@ class JwtAuthorizationTest extends TestCase
     /**
      * Perform a GET request to the test endpoint, optionally including a Bearer token in the Authorization header.
      *
-     * @param bool $includeBearer Whether to include a bearer token in the request.
-     * @param string $scope Optionally, a required scope for the JWT middleware. Defaults to no scope.
-     * @param Closure|null $responseHandler Response handler for endpoint. When null, a JSON containing `test` will be
-     * returned.
+     * @param  bool  $includeBearer  Whether to include a bearer token in the request.
+     * @param  string  $scope  Optionally, a required scope for the JWT middleware. Defaults to no scope.
+     * @param  Closure|null  $responseHandler  Response handler for endpoint. When null, a JSON containing `test` will be
+     *                                         returned.
      * @return TestResponse
      */
     private function request(bool $includeBearer, string $scope = '', ?Closure $responseHandler = null)
     {
         // Define a very simple testing endpoint, protected by the jwt middleware.
-        Route::middleware(['api', 'jwt' . (empty($scope) ? '' : ":$scope")])
+        Route::middleware(['api', 'jwt'.(empty($scope) ? '' : ":$scope")])
             ->get(self::ROUTE_URI, $responseHandler ?? function () {
                 return response()->json('test_response');
             });
@@ -131,11 +130,11 @@ class JwtAuthorizationTest extends TestCase
         });
 
         $this->request(true, '', function (Request $request) {
-                // Apply the user resolver on the request and return its response.
-                return [
-                    'sub' => $request->user()->sub
-                ];
-            })
+            // Apply the user resolver on the request and return its response.
+            return [
+                'sub' => $request->user()->sub,
+            ];
+        })
             ->assertOk()
             ->assertSimilarJson($jwt);
     }
@@ -160,12 +159,12 @@ class JwtAuthorizationTest extends TestCase
         resolve(AuthManager::class)->provider('pc-users', fn () => $provider);
 
         $response = $this->request(true, '', function (Request $request) {
-                // Apply the user resolver on the request and return its response.
-                return [
-                    'sub' => $request->user()->sub,
-                    'name' => $request->user()->name,
-                ];
-            });
+            // Apply the user resolver on the request and return its response.
+            return [
+                'sub' => $request->user()->sub,
+                'name' => $request->user()->name,
+            ];
+        });
 
         $response
             ->assertOk()

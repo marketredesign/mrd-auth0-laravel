@@ -10,7 +10,7 @@ class NotImplementedException extends HttpException
     public function __construct(
         string $message = '',
         int $statusCode = 503,
-        Throwable $previous = null,
+        ?Throwable $previous = null,
         array $headers = [],
         int $code = 0
     ) {

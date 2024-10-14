@@ -66,9 +66,7 @@ class User implements Authenticatable
     /**
      * @inheritDocs
      */
-    public function setRememberToken($value): void
-    {
-    }
+    public function setRememberToken($value): void {}
 
     /**
      * @inheritDocs

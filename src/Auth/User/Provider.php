@@ -8,7 +8,7 @@ use Illuminate\Contracts\Auth\UserProvider;
 class Provider implements UserProvider
 {
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function retrieveById($identifier)
     {
@@ -16,7 +16,7 @@ class Provider implements UserProvider
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function retrieveByToken($identifier, $token)
     {
@@ -24,7 +24,7 @@ class Provider implements UserProvider
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function updateRememberToken(Authenticatable $user, $token)
     {
@@ -32,7 +32,7 @@ class Provider implements UserProvider
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function retrieveByCredentials(array $credentials)
     {
@@ -40,7 +40,7 @@ class Provider implements UserProvider
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function validateCredentials(Authenticatable $user, array $credentials)
     {
@@ -52,7 +52,7 @@ class Provider implements UserProvider
         static $repository = null;
 
         if ($repository === null) {
-            $repository = new Repository();
+            $repository = new Repository;
         }
 
         return $repository;

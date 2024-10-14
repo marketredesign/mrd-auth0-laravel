@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Marketredesign\MrdAuth0Laravel\Repository;
 
 use Illuminate\Http\Client\RequestException;
@@ -30,8 +29,8 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
     /**
      * Retrieve user datasets by calling the API of user tool directly, without caching.
      *
-     * @param bool $managedOnly Only retrieve datasets that the user is a manager of.
-     * @return Collection
+     * @param  bool  $managedOnly  Only retrieve datasets that the user is a manager of.
+     *
      * @throws RequestException
      */
     private function retrieveDatasetsFromApi(bool $managedOnly): Collection
@@ -42,15 +41,15 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
     /**
      * Get user datasets from cache, when enabled and present, or by retrieving from the API otherwise.
      *
-     * @param bool $managedOnly Only get datasets that the user is a manager of.
-     * @param bool $cached Use {@code false} to disable retrieving from and storing in cache.
-     * @param ?string $guard Name of the auth guard used to get the current user ID. Use {@code null} for default one.
-     * @return Collection
+     * @param  bool  $managedOnly  Only get datasets that the user is a manager of.
+     * @param  bool  $cached  Use {@code false} to disable retrieving from and storing in cache.
+     * @param  ?string  $guard  Name of the auth guard used to get the current user ID. Use {@code null} for default one.
+     *
      * @throws RequestException
      */
     private function getRawDatasets(bool $managedOnly, bool $cached, ?string $guard): Collection
     {
-        if (!$cached) {
+        if (! $cached) {
             return $this->retrieveDatasetsFromApi($managedOnly);
         }
 
@@ -59,6 +58,7 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
         if ($userId == null) {
             // We cannot read from cache since our normal method of retrieving the user ID apparently did not work.
             Log::warning('Unable to find user ID in the request!');
+
             return $this->retrieveDatasetsFromApi($managedOnly);
         }
 
@@ -68,7 +68,7 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getUserDatasetIds(
         bool $managedOnly = false,
@@ -79,7 +79,7 @@ class DatasetRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\Dat
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getUserDatasets(
         bool $managedOnly = false,

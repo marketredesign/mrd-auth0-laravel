@@ -18,13 +18,13 @@ class JwtGuard extends GuardAbstract
             return $this->user;
         }
 
-        if (!request() instanceof Request) {
+        if (! request() instanceof Request) {
             return null;
         }
 
         $token = request()->bearerToken();
 
-        if (!is_string($token)) {
+        if (! is_string($token)) {
             return null;
         }
 
@@ -34,6 +34,7 @@ class JwtGuard extends GuardAbstract
             $decodedJwt = $tokenVerifier->verify($token);
         } catch (DomainException|JWTExceptionWithPayloadInterface|UnexpectedValueException $e) {
             Log::debug('JWT decoding failed, request not authorized.', $e->getTrace());
+
             return null;
         }
 

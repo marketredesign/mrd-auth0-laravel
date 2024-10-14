@@ -25,6 +25,9 @@ use Marketredesign\MrdAuth0Laravel\Facades\PricecypherAuth;
 use Marketredesign\MrdAuth0Laravel\Http\Middleware\AuthorizeDatasetAccess;
 use Marketredesign\MrdAuth0Laravel\Http\Middleware\AuthorizeJwt;
 
+/**
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ */
 class MrdAuth0LaravelServiceProvider extends ServiceProvider
 {
     private function httpMacros(): void
@@ -51,13 +54,13 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../config/pricecypher.php' => config_path('pricecypher.php'),
-                __DIR__ . '/../config/pricecypher-oidc.php' => config_path('pricecypher-oidc.php'),
+                __DIR__.'/../config/pricecypher.php' => config_path('pricecypher.php'),
+                __DIR__.'/../config/pricecypher-oidc.php' => config_path('pricecypher-oidc.php'),
             ], 'mrd-auth0-config');
         }
 
-        $auth->extend('pc-jwt', static fn($app, $name, array $config) => new JwtGuard($name, $config));
-        $auth->provider('pc-users', fn() => new Provider());
+        $auth->extend('pc-jwt', static fn ($app, $name, array $config) => new JwtGuard($name, $config));
+        $auth->provider('pc-users', fn () => new Provider);
 
         $router = $this->app->make(Router::class);
         $kernel = $this->app->make(Kernel::class);
@@ -79,23 +82,23 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Load our configs.
-        $this->mergeConfigFrom(__DIR__ . '/../config/pricecypher.php', 'pricecypher');
-        $this->mergeConfigFrom(__DIR__ . '/../config/pricecypher-oidc.php', 'pricecypher-oidc');
+        $this->mergeConfigFrom(__DIR__.'/../config/pricecypher.php', 'pricecypher');
+        $this->mergeConfigFrom(__DIR__.'/../config/pricecypher-oidc.php', 'pricecypher-oidc');
 
         // Bind repository implementations to the contracts.
         $this->app->bind(AuthRepository::class, Repository\AuthRepository::class);
         $this->app->bind(DatasetRepository::class, Repository\DatasetRepository::class);
         $this->app->bind(UserRepository::class, Repository\UserRepository::class);
 
-        $this->app->singleton(ClientInterface::class, static fn() => (new OidcClientBuilder())->build());
+        $this->app->singleton(ClientInterface::class, static fn () => (new OidcClientBuilder)->build());
 
         $this->app->singleton(
             AuthorizationService::class,
-            static fn() => (new AuthorizationServiceBuilder())->build(),
+            static fn () => (new AuthorizationServiceBuilder)->build(),
         );
 
         $this->app->singleton(TokenVerifierInterface::class, function () {
-            $verifierBuilder = new AccessTokenVerifierBuilder();
+            $verifierBuilder = new AccessTokenVerifierBuilder;
             $joseBuilder = new JoseBuilder(config('pricecypher-oidc.audience'));
 
             $verifierBuilder->setJoseBuilder($joseBuilder);

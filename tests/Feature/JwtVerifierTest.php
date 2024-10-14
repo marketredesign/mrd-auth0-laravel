@@ -33,10 +33,6 @@ class JwtVerifierTest extends TestCase
     /**
      * Verify that the given "actual" decoded JWT is as "expected".
      * The `iss` claim (matching {@code $this->oidcIssuer}), and `sub` claim are always expected to be included.
-     *
-     * @param array $expected
-     * @param array $actual
-     * @return AssertableJsonString
      */
     protected function checkDecoded(array $expected, array $actual): AssertableJsonString
     {

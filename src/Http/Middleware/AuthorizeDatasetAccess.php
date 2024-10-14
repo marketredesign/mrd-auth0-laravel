@@ -2,7 +2,6 @@
 
 namespace Marketredesign\MrdAuth0Laravel\Http\Middleware;
 
-use App;
 use Closure;
 use Exception;
 use Illuminate\Http\Client\RequestException;
@@ -25,10 +24,10 @@ class AuthorizeDatasetAccess
     /**
      * Authorize access to the dataset ID contained in the request.
      *
-     * @param Request $request Illuminate HTTP Request object.
-     * @param Closure $next Function to call when middleware is complete.
-     *
+     * @param  Request  $request  Illuminate HTTP Request object.
+     * @param  Closure  $next  Function to call when middleware is complete.
      * @return mixed
+     *
      * @throws Exception
      */
     public function handle(Request $request, Closure $next)
@@ -42,7 +41,7 @@ class AuthorizeDatasetAccess
 
         $authorizedDatasetIds = $this->retrieveAuthorizedDatasets();
 
-        if (!$authorizedDatasetIds->contains($requestedDatasetId)) {
+        if (! $authorizedDatasetIds->contains($requestedDatasetId)) {
             abort(403, 'Unauthorized dataset');
         }
 
@@ -51,8 +50,6 @@ class AuthorizeDatasetAccess
 
     /**
      * Retrieve the authorized dataset IDs of the user. The underlying repository takes care of caching.
-     *
-     * @return Collection
      */
     protected function retrieveAuthorizedDatasets(): Collection
     {
@@ -67,7 +64,6 @@ class AuthorizeDatasetAccess
     /**
      * (Try to) find a dataset ID within the given request. If multiple distinct ones are found, the request is aborted.
      *
-     * @param Request $request
      * @return null|string Dataset ID, if exactly one unique one was found. Null if no dataset IDs could be found.
      */
     protected function getRequestedDatasetId(Request $request): ?string

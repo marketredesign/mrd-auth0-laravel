@@ -24,14 +24,14 @@ final class JwtVerifier extends AbstractTokenVerifier
 
     public function __construct(string $issuer, string $audience, ?TokenDecrypterInterface $decrypter = null)
     {
-        parent::__construct($issuer, 'not used', $decrypter, new CarbonClock());
+        parent::__construct($issuer, 'not used', $decrypter, new CarbonClock);
         $this->audience = $audience;
     }
 
     public function verify(string $jwt): array
     {
         $jwks = JWK::parseKeySet($this->jwksProvider->getJwks());
-        $claims = (array)JWT::decode($jwt, $jwks);
+        $claims = (array) JWT::decode($jwt, $jwks);
         $claimChecker = new ClaimCheckerManager($this->getClaimCheckers());
 
         // TODO 'aud' claim mandatory?
@@ -53,15 +53,15 @@ final class JwtVerifier extends AbstractTokenVerifier
             new NotBeforeChecker($this->clockTolerance, true, $this->clock),
         ];
 
-        if (null !== $this->azp) {
+        if ($this->azp !== null) {
             $checkers[] = new AzpChecker($this->azp);
         }
 
-        if (null !== $this->nonce) {
+        if ($this->nonce !== null) {
             $checkers[] = new NonceChecker($this->nonce);
         }
 
-        if (null !== $this->maxAge) {
+        if ($this->maxAge !== null) {
             $checkers[] = new AuthTimeChecker($this->maxAge, $this->clockTolerance, $this->clock);
         }
 

@@ -11,6 +11,7 @@ interface AuthRepository
      * of its expiration time has passed. Otherwise, a new one is retrieved.
      *
      * @return string Machine-to-machine token
+     *
      * @throws Exception If not running in console (e.g. not from async job).
      */
     public function getMachineToMachineToken(): string;

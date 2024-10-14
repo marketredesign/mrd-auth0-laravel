@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
 use Marketredesign\MrdAuth0Laravel\Facades\Users;
@@ -202,13 +201,13 @@ class UserFacadeTest extends TestCase
         Users::fake();
         Users::fakeAddUsers(collect(['test', 'sjaak', 'user2']));
 
-        $user = Users::createUser("foo@bar.com", "foo", "bar");
+        $user = Users::createUser('foo@bar.com', 'foo', 'bar');
 
         self::assertEquals(4, Users::fakeCount());
-        self::assertEquals("foo@bar.com", $user->email);
-        self::assertEquals("foo", $user->given_name);
-        self::assertEquals("bar", $user->family_name);
-        self::assertEquals("foo" . " " . "bar", $user->name);
+        self::assertEquals('foo@bar.com', $user->email);
+        self::assertEquals('foo', $user->given_name);
+        self::assertEquals('bar', $user->family_name);
+        self::assertEquals('foo'.' '.'bar', $user->name);
     }
 
     /**

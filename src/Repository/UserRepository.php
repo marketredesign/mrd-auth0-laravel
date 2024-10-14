@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Marketredesign\MrdAuth0Laravel\Repository;
 
 use Illuminate\Support\Collection;
@@ -34,7 +33,7 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function get($id): ?object
     {
@@ -44,7 +43,7 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
 
         $this->warnAuth0();
 
-        return (object)[
+        return (object) [
             'sub' => $id,
             'user_id' => $id,
             'email' => $id,
@@ -52,7 +51,7 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function delete($id): void
     {
@@ -64,9 +63,9 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
-    public function createUser(String $email, String $firstName, String $lastName): object
+    public function createUser(string $email, string $firstName, string $lastName): object
     {
         throw new NotImplementedException('Identity provider not (yet) supported.');
     }
@@ -76,25 +75,25 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
      * with the given queryValues. The result is optionally limited to only contain the given fields. The returned
      * collection will be keyed by the queryField.
      *
-     * @param string $queryField Field on which the users are queried.
-     * @param Collection $queryValues The values of queryField used to query the users.
-     * @param array|null $fields Fields to be retrieved for each user.
+     * @param  string  $queryField  Field on which the users are queried.
+     * @param  Collection  $queryValues  The values of queryField used to query the users.
+     * @param  array|null  $fields  Fields to be retrieved for each user.
      * @return Collection Keyed by queryField, containing an object for each user.
      */
-    private function getAll(string $queryField, Collection $queryValues, array $fields = null): Collection
+    private function getAll(string $queryField, Collection $queryValues, ?array $fields = null): Collection
     {
         throw new NotImplementedException('Identity provider not (yet) supported.');
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function getByIds(Collection $ids, array $fields = null): Collection
+    public function getByIds(Collection $ids, ?array $fields = null): Collection
     {
         $this->warnAuth0();
 
         return $ids->map(function ($id) {
-            return (object)[
+            return (object) [
                 'sub' => $id,
                 'user_id' => $id,
                 'email' => $id,
@@ -103,15 +102,15 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function getByEmails(Collection $emails, array $fields = null): Collection
+    public function getByEmails(Collection $emails, ?array $fields = null): Collection
     {
         return $this->getAll('email', $emails, $fields);
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getAllUsers(): Collection
     {
@@ -119,7 +118,7 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getRoles(string $userId): Collection
     {
@@ -127,7 +126,7 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function addRoles(string $userId, Collection $roleIds): void
     {
@@ -135,7 +134,7 @@ class UserRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\UserRe
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function removeRoles(string $userId, Collection $roleIds): void
     {

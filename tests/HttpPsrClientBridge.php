@@ -24,7 +24,7 @@ class HttpPsrClientBridge implements ClientInterface
     {
         return Http::withOptions($this->httpOptions)
             ->withHeaders($request->getHeaders())
-            ->send($request->getMethod(), (string)$request->getUri(), ['body' => $request->getBody()])
+            ->send($request->getMethod(), (string) $request->getUri(), ['body' => $request->getBody()])
             ->toPsrResponse();
     }
 }

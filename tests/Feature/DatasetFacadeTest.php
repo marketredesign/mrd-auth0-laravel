@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
 use Marketredesign\MrdAuth0Laravel\Contracts\DatasetRepository;
