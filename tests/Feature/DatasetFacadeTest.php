@@ -11,7 +11,7 @@ class DatasetFacadeTest extends TestCase
     /**
      * Verifies that the getUserDatasetIds method is executed by our DatasetRepository implementation.
      */
-    public function testGetUserDatasetIds()
+    public function test_get_user_dataset_ids()
     {
         $this->mock(DatasetRepository::class, function ($mock) {
             $mock->shouldReceive('getUserDatasetIds')->once()->withNoArgs();
@@ -23,7 +23,7 @@ class DatasetFacadeTest extends TestCase
     /**
      * Verifies that the getUserDatasets method is executed by our DatasetRepository implementation.
      */
-    public function testGetUserDatasets()
+    public function test_get_user_datasets()
     {
         $this->mock(DatasetRepository::class, function ($mock) {
             $mock->shouldReceive('getUserDatasets')->once()->withNoArgs();
@@ -35,7 +35,7 @@ class DatasetFacadeTest extends TestCase
     /**
      * Verifies testing mode with adding fake datasets by collection of IDs.
      */
-    public function testFakeAddDatasetsById()
+    public function test_fake_add_datasets_by_id()
     {
         // Enable testing mode.
         Datasets::fake();
@@ -84,7 +84,7 @@ class DatasetFacadeTest extends TestCase
     /**
      * Verifies testing mode with adding fake datasets by collection of collectionss.
      */
-    public function testFakeAddDatasetsByCollections()
+    public function test_fake_add_datasets_by_collections()
     {
         // Enable testing mode.
         Datasets::fake();
@@ -163,7 +163,7 @@ class DatasetFacadeTest extends TestCase
      * Verifies that, in testing mode, requesting the same datasets twice results in the same dataset objects being
      * returned.
      */
-    public function testFakeRequestingSameDatasetsTwice()
+    public function test_fake_requesting_same_datasets_twice()
     {
         // Enable testing mode.
         Datasets::fake();
@@ -189,7 +189,7 @@ class DatasetFacadeTest extends TestCase
     /**
      * Verifies that the fake repository can be cleared.
      */
-    public function testFakeClear()
+    public function test_fake_clear()
     {
         // Enable testing mode.
         Datasets::fake();
@@ -225,7 +225,7 @@ class DatasetFacadeTest extends TestCase
     /**
      * Verifies that the number of datasets in the fake repository can be counted.
      */
-    public function testCount()
+    public function test_count()
     {
         // Enable testing mode.
         Datasets::fake();

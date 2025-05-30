@@ -49,7 +49,7 @@ class JwtVerifierTest extends TestCase
     /**
      * Verifies that a valid JWT can be decoded into an associative array as expected.
      */
-    public function testValidToken()
+    public function test_valid_token()
     {
         $valid = $this->encJwt('some_user_sub', ['extra' => 'test']);
 
@@ -61,7 +61,7 @@ class JwtVerifierTest extends TestCase
     /**
      * Verifies that a token without 'aud' claim can be valid.
      */
-    public function testNoAudience()
+    public function test_no_audience()
     {
         $valid = $this->encJwt();
         $dec = $this->verifier->verify($valid);
@@ -72,7 +72,7 @@ class JwtVerifierTest extends TestCase
     /**
      * Verifies that a token with an 'aud' claim equal to {@code null} is not valid.
      */
-    public function testNullAudience()
+    public function test_null_audience()
     {
         $valid = $this->encJwt('some_user_sub', ['aud' => null]);
 
@@ -85,7 +85,7 @@ class JwtVerifierTest extends TestCase
     /**
      * Verifies that a JWT with invalid 'aud' claim does not pass verification.
      */
-    public function testInvalidAudience()
+    public function test_invalid_audience()
     {
         $invalid = $this->encJwt('invalid_aud', ['aud' => 'https://wrong-audience.test/pricecypher']);
 
@@ -100,7 +100,7 @@ class JwtVerifierTest extends TestCase
     /**
      * Verifies that a JWT with a valid 'aud' claim can be considered valid.
      */
-    public function testValidAudience()
+    public function test_valid_audience()
     {
         $invalid = $this->encJwt('valid_aud', ['aud' => self::AUDIENCE]);
 
@@ -112,7 +112,7 @@ class JwtVerifierTest extends TestCase
     /**
      * Verifies that a JWT with invalid 'iss' claim does not pass validation.
      */
-    public function testInvalidIssuer()
+    public function test_invalid_issuer()
     {
         $invalid = $this->encJwt('invalid_iss', ['iss' => 'https://some_other_issuer.test/invalid']);
 
@@ -127,7 +127,7 @@ class JwtVerifierTest extends TestCase
     /**
      * Verifies that a token is used before it was issued (according to the 'iat' claim), does not pass validation.
      */
-    public function testInvalidIssuedAt()
+    public function test_invalid_issued_at()
     {
         $invalid = $this->encJwt('invalid_iss', ['iat' => now()->timestamp + 1]);
 
@@ -142,7 +142,7 @@ class JwtVerifierTest extends TestCase
     /**
      * Verifies that a token is only considered valid up until it is expired (according to the `exp` claim).
      */
-    public function testInvalidExpirationTime()
+    public function test_invalid_expiration_time()
     {
         $valid = $this->encJwt('invalid_iss', ['exp' => now()->timestamp + 100]);
 
@@ -163,7 +163,7 @@ class JwtVerifierTest extends TestCase
     /**
      * Verifies that a JWT used before the 'nbf' (not-before) time does not pass validation.
      */
-    public function testInvalidNotBefore()
+    public function test_invalid_not_before()
     {
         $invalid = $this->encJwt('invalid_iss', ['nbf' => now()->timestamp + 100]);
 
@@ -180,7 +180,7 @@ class JwtVerifierTest extends TestCase
     /**
      * Verifies that a JWT with mismatching 'azp' claim does not pass validation.
      */
-    public function testAzp()
+    public function test_azp()
     {
         $verifier = $this->verifier->withAzp('some_required_client_id');
         $valid = $this->encJwt('valid_azp', ['azp' => 'some_required_client_id']);
@@ -199,7 +199,7 @@ class JwtVerifierTest extends TestCase
     /**
      * Verifies that a JWT with mismatching 'nonce' claim does not pass validation.
      */
-    public function testNonce()
+    public function test_nonce()
     {
         $verifier = $this->verifier->withNonce('first_use');
         $valid = $this->encJwt('valid_nonce', ['nonce' => 'first_use']);
@@ -218,7 +218,7 @@ class JwtVerifierTest extends TestCase
     /**
      * Verifies that a maximum age of access tokens (compared to their 'auth_time' claim) can be enforced.
      */
-    public function testMaxAge()
+    public function test_max_age()
     {
         $verifier = $this->verifier->withMaxAge(100);
         $token = $this->encJwt('valid_auth_time', ['auth_time' => now()->timestamp]);
@@ -238,7 +238,7 @@ class JwtVerifierTest extends TestCase
     /**
      * Verifies that a JWT with non-integer value for the 'auth_time' claim does not pass validation.
      */
-    public function testMaxAgeType()
+    public function test_max_age_type()
     {
         $verifier = $this->verifier->withMaxAge(100);
         $invalidType = $this->encJwt('invalid_auth_time_type', ['auth_time' => 'string']);

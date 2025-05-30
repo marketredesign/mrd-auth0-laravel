@@ -91,7 +91,7 @@ class DatasetRepositoryTest extends TestCase
      * Verifies that our implementation of the Dataset Repository is bound in the service container, and that it can be
      * instantiated.
      */
-    public function testServiceBinding()
+    public function test_service_binding()
     {
         // Verify it is indeed our instance.
         $this->assertInstanceOf(\Marketredesign\MrdAuth0Laravel\Repository\DatasetRepository::class, $this->repo);
@@ -100,7 +100,7 @@ class DatasetRepositoryTest extends TestCase
     /**
      * Verifies that the base URL of the user tool can be configured.
      */
-    public function testUserToolBaseConfigurable()
+    public function test_user_tool_base_configurable()
     {
         // Return empty response 3 times.
         foreach (['https://users.com', 'https://users.pricecypher.com', 'http://tests.pc.test/api'] as $baseUrl) {
@@ -118,7 +118,7 @@ class DatasetRepositoryTest extends TestCase
     /**
      * Verifies that an empty collection of dataset IDs is returned when the user has access to no datasets.
      */
-    public function testGetIdsNoDatasets()
+    public function test_get_ids_no_datasets()
     {
         // Return empty response
         Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => []])]);
@@ -140,7 +140,7 @@ class DatasetRepositoryTest extends TestCase
     /**
      * Verifies that an empty collection of datasets is returned when the user has access to no datasets.
      */
-    public function testGetDatasetsNoDatasets()
+    public function test_get_datasets_no_datasets()
     {
         // Return empty response
         Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => []])]);
@@ -156,7 +156,7 @@ class DatasetRepositoryTest extends TestCase
     /**
      * Verifies that retrieving dataset IDs works as expected.
      */
-    public function testGetIds()
+    public function test_get_ids()
     {
         // Return mocked response as given by user tool.
         Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => [
@@ -177,7 +177,7 @@ class DatasetRepositoryTest extends TestCase
     /**
      * Verifies that retrieving datasets works as expected.
      */
-    public function testGetDatasets()
+    public function test_get_datasets()
     {
         $ds1 = $this->ds(1, ['module_B', 'module_C']);
         $ds6 = $this->ds(6, ['module_A', 'module_B']);
@@ -208,7 +208,7 @@ class DatasetRepositoryTest extends TestCase
     /**
      * Verifies that the bearer token is used in the request to the user tool.
      */
-    public function testBearerTokenInRequest()
+    public function test_bearer_token_in_request()
     {
         // Return empty response 3 times.
         Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => []])]);
@@ -229,7 +229,7 @@ class DatasetRepositoryTest extends TestCase
     /**
      * Verifies that the `managed_only` query parameter is sent to the user tool when requesting datasets (or IDs).
      */
-    public function testManagedOnlyParameter()
+    public function test_managed_only_parameter()
     {
         // Return empty response 4 times.
         Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => []])]);
@@ -254,7 +254,7 @@ class DatasetRepositoryTest extends TestCase
      * no really possible. But in case it does occur, we want to be sure that definitely no caching is used since
      * then dataset authorization will likely fail.
      */
-    public function testMultipleUsersNoUserId()
+    public function test_multiple_users_no_user_id()
     {
         // Sanity check; no user ID in request.
         self::assertNull(\Illuminate\Support\Facades\Auth::id());
@@ -292,7 +292,7 @@ class DatasetRepositoryTest extends TestCase
     /**
      * Verifies that caching is performed appropriately for different users.
      */
-    public function testMultipleUsersWithUserId()
+    public function test_multiple_users_with_user_id()
     {
         // Create 2 different fake responses, for 2 different users.
         $ds1 = $this->ds(1, ['module_B', 'module_C']);
@@ -330,7 +330,7 @@ class DatasetRepositoryTest extends TestCase
     /**
      * Verifies that caching is performed appropriately for different users, using the managed_only parameter.
      */
-    public function testCachingManagedOnly()
+    public function test_caching_managed_only()
     {
         $ds1 = $this->ds(1, ['module_B', 'module_C']);
         $ds6 = $this->ds(6, ['module_A', 'module_B']);
@@ -378,7 +378,7 @@ class DatasetRepositoryTest extends TestCase
     /**
      * Verifies that caching can be disabled.
      */
-    public function testDisableCaching()
+    public function test_disable_caching()
     {
         $ds1 = $this->ds(1, ['module_B', 'module_C']);
         $ds6 = $this->ds(6, ['module_A', 'module_B']);
@@ -427,7 +427,7 @@ class DatasetRepositoryTest extends TestCase
     /**
      * Verifies that the time to live (TTL) of the cache can be configured.
      */
-    public function testCachingTtlConfigurable()
+    public function test_caching_ttl_configurable()
     {
         // Set user ID in request to make sure caching is going to be performed.
         $this->auth(['sub' => 'user1']);

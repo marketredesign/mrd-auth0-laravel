@@ -41,7 +41,7 @@ class Callback
             'refresh_token' => $tokenSet->getRefreshToken(),
         ]);
 
-        if (!$guard->check()) {
+        if (! $guard->check()) {
             abort(401, 'Not authenticated');
         }
 

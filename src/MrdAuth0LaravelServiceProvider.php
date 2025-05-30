@@ -59,14 +59,14 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../config/mrd-auth0.php' => config_path('mrd-auth0.php'),
+                __DIR__.'/../config/mrd-auth0.php' => config_path('mrd-auth0.php'),
                 __DIR__.'/../config/pricecypher.php' => config_path('pricecypher.php'),
                 __DIR__.'/../config/pricecypher-oidc.php' => config_path('pricecypher-oidc.php'),
             ], 'mrd-auth0-config');
         }
 
         $auth->extend('pc-jwt', static fn ($app, $name, array $config) => new JwtGuard($name, $config));
-        $auth->extend('pc-oidc', static fn($app, $name, array $config) => new OidcGuard($name, $config));
+        $auth->extend('pc-oidc', static fn ($app, $name, array $config) => new OidcGuard($name, $config));
         $auth->provider('pc-users', fn () => new Provider);
 
         $router = $this->app->make(Router::class);
@@ -91,10 +91,10 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
     public function register()
     {
         // Load our routes.
-        $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
+        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
         // Load our configs.
-        $this->mergeConfigFrom(__DIR__ . '/../config/mrd-auth0.php', 'mrd-auth0');
+        $this->mergeConfigFrom(__DIR__.'/../config/mrd-auth0.php', 'mrd-auth0');
         $this->mergeConfigFrom(__DIR__.'/../config/pricecypher.php', 'pricecypher');
         $this->mergeConfigFrom(__DIR__.'/../config/pricecypher-oidc.php', 'pricecypher-oidc');
 
@@ -119,7 +119,7 @@ class MrdAuth0LaravelServiceProvider extends ServiceProvider
             return $verifierBuilder->build(resolve(ClientInterface::class));
         });
 
-        $this->app->bind(AuthRequestInterface::class, static fn() => AuthRequest::fromParams([
+        $this->app->bind(AuthRequestInterface::class, static fn () => AuthRequest::fromParams([
             'client_id' => config('pricecypher-oidc.client_id'),
             'redirect_uri' => route('oidc-callback'),
             'scope' => config('pricecypher-oidc.id_scopes'),

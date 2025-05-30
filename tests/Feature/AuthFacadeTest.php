@@ -12,7 +12,7 @@ class AuthFacadeTest extends TestCase
     /**
      * Verifies that the getMachineToMachineToken method is executed by our Auth0Repository implementation.
      */
-    public function testGetMachineToMachineToken()
+    public function test_get_machine_to_machine_token()
     {
         $this->mock(AuthRepository::class, function ($mock) {
             $mock->shouldReceive('getMachineToMachineToken')->once()->withNoArgs();
@@ -24,7 +24,7 @@ class AuthFacadeTest extends TestCase
     /**
      * Verifies that the Auth0 facade can be faked and returns some machine to machine token when queried.
      */
-    public function testFake()
+    public function test_fake()
     {
         // Enable testing mode.
         PricecypherAuth::fake();
@@ -36,7 +36,7 @@ class AuthFacadeTest extends TestCase
     /**
      * Verifies that a fake expires in value can be set in testing mode.
      */
-    public function testFakeSetExpiresIn()
+    public function test_fake_set_expires_in()
     {
         // Enable testing mode
         PricecypherAuth::fake();
@@ -56,7 +56,7 @@ class AuthFacadeTest extends TestCase
     /**
      * Verifies that a fake access token can be set in testing mode.
      */
-    public function testFakeSetAccessToken()
+    public function test_fake_set_access_token()
     {
         // Enable testing mode
         PricecypherAuth::fake();

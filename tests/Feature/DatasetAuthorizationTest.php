@@ -103,7 +103,7 @@ class DatasetAuthorizationTest extends TestCase
     /**
      * Verifies that a request without dataset does not perform any dataset authorization.
      */
-    public function testNoDatasetId()
+    public function test_no_dataset_id()
     {
         // No dataset is specified in the request, so no authorization should be performed.
         $this->request()->assertOk()->assertSee('test_response');
@@ -116,7 +116,7 @@ class DatasetAuthorizationTest extends TestCase
      * Verifies that access to endpoints protected by the middleware is not authorized when the route uses a supported
      * dataset id key as route parameter and the user has access to no datasets at all.
      */
-    public function testRouteDatasetNoAuthorized()
+    public function test_route_dataset_no_authorized()
     {
         // Return empty response (from mocked user tool dataset endpoint) once per supported dataset key.
         Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => []])]);
@@ -133,7 +133,7 @@ class DatasetAuthorizationTest extends TestCase
      * Verifies that access to endpoints protected by the middleware is not authorized for GET requests that use
      * a supported dataset id key as query parameter and the user has access to no datasets at all.
      */
-    public function testQueryParamDatasetNoAuthorized()
+    public function test_query_param_dataset_no_authorized()
     {
         // Return empty response (from mocked user tool dataset endpoint) once per supported dataset key.
         Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => []])]);
@@ -153,7 +153,7 @@ class DatasetAuthorizationTest extends TestCase
      * Verifies that access to endpoints protected by the middleware is not authorized for POST requests that use
      * a supported dataset id key in the body and the user has access to no datasets at all.
      */
-    public function testPostDatasetNoAuthorized()
+    public function test_post_dataset_no_authorized()
     {
         // Return empty response (from mocked user tool dataset endpoint) once per supported dataset key.
         Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => []])]);
@@ -173,7 +173,7 @@ class DatasetAuthorizationTest extends TestCase
      * Verifies that access to endpoints protected by the middleware is not authorized when the route uses a supported
      * dataset id key as route parameter and the user requests access to an unauthorized dataset.
      */
-    public function testRouteDatasetUnauthorized()
+    public function test_route_dataset_unauthorized()
     {
         // Return mocked response as given by user tool once per supported dataset key.
         Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => [
@@ -195,7 +195,7 @@ class DatasetAuthorizationTest extends TestCase
      * Verifies that access to endpoints protected by the middleware is not authorized for GET requests that use
      * a supported dataset id key as query parameter and the user requests access to an unauthorized dataset.
      */
-    public function testQueryParamDatasetUnauthorized()
+    public function test_query_param_dataset_unauthorized()
     {
         // Return mocked response as given by user tool once per supported dataset key.
         Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => [
@@ -219,7 +219,7 @@ class DatasetAuthorizationTest extends TestCase
      * Verifies that access to endpoints protected by the middleware is not authorized for POST requests that use
      * a supported dataset id key in the body and the user requests access to an unauthorized dataset.
      */
-    public function testPostDatasetUnauthorized()
+    public function test_post_dataset_unauthorized()
     {
         // Return mocked response as given by user tool once per supported dataset key.
         Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => [
@@ -243,7 +243,7 @@ class DatasetAuthorizationTest extends TestCase
      * Verifies that access to endpoints protected by the middleware is authorized when the route uses a supported
      * dataset id key as route parameter and the user requests access to an authorized dataset.
      */
-    public function testRouteDatasetAuthorized()
+    public function test_route_dataset_authorized()
     {
         // Return mocked response as given by user tool once per supported dataset key.
         Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => [
@@ -265,7 +265,7 @@ class DatasetAuthorizationTest extends TestCase
      * Verifies that access to endpoints protected by the middleware is authorized for GET requests that use
      * a supported dataset id key as query parameter and the user requests access to an authorized dataset.
      */
-    public function testQueryParamDatasetAuthorized()
+    public function test_query_param_dataset_authorized()
     {
         // Return mocked response as given by user tool once per supported dataset key.
         Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => [
@@ -289,7 +289,7 @@ class DatasetAuthorizationTest extends TestCase
      * Verifies that access to endpoints protected by the middleware is authorized for POST requests that use
      * a supported dataset id key in the body and the user requests access to an authorized dataset.
      */
-    public function testPostDatasetAuthorized()
+    public function test_post_dataset_authorized()
     {
         // Return mocked response as given by user tool once per supported dataset key.
         Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response(['datasets' => [
@@ -313,7 +313,7 @@ class DatasetAuthorizationTest extends TestCase
      * Verifies that access to endpoints protected by the middleware is unauthorized for GET and POST requests that
      * specify different dataset IDs as route and query parameters.
      */
-    public function testDifferentDatasetIdsInRouteAndRequest()
+    public function test_different_dataset_ids_in_route_and_request()
     {
         // Send GET and POST requests to test endpoint for each supported dataset key as route and query parameter.
         foreach (['GET', 'POST'] as $requestMethod) {
@@ -335,7 +335,7 @@ class DatasetAuthorizationTest extends TestCase
      * Verifies that access to endpoints protected by the middleware is unauthorized for GET and POST requests that
      * specify different dataset IDs in the request data.
      */
-    public function testDifferentDatasetIdsInRequest()
+    public function test_different_dataset_ids_in_request()
     {
         // Send GET and POST requests.
         foreach (['GET', 'POST'] as $requestMethod) {
@@ -357,7 +357,7 @@ class DatasetAuthorizationTest extends TestCase
     /**
      * Verifies that dataset access is unauthorized when a request exception occurs when calling the user tool API.
      */
-    public function testUserToolRequestException()
+    public function test_user_tool_request_exception()
     {
         // Returned mocked request exception once per supported dataset key.
         Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response('Some fake error', 400)]);
@@ -376,7 +376,7 @@ class DatasetAuthorizationTest extends TestCase
      * NB: transfer exception is the top level exception of Guzzle (and thus also includes the request exceptions) but
      * we cannot recover from it in most cases, so we allow a 500 Internal server to be returned in this case.
      */
-    public function testUserToolTransferException()
+    public function test_user_tool_transfer_exception()
     {
         // Returned mocked transfer exception once per supported dataset key.
         Http::fake([self::BASE_USERS.'/api/datasets?*' => Http::response('Some fake error', 500)]);
@@ -392,7 +392,7 @@ class DatasetAuthorizationTest extends TestCase
     /**
      * Verifies that datasets are authorized correctly when two users make requests, and no JWT middleware is used.
      */
-    public function testMultipleUsersNoJWT()
+    public function test_multiple_users_no_jwt()
     {
         // Disable JWT authorization.
         $this->enableJWT = false;
@@ -447,7 +447,7 @@ class DatasetAuthorizationTest extends TestCase
     /**
      * Verifies that datasets are authorized correctly when two users make requests, and JWT middleware is used.
      */
-    public function testMultipleUsersWithJWT()
+    public function test_multiple_users_with_jwt()
     {
         // Enable JWT authorization such that a user ID is present in the request and thus caching should be enabled.
         $this->enableJWT = true;
@@ -499,7 +499,7 @@ class DatasetAuthorizationTest extends TestCase
     /**
      * Verifies that the cache TTL can be set using a config value.
      */
-    public function testGetCachingTTL()
+    public function test_get_caching_ttl()
     {
         // Enable JWT authorization such that a user ID is present in the request and thus caching should be enabled.
         $this->enableJWT = true;

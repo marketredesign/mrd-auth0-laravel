@@ -11,7 +11,7 @@ class UserFacadeTest extends TestCase
     /**
      * Verifies that get method is executed by our UserRepository implementation.
      */
-    public function testGet()
+    public function test_get()
     {
         $this->mock(UserRepository::class, function ($mock) {
             $mock->shouldReceive('get')->once()->with('some_id');
@@ -23,7 +23,7 @@ class UserFacadeTest extends TestCase
     /**
      * Verifies that getByIds method is executed by our UserRepository implementation.
      */
-    public function testGetByIds()
+    public function test_get_by_ids()
     {
         $this->mock(UserRepository::class, function ($mock) {
             $mock->shouldReceive('getByIds')->once();
@@ -35,7 +35,7 @@ class UserFacadeTest extends TestCase
     /**
      * Verifies that getByEmails method is executed by our UserRepository implementation.
      */
-    public function testGetByEmails()
+    public function test_get_by_emails()
     {
         $this->mock(UserRepository::class, function ($mock) {
             $mock->shouldReceive('getByEmails')->once();
@@ -47,7 +47,7 @@ class UserFacadeTest extends TestCase
     /**
      * Verifies testing mode with adding fake users.
      */
-    public function testFakeAddUsers()
+    public function test_fake_add_users()
     {
         // Enable testing mode.
         Users::fake();
@@ -71,7 +71,7 @@ class UserFacadeTest extends TestCase
     /**
      * Verifies that, in testing mode, requesting the same user twice results in the same user object being returned.
      */
-    public function testFakeRequestingSameUserTwice()
+    public function test_fake_requesting_same_user_twice()
     {
         // Enable testing mode.
         Users::fake();
@@ -91,7 +91,7 @@ class UserFacadeTest extends TestCase
     /**
      * Verifies that the fake repository can be cleared.
      */
-    public function testFakeClear()
+    public function test_fake_clear()
     {
         // Enable testing mode.
         Users::fake();
@@ -112,7 +112,7 @@ class UserFacadeTest extends TestCase
     /**
      * Verifies that the number of users in the fake repository can be counted.
      */
-    public function testCount()
+    public function test_count()
     {
         // Enable testing mode.
         Users::fake();
@@ -133,7 +133,7 @@ class UserFacadeTest extends TestCase
     /**
      * Verifies that users can be retrieved by multiple IDs from the fake repository.
      */
-    public function testFakeGetByIds()
+    public function test_fake_get_by_ids()
     {
         // Enable testing mode.
         Users::fake();
@@ -159,7 +159,7 @@ class UserFacadeTest extends TestCase
     /**
      * Verifies that users can be retrieved through email address from the fake repository
      */
-    public function testFakeGetByEmails()
+    public function test_fake_get_by_emails()
     {
         // Enable testing mode
         Users::fake();
@@ -180,7 +180,7 @@ class UserFacadeTest extends TestCase
     /**
      * Verifies that the fake delete functionality properly deletes users from the fake repository
      */
-    public function testFakeDelete()
+    public function test_fake_delete()
     {
         Users::fake();
 
@@ -196,7 +196,7 @@ class UserFacadeTest extends TestCase
     /**
      * Verifies that fake create user functionality creates a new user and returns the new user properly
      */
-    public function testCreateUser()
+    public function test_create_user()
     {
         Users::fake();
         Users::fakeAddUsers(collect(['test', 'sjaak', 'user2']));
@@ -213,7 +213,7 @@ class UserFacadeTest extends TestCase
     /**
      * Verifies that no users are returned when there are no users in the fake repository
      */
-    public function testFakeGetAllUsersNone()
+    public function test_fake_get_all_users_none()
     {
         Users::fake();
 
@@ -224,7 +224,7 @@ class UserFacadeTest extends TestCase
     /**
      * Verifies that all users are returned when there are multiple users in the fake repository
      */
-    public function testFakeGetAllUsersMultiple()
+    public function test_fake_get_all_users_multiple()
     {
         Users::fake();
         Users::fakeAddUsers(collect(['test', 'sjaak', 'user2']));
@@ -249,7 +249,7 @@ class UserFacadeTest extends TestCase
     /**
      * Verifies that the get, add, and remove roles functions work as expected when in fake mode.
      */
-    public function testFakeRoles()
+    public function test_fake_roles()
     {
         // Enable testing mode
         Users::fake();

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
 use Illuminate\Support\Facades\Auth;
@@ -34,13 +33,13 @@ class PermissionAuthorizationTest extends TestCase
     /**
      * Perform a GET request to the test endpoint, which responds with a JSON with 'test_response' if successful.
      *
-     * @param string $permission Optionally, a required permission for the CheckPermission middleware. Defaults to none.
+     * @param  string  $permission  Optionally, a required permission for the CheckPermission middleware. Defaults to none.
      * @return TestResponse
      */
     private function request(string $permission = '')
     {
         // Define a very simple testing endpoint, protected by the permission middleware.
-        Route::middleware('permission' . (empty($permission) ? '' : ":$permission"))
+        Route::middleware('permission'.(empty($permission) ? '' : ":$permission"))
             ->get(self::ROUTE_URI, function () {
                 return response()->json('test_response');
             });
@@ -52,7 +51,7 @@ class PermissionAuthorizationTest extends TestCase
      * Verifies that the user is redirected to the login page when not already logged in, in the case where no specific
      * permission is required.
      */
-    public function testNotLoggedInNoPermRequested()
+    public function test_not_logged_in_no_perm_requested()
     {
         // Sanity check; make sure no user is logged in.
         self::assertFalse(Auth::check());
@@ -65,7 +64,7 @@ class PermissionAuthorizationTest extends TestCase
      * Verifies that the user is redirected to the login page when not already logged in, in the case where some
      * specific permission is required.
      */
-    public function testNotLoggedInPermRequested()
+    public function test_not_logged_in_perm_requested()
     {
         // Sanity check; make sure no user is logged in.
         self::assertFalse(Auth::check());
@@ -77,7 +76,7 @@ class PermissionAuthorizationTest extends TestCase
     /**
      * Verifies that the user is allowed access when the user is logged in and no specific permissions are required.
      */
-    public function testLoggedInNoPermRequested()
+    public function test_logged_in_no_perm_requested()
     {
         // Login as some user.
         $this->authPermissions();
@@ -92,7 +91,7 @@ class PermissionAuthorizationTest extends TestCase
     /**
      * Verifies authorization works properly, and a warning is logged, when permissions claim is missing from ID tokens.
      */
-    public function testLoggedInNoPermissionsClaim()
+    public function test_logged_in_no_permissions_claim()
     {
         // Sanity check; permissions is indeed not the permissions claim property name.
         self::assertNotEquals('permissions', $this->permissionsClaim);
@@ -124,7 +123,7 @@ class PermissionAuthorizationTest extends TestCase
      * Verifies that the user is refused access when the user is logged in but a permission is required while the user
      * has no permissions at all.
      */
-    public function testLoggedInPermRequestedNonePresent()
+    public function test_logged_in_perm_requested_none_present()
     {
         // Login as some user.
         $this->authPermissions();
@@ -140,7 +139,7 @@ class PermissionAuthorizationTest extends TestCase
      * Verifies that the user is refused access when the user is logged in but a permission is required that the user
      * does not have, while they do have other permissions.
      */
-    public function testLoggedInPermRequestedWrongPresent()
+    public function test_logged_in_perm_requested_wrong_present()
     {
         // Login as some user.
         $this->authPermissions(['write:test', 'read:another']);
@@ -156,7 +155,7 @@ class PermissionAuthorizationTest extends TestCase
      * Verifies that the user is allowed access when the user is logged in and a specific permissions that the user
      * does have is required.
      */
-    public function testLoggedInPermRequestedPresent()
+    public function test_logged_in_perm_requested_present()
     {
         // Login as some user.
         $this->authPermissions(['write:test', 'read:test']);
@@ -171,7 +170,7 @@ class PermissionAuthorizationTest extends TestCase
     /**
      * Verifies that the permissions claim key can be configured.
      */
-    public function testPermissionsClaimConfigurable()
+    public function test_permissions_claim_configurable()
     {
         // Set some other permissions claim in the config.
         $otherClaim = 'some_other_permissions_claim';

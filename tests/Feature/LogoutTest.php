@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
 use Illuminate\Contracts\Session\Session;
@@ -26,7 +25,7 @@ class LogoutTest extends TestCase
     /**
      * Verifies that the user is redirected to Auth0's logout page when already logged in, and logged out afterward.
      */
-    public function testNormalLogout()
+    public function test_normal_logout()
     {
         // Login as some user.
         $this->auth();
@@ -38,7 +37,7 @@ class LogoutTest extends TestCase
         $this->get(route(self::ROUTE_NAME))->assertRedirect()
             ->assertRedirectContains('https://domain.test/oidc/logout')
             ->assertRedirectContains('client_id=id')
-            ->assertRedirectContains('post_logout_redirect_uri=' . urlencode('http://localhost'));
+            ->assertRedirectContains('post_logout_redirect_uri='.urlencode('http://localhost'));
 
         // Verify that the user is indeed logged out now.
         self::assertFalse(Auth::guard($this->guard)->check());
@@ -47,7 +46,7 @@ class LogoutTest extends TestCase
     /**
      * Verifies that the user is redirected to intended / home page when trying to logout.
      */
-    public function testLogoutWithoutBeingLoggedIn()
+    public function test_logout_without_being_logged_in()
     {
         Config::set('pricecypher-oidc.routes.home', '/some-home-url');
 

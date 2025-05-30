@@ -28,7 +28,7 @@ class AuthRepositoryTest extends TestCase
      * Verifies that our implementation of the Auth0 Repository is bound in the service container, and that it can be
      * instantiated.
      */
-    public function testServiceBinding()
+    public function test_service_binding()
     {
         // Verify it is indeed our instance.
         $this->assertInstanceOf(\Marketredesign\MrdAuth0Laravel\Repository\AuthRepository::class, $this->repo);
@@ -38,7 +38,7 @@ class AuthRepositoryTest extends TestCase
     /**
      * Verifies machine-to-machine token can only be retrieved when the application is running in console.
      */
-    public function testM2mOnlyInConsole()
+    public function test_m2m_only_in_console()
     {
         // Mock app to think it's not running in console.
         App::shouldReceive('runningInConsole')->andReturn(false);
@@ -66,7 +66,7 @@ class AuthRepositoryTest extends TestCase
     /**
      * Verifies that the get m2m token function calls the correct API endpoint and returns the expected value.
      */
-    public function testGetM2mToken()
+    public function test_get_m2m_token()
     {
         Http::fake([
             'https://domain.test/token' => Http::response([
@@ -93,7 +93,7 @@ class AuthRepositoryTest extends TestCase
     /**
      * Verifies that the m2m tokens are cached for half their expiration time.
      */
-    public function testGetM2mTokenCaching()
+    public function test_get_m2m_token_caching()
     {
         // Add some mocked responses, each with different access token.
         Http::fakeSequence('https://domain.test/token')

@@ -47,7 +47,7 @@ class JwtAuthorizationTest extends TestCase
     /**
      * Verify the request is unauthorized when no bearer token is specified.
      */
-    public function testBearerTokenMissing()
+    public function test_bearer_token_missing()
     {
         $this->request(false)
             ->assertUnauthorized()
@@ -57,7 +57,7 @@ class JwtAuthorizationTest extends TestCase
     /**
      * Verify the request is unauthorized when the bearer token is invalid.
      */
-    public function testInvalidToken()
+    public function test_invalid_token()
     {
         $this->request(true)->assertUnauthorized();
     }
@@ -65,7 +65,7 @@ class JwtAuthorizationTest extends TestCase
     /**
      * Verify the request is forbidden when the bearer token contains no scope, but a scope is required.
      */
-    public function testScopeRequiredNoneProvided()
+    public function test_scope_required_none_provided()
     {
         $this->request(true, 'test_scope')
             ->assertUnauthorized()
@@ -75,7 +75,7 @@ class JwtAuthorizationTest extends TestCase
     /**
      * Verify the request is forbidden when the bearer token contains an empty scope, but a scope is required.
      */
-    public function testScopeRequiredEmptyScopesProvided()
+    public function test_scope_required_empty_scopes_provided()
     {
         $this->auth(['scope' => ''])->request(true, 'test_scope')
             ->assertForbidden()
@@ -85,7 +85,7 @@ class JwtAuthorizationTest extends TestCase
     /**
      * Verify the request is forbidden when the bearer token only has a different scope than required.
      */
-    public function testScopeRequiredIncorrectScopeProvided()
+    public function test_scope_required_incorrect_scope_provided()
     {
         $this->auth(['scope' => 'nottest_scope'])
             ->request(true, 'test_scope')
@@ -96,7 +96,7 @@ class JwtAuthorizationTest extends TestCase
     /**
      * Verify the request passes when it contains one scope only, which is required.
      */
-    public function testScopeRequiredOneScopeProvided()
+    public function test_scope_required_one_scope_provided()
     {
         $this->auth(['scope' => 'test_scope'])
             ->request(true, 'test_scope')
@@ -107,7 +107,7 @@ class JwtAuthorizationTest extends TestCase
     /**
      * Verify the request passes when it contains multiple scopes including the one that is required.
      */
-    public function testScopeRequiredMultipleScopesProvided()
+    public function test_scope_required_multiple_scopes_provided()
     {
         $this->auth(['scope' => 'somescope test_scope somethingelse'])
             ->request(true, 'test_scope')
@@ -118,7 +118,7 @@ class JwtAuthorizationTest extends TestCase
     /**
      * Verify that the request user resolver returns a Auth0JWT user with correct userinfo.
      */
-    public function testUserResolver()
+    public function test_user_resolver()
     {
         // Create some user info as it would be returned from Auth0.
         $jwt = [
@@ -139,7 +139,7 @@ class JwtAuthorizationTest extends TestCase
             ->assertSimilarJson($jwt);
     }
 
-    public function testCustomUserResolver()
+    public function test_custom_user_resolver()
     {
         $jwt = [
             'sub' => 'someuser',
@@ -174,7 +174,7 @@ class JwtAuthorizationTest extends TestCase
             ]);
     }
 
-    public function testNoIssuer()
+    public function test_no_issuer()
     {
         Config::set('pricecypher-oidc.issuer', null);
 

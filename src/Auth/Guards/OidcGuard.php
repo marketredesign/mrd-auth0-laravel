@@ -25,7 +25,7 @@ class OidcGuard extends GuardAbstract
             return $this->user;
         }
 
-        if (!request() instanceof Request) {
+        if (! request() instanceof Request) {
             return null;
         }
 
@@ -47,8 +47,8 @@ class OidcGuard extends GuardAbstract
             return null;
         }
 
-        if (!($this->user instanceof User)) {
-            abort('User model must implement "' . User::class . '"');
+        if (! ($this->user instanceof User)) {
+            abort('User model must implement "'.User::class.'"');
         }
 
         return $this->user;

@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Auth;
 class Logout
 {
     private ClientInterface $oidcClient;
+
     private string $home;
+
     private ?string $logoutEndp;
 
     public function __construct(ClientInterface $oidcClient)
@@ -24,7 +26,7 @@ class Logout
     {
         $guard = Auth::guard('pc-oidc');
 
-        if (!$guard->check()) {
+        if (! $guard->check()) {
             return redirect()->intended($this->home);
         }
 

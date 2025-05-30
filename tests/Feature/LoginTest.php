@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Marketredesign\MrdAuth0Laravel\Tests\Feature;
 
 use Illuminate\Contracts\Session\Session;
@@ -27,7 +26,7 @@ class LoginTest extends TestCase
     /**
      * Verifies that the user is redirected back when already logged in.
      */
-    public function testAlreadyLoggedIn()
+    public function test_already_logged_in()
     {
         $this->auth();
         // Sanity check; make sure a user is logged in.
@@ -47,7 +46,7 @@ class LoginTest extends TestCase
     /**
      * Verifies that the user is redirected to Auth0 when not already logged in.
      */
-    public function testNotLoggedIn()
+    public function test_not_logged_in()
     {
         // Sanity check; make sure no user is logged in.
         self::assertFalse(Auth::check());

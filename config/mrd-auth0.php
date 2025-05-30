@@ -17,5 +17,5 @@ return [
     |-------------------------------------------------------------------------------------------------------------------
     | relationship between Auth0 and a source of users.
     */
-    'connection' => env('AUTH0_CONNECTION', "External")
+    'connection' => env('AUTH0_CONNECTION', 'External'),
 ];
