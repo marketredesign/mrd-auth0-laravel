@@ -1,23 +1,21 @@
 <?php
 
+// TODO remove file when User Repo refactored / removed.
 return [
     /*
     |-------------------------------------------------------------------------------------------------------------------
-    | PriceCypher back-end services base URLs.
+    | Chunk size
     |-------------------------------------------------------------------------------------------------------------------
-    | Hostnames of the PriceCypher back-end services.
+    | Size of chunks when requesting values from the Auth0 management API. E.g. number of users in UserRepository.
     |
     */
-    'services' => [
-        'user_tool' => env('BASE_USERS', 'https://users.pricecypher.com'),
-    ],
+    'chunk_size' => env('AUTH0_CHUNK_SIZE', 50),
 
     /*
     |-------------------------------------------------------------------------------------------------------------------
-    | Cache TTL
+    | Connection
     |-------------------------------------------------------------------------------------------------------------------
-    | Time to live for cache entries stored by the package, in seconds. E.g. user info in Request and UserRepository.
-    |
+    | relationship between Auth0 and a source of users.
     */
-    'cache_ttl' => env('PC_CACHE_TTL', 300),
+    'connection' => env('AUTH0_CONNECTION', "External")
 ];

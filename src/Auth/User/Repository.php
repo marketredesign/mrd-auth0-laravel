@@ -11,4 +11,9 @@ class Repository
     {
         return new StatelessUser($decodedJwt);
     }
+
+    public function fromSession(array $userInfo): Authenticatable
+    {
+        return new StatefulUser($userInfo);
+    }
 }
