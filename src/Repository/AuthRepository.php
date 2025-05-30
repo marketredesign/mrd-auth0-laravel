@@ -25,7 +25,7 @@ class AuthRepository implements \Marketredesign\MrdAuth0Laravel\Contracts\AuthRe
      */
     protected function getM2mTokenCacheKey(): string
     {
-        return 'auth0-m2m-token';
+        return 'oidc-m2m-token';
     }
 
     /**
