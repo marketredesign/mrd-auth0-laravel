@@ -72,13 +72,7 @@
       <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php83" />
       <path value="$PROJECT_DIR$/vendor/symfony/http-client-contracts" />
       <path value="$PROJECT_DIR$/vendor/symfony/http-client" />
-      <path value="$PROJECT_DIR$/vendor/web-token/jwt-key-mgmt" />
-      <path value="$PROJECT_DIR$/vendor/web-token/jwt-encryption" />
-      <path value="$PROJECT_DIR$/vendor/web-token/jwt-core" />
-      <path value="$PROJECT_DIR$/vendor/web-token/jwt-checker" />
       <path value="$PROJECT_DIR$/vendor/symfony/psr-http-message-bridge" />
-      <path value="$PROJECT_DIR$/vendor/web-token/jwt-signature-algorithm-rsa" />
-      <path value="$PROJECT_DIR$/vendor/web-token/jwt-signature" />
       <path value="$PROJECT_DIR$/vendor/web-token/jwt-library" />
       <path value="$PROJECT_DIR$/vendor/nunomaduro/collision" />
       <path value="$PROJECT_DIR$/vendor/filp/whoops" />
@@ -174,7 +168,6 @@
       <path value="$PROJECT_DIR$/vendor/sebastian/version" />
       <path value="$PROJECT_DIR$/vendor/sebastian/type" />
       <path value="$PROJECT_DIR$/vendor/squizlabs/php_codesniffer" />
-      <path value="$PROJECT_DIR$/vendor/nunomaduro/larastan" />
       <path value="$PROJECT_DIR$/vendor/sebastian/code-unit" />
       <path value="$PROJECT_DIR$/vendor/sebastian/cli-parser" />
       <path value="$PROJECT_DIR$/vendor/tijsverkoyen/css-to-inline-styles" />
@@ -197,6 +190,7 @@
       <path value="$PROJECT_DIR$/vendor/psr-mock/http-message-implementation" />
       <path value="$PROJECT_DIR$/vendor/facile-it/php-jose-verifier" />
       <path value="$PROJECT_DIR$/vendor/carbonphp/carbon-doctrine-types" />
+      <path value="$PROJECT_DIR$/vendor/larastan/larastan" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.2" />
